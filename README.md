@@ -14,8 +14,11 @@ Parfu archives and restores all directories in the target directory (including e
 
 Use examples: 
   To archive a directory:
+  
     parfu_all_test_001 C target_path/directory_to_archive archive_path/archive_file.pfu
-  To extract an archive file
+    
+  To extract an archive file:
+  
     parfu_all_test_001 X extract_path/extract_directory archive_path/archive_file.pfu
     
 To build parfu:

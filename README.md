@@ -10,6 +10,8 @@ If you run parfu with no arguments, it prints an argument list.  You can safely 
 
 Each rank of parfu transfers a different target file to the archive file (or piece of smaller file), and all the ranks are copying data simultaneously.  The assumption of the design of parfu is that the archive file is on a parallel file system, although there's no requirement for this. All file I/O is done via standard MPIIO commands.  If you use parfu witih archive files on non-parallel file systems, writing/reading the archive file will likely become your bottleneck.
 
+Parfu archives and restores all directories in the target directory (including empty ones).  It archives and restores regular files, including zero-byte files.  Symbolic links are preserved and restored as symbolic links (Later versions will have a command-line option to follow links instead).  All pathnames are stored relative to the "create" target directory.  When extracting, all files are extracted relative to the target "extract" directory.  Leading slashes in absolute pathnames are remmoved.  If you wish to extract to an absolute position just specify "/" as the target extract directory.
+
 Use examples: 
   To archive a directory:
     parfu_all_test_001 C target_path/directory_to_archive archive_path/archive_file.pfu

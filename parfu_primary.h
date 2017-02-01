@@ -7,6 +7,7 @@
 //  All rights reserved.
 //  
 //  Parfu was developed by:
+//  The University of Illinois
 //  The National Center For Supercomputing Applications (NCSA)
 //  Blue Waters Science and Engineering Applications Support Team (SEAS)
 //  Craig P Steffen <csteffen@ncsa.illinois.edu>
@@ -34,6 +35,19 @@
 
 #include <time.h>
 
+//////////////////
+// 
+// Constants that users might want to tweak
+// 
+
+#define PARFU_DEFAULT_MIN_BLOCK_SIZE_EXPONENT     12
+#define PARFU_DEFAULT_BLOCKS_PER_FRAGMENT             250
+
+//
+// End of recommended user-tweakable constants
+//
+//////////////////
+
 extern int debug;
 
 typedef enum{PARFU_FILE_TYPE_REGULAR,PARFU_FILE_TYPE_DIR,PARFU_FILE_TYPE_SYMLINK,PARFU_FILE_TYPE_INVALID} parfu_file_t;
@@ -58,13 +72,11 @@ typedef enum{PARFU_FILE_TYPE_REGULAR,PARFU_FILE_TYPE_DIR,PARFU_FILE_TYPE_SYMLINK
 
 #define PARFU_FILE_PTR_NONSHARED (-1)
 
-#define PARFU_DEFAULT_MIN_BLOCK_SIZE_EXPONENT     12
 #define PARFU_ABSOLUTE_MIN_BLOCK_SIZE_EXPONENT    8
 #define PARFU_LARGEST_ALLOWED_MAX_BLOCK_SIZE_EXPONENT  26
 #define PARFU_SMALLEST_ALLOWED_MAX_BLOCK_SIZE_EXPONENT 16
 #define PARFU_DEFAULT_MAX_BLOCK_SIZE_EXPONENT          20
 
-#define PARFU_DEFAULT_BLOCKS_PER_FRAGMENT             250
 
 // example of file layout in archive file
 // void space is depicted by underscores:___ (3 void bytes)
@@ -220,8 +232,27 @@ int parfu_extract_1file_singFP(char *arch_file_name,
 			       long int transfer_buffer_size,
 			       int my_blocks_per_fragment);
 
+/////////
+//
+// Data structures for main() source files (command-line flags and stuff)
+//
 
+#define DEFAULT_N_VALUES_IN_BEHAVIOR_CONTROL_ARRAY   10
 
+typedef struct{
+  int yn_iterations_argument;
+  int n_iterations;
+  int array_len;
+  int n_archive_files;
+  char **archive_files;
+  int n_min_block_exponent_values;
+  int *min_block_exponent_values;
+  int n_blocks_per_fragment_values;
+  int *blocks_per_fragment_values;
+}parfu_behavior_control_t;
+
+parfu_behavior_control_t *parfu_init_behavior_control_raw(void);
+parfu_behavior_control_t *parfu_init_behavior_control_raw(int array_length);
 
 
 // PARFU_PRIMARY_H

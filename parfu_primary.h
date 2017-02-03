@@ -251,7 +251,7 @@ typedef struct{
   int *blocks_per_fragment_values;
 }parfu_behavior_control_t;
 
-parfu_behavior_control_t *parfu_init_behavior_control_raw(void);
+parfu_behavior_control_t *parfu_init_behavior_control(void);
 parfu_behavior_control_t *parfu_init_behavior_control_raw(int array_length);
 
 

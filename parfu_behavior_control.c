@@ -22,7 +22,7 @@
 
 #include <parfu_primary.h>
 
-parfu_behavior_control_t *parfu_init_behavior_control_raw(void){
+parfu_behavior_control_t *parfu_init_behavior_control(void){
   parfu_behavior_control_t *out=NULL;
   out=parfu_init_behavior_control_raw(DEFAULT_N_VALUES_IN_BEHAVIOR_CONTROL_ARRAY);
   if(out==NULL){

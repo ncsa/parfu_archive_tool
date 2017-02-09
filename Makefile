@@ -7,6 +7,7 @@
 ##  All rights reserved.
 ##  
 ##  Parfu was developed by:
+##  The University of Illinois
 ##  The National Center For Supercomputing Applications (NCSA)
 ##  Blue Waters Science and Engineering Applications Support Team (SEAS)
 ##  Craig P Steffen <csteffen@ncsa.illinois.edu>

@@ -297,7 +297,7 @@ int main(int nargs, char *args[]){
 				      n_ranks,my_rank,
 				      PARFU_DEFAULT_MAX_BLOCK_SIZE_EXPONENT,
 				      536870912,
-				      bpf)){
+				      bpf,0)){
 	  fprintf(stderr,"function parfu_archive_1file_singFP failed!!!\n");
 	  fprintf(stderr,"rank %d exiting.\n",my_rank);
 	  MPI_Finalize();
@@ -333,7 +333,7 @@ int main(int nargs, char *args[]){
 				  n_ranks,my_rank,
 				  &return_exponent,
 				  default_transfer_buffer_size,
-				  PARFU_DEFAULT_BLOCKS_PER_FRAGMENT)){
+				  PARFU_DEFAULT_BLOCKS_PER_FRAGMENT,0)){
       fprintf(stderr,"parfu_extract_1file_singFP failed!!!\n");
       fprintf(stderr,"rank %d exiting.\n",my_rank);
       return 2;      

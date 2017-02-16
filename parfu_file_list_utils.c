@@ -281,11 +281,28 @@ int parfu_is_a_dir(char *pathname){
 }
 
 int parfu_does_not_exist(char *pathname){
+  return parfu_does_not_exist_raw(pathname,1);
+}
+
+int parfu_does_not_exist_quiet(char *pathname){
+  return parfu_does_not_exist_raw(pathname,0);
+}
+
+int parfu_does_exist_quiet(char *pathname){
+  if(parfu_does_not_exist_quiet(pathname))
+    return 0;
+  else
+    return 1;
+}
+
+int parfu_does_not_exist_raw(char *pathname, int be_loud){
   struct stat filestruct;
   int returnval;
   if((returnval=stat(pathname,&filestruct))){
-    fprintf(stderr,"parfu_is_a_dir:\n");
-    fprintf(stderr," stat returned %d!\n",returnval);
+    if(be_loud){
+      fprintf(stderr,"parfu_is_a_dir:\n");
+      fprintf(stderr," stat returned %d!\n",returnval);
+    }
     return 1;
   }
   else{

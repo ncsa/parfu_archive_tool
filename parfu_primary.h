@@ -34,6 +34,7 @@
 #include <dirent.h>
 
 #include <time.h>
+#include <ctype.h>
 
 //////////////////
 // 
@@ -77,6 +78,8 @@ typedef enum{PARFU_FILE_TYPE_REGULAR,PARFU_FILE_TYPE_DIR,PARFU_FILE_TYPE_SYMLINK
 #define PARFU_SMALLEST_ALLOWED_MAX_BLOCK_SIZE_EXPONENT 16
 #define PARFU_DEFAULT_MAX_BLOCK_SIZE_EXPONENT          20
 
+#define PARFU_MIN_ALLOWED_BLOCKS_PER_FRAGMENT           1
+#define PARFU_MAX_ALLOWED_BLOCKS_PER_FRAGMENT        2000
 
 // example of file layout in archive file
 // void space is depicted by underscores:___ (3 void bytes)
@@ -162,6 +165,9 @@ int parfu_is_a_dir(char *pathname);
 int parfu_is_a_symlink(const char *pathname,char **target_text);
 int parfu_is_a_regfile(char *pathname, long int *size);
 int parfu_does_not_exist(char *pathname);
+int parfu_does_not_exist_raw(char *pathname, int be_loud);
+int parfu_does_not_exist_quiet(char *pathname);
+int parfu_does_exist_quiet(char *pathname);
 
 parfu_file_fragment_entry_list_t *parfu_build_file_list_from_directory(char *top_dirname, 
 								       int follow_symlinks, 
@@ -224,13 +230,15 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
 			       int n_ranks, int my_rank, 
 			       int my_max_block_size_exponent,
 			       long int transfer_buffer_size,
-			       int blocks_per_fragment);
+			       int blocks_per_fragment,
+			       int check_if_already_exist);
 int parfu_extract_1file_singFP(char *arch_file_name,
 			       char *extract_target_dir,
 			       int n_ranks, int my_rank, 
 			       int *my_max_block_size_exponent,
 			       long int transfer_buffer_size,
-			       int my_blocks_per_fragment);
+			       int my_blocks_per_fragment,
+			       int check_if_already_exist);
 
 /////////
 //
@@ -238,8 +246,16 @@ int parfu_extract_1file_singFP(char *arch_file_name,
 //
 
 #define DEFAULT_N_VALUES_IN_BEHAVIOR_CONTROL_ARRAY   10
+// Next two variables must relate, so that the indexing in file names works
+// They could be 10,1 or 100,2 or 1000,3 or 10000,4 and so on
+// so that a 0-origin index of the as many as the first value can be expressed
+// in terms of digits of the second value
+#define PARFU_MAX_TEST_ITERATIONS                  1000
+#define PARFU_N_DIGITS_IN_ITERATION_INDEX             3
 
 typedef struct{
+  int trial_run;
+  char mode;
   int yn_iterations_argument;
   int n_iterations;
   int array_len;
@@ -251,8 +267,21 @@ typedef struct{
   int *blocks_per_fragment_values;
 }parfu_behavior_control_t;
 
+// parfu_behavior_control.c
 parfu_behavior_control_t *parfu_init_behavior_control(void);
 parfu_behavior_control_t *parfu_init_behavior_control_raw(int array_length);
+int parfu_behav_add_min_expon(parfu_behavior_control_t *behav,
+			      int in_exp);
+int parfu_behav_add_bl_per_frag(parfu_behavior_control_t *behav,
+				int in_bpf);
+int parfu_behav_add_arc_file(parfu_behavior_control_t *behav,
+			     char *in_filename);
+int parfu_behav_extend_array(parfu_behavior_control_t *behav);
+int parfu_are_we_in_MPI(void);
+parfu_behavior_control_t *parfu_parse_arguments(int argc, char *argv[]);
+
+
+
 
 
 // PARFU_PRIMARY_H

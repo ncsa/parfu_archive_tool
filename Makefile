@@ -35,7 +35,7 @@ CFLAGS := -g -I. -Wall -Wmissing-prototypes -Wstrict-prototypes
 # The TARGETS variable sets what gets built. 
 
 # By default, this Makefile builds the basic proof-of-concept test code. 
-TARGETS := parfu_all_test_001
+TARGETS := parfu_all_test_001 parfu_bench_test_002
 
 # Using TARGETS line would also build two utilty test codes, which are
 # probably only interesting for historical or internal testing reasons.
@@ -52,7 +52,7 @@ TARGETS := parfu_all_test_001
 # header and utility function definitions
 PARFU_HEADER_FILES := parfu_primary.h
 
-PARFU_OBJECT_FILES := parfu_file_list_utils.o parfu_buffer_utils.o parfu_data_transfer.o
+PARFU_OBJECT_FILES := parfu_file_list_utils.o parfu_buffer_utils.o parfu_data_transfer.o parfu_behavior_control.o
 
 default: ${TARGETS}
 
@@ -69,6 +69,9 @@ parfu_create_test_1: parfu_create_test_1.o ${PARFU_OBJECT_FILES} ${PARFU_HEADER_
 
 parfu_all_test_001: parfu_all_test_001.o ${PARFU_OBJECT_FILES} ${PARFU_HEADER_FILES}
 	${CC} -o $@ ${CFLAGS} parfu_all_test_001.o ${PARFU_OBJECT_FILES}
+
+parfu_bench_test_002: parfu_bench_test_002.o ${PARFU_OBJECT_FILES} ${PARFU_HEADER_FILES}
+	${CC} -o $@ ${CFLAGS} parfu_bench_test_002.o ${PARFU_OBJECT_FILES}
 
 # utility targets
 

@@ -27,7 +27,8 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
 			       int n_ranks, int my_rank, 
 			       int my_max_block_size_exponent,
 			       long int transfer_buffer_size,
-			       int my_blocks_per_fragment){
+			       int my_blocks_per_fragment,
+			       int check_if_already_exist){
   // the assumption of this function is that MPI stuff has already been 
   // initialized.  The inputs for n_ranks and my_ranks are valid for all
   // ranks; the others may only be valid for rank 0.
@@ -88,7 +89,17 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
   // distribute name of archive file to all ranks
   if(my_rank==0){
     filename_length=(strlen(arch_file_name))+1;
+    if(check_if_already_exist){
+      if(parfu_does_exist_quiet(arch_file_name)){
+	fprintf(stderr,"parfu_archive_1file_singFP:\n");
+	fprintf(stderr,"  Checking if archive file already exists.  It does!\n");
+	fprintf(stderr,"  Returning with an error.\n");
+	return 101;
+      }
+    }
   }
+  MPI_Barrier(MPI_COMM_WORLD);
+
   MPI_Bcast(&filename_length,1,MPI_INT,0,MPI_COMM_WORLD);
   if((archive_filename_buffer=malloc(filename_length))==NULL){
     fprintf(stderr,"parfu_archive_1file_singFP:\n");
@@ -100,7 +111,7 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
     sprintf(archive_filename_buffer,"%s",arch_file_name);
   }
   MPI_Bcast(archive_filename_buffer,filename_length,MPI_CHAR,0,MPI_COMM_WORLD);
-  
+
   // open archive file on all ranks with shared pointer
   file_result=MPI_File_open(MPI_COMM_WORLD, archive_filename_buffer, 
 			    MPI_MODE_WRONLY | MPI_MODE_CREATE | MPI_MODE_EXCL, 
@@ -368,7 +379,8 @@ int parfu_extract_1file_singFP(char *arch_file_name,
 			       int n_ranks, int my_rank, 
 			       int *my_max_block_size_exponent,
 			       long int transfer_buffer_size,
-			       int my_blocks_per_fragment){
+			       int my_blocks_per_fragment,
+			       int check_if_already_exist){
   // the assumption of this function is that MPI stuff has already been 
   // initialized.  The inputs for n_ranks and my_ranks are valid for all
   // ranks; the others may only be valid for rank 0.
@@ -514,20 +526,23 @@ int parfu_extract_1file_singFP(char *arch_file_name,
     // list_fr_archive now has the pathnames for where extracted files are going
     // to go.  We loop through to see if they already exist, and exit if that's
     // the case.
-    for(i=0;i<list_fr_archive->n_entries_full;i++){
-      // check for existence of the ith file to be extracted
-      if( list_fr_archive->list[i].type == PARFU_FILE_TYPE_REGULAR ||
-	  list_fr_archive->list[i].type == PARFU_FILE_TYPE_SYMLINK ){
-	if( access(list_fr_archive->list[i].relative_filename,F_OK) != -1){
-	  fprintf(stderr,"parfu_extract_1file_singFP:\n");
-	  fprintf(stderr,"  going to extract file %s\n",
-		  list_fr_archive->list[i].relative_filename);
-	  fprintf(stderr,"  but that file already exists!!!\n");
-	  return -8;
-	}
-      }
-    }
     
+    if(check_if_already_exist){
+      for(i=0;i<list_fr_archive->n_entries_full;i++){
+	// check for existence of the ith file to be extracted
+	if( list_fr_archive->list[i].type == PARFU_FILE_TYPE_REGULAR ||
+	    list_fr_archive->list[i].type == PARFU_FILE_TYPE_SYMLINK ){
+	  if( access(list_fr_archive->list[i].relative_filename,F_OK) != -1){
+	    fprintf(stderr,"parfu_extract_1file_singFP:\n");
+	    fprintf(stderr,"  going to extract file %s\n",
+		    list_fr_archive->list[i].relative_filename);
+	    fprintf(stderr,"  but that file already exists!!!\n");
+	    return -8;
+	  }
+	}
+      } // for(i=0;
+    } //     if(check_if_already_exist){
+
     // rank 0 splits the initial (by file) catalog into the by-slice
     // catalog for distribution to the other ranks
     //    fprintf(stderr,"  ***** about to split list.\n");

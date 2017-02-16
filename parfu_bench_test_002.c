@@ -29,6 +29,10 @@ int main(int argc, char *argv[]){
   //  int opt_integer;
   int total_runs;
 
+  int ind_E;
+  int ind_B;
+  int ind_N;
+
   if((marching_orders=parfu_parse_arguments(argc,argv))==NULL){
     fprintf(stderr,"There was an error parsing the command line.  Exiting!\n");
     exit(2);
@@ -50,11 +54,30 @@ int main(int argc, char *argv[]){
     break;
   }
 
+  // count the runs and confirm to the user what we're going to do
   total_runs=1;
+
+  // count the number of archive files 
+  if( marching_orders->n_archive_files < 1){
+    fprintf(stderr,"You must specify at least one archive file!\n");
+    fprintf(stderr,"  Exiting.\n");
+    exit(3);
+  }
+  if( marching_orders->mode=='X' && 
+      marching_orders->n_archive_files > 1 ){
+    fprintf(stderr,"In extract mode, you must ONLY specify one archive file!\n");
+    fprintf(stderr,"  You specified %d files.  Aborting.\n",
+	    marching_orders->n_archive_files);
+    exit(4);
+  }
+  fprintf(stderr,"You specified %d archive files.\n",
+	  marching_orders->n_archive_files);
+  total_runs *= marching_orders->n_archive_files;
+  
+  // count the number of specified min block size exponents
   if(marching_orders->n_min_block_exponent_values){
-    fprintf(stderr,"We have %d specified values of min block size exponent.\n",
+    fprintf(stderr,"You specified %d values of min block size exponent.\n",
 	    marching_orders->n_min_block_exponent_values);
-    total_runs *= marching_orders->n_min_block_exponent_values;
   }
   else{
     marching_orders->n_min_block_exponent_values=1;
@@ -62,14 +85,30 @@ int main(int argc, char *argv[]){
       PARFU_DEFAULT_MIN_BLOCK_SIZE_EXPONENT;
     fprintf(stderr,"No values of min block size exponent specified, so we will\n");
     fprintf(stderr,"  be using the default, %d.\n",
-	    marching_orders->min_block_exponent_values[0]);
-    
+	    marching_orders->min_block_exponent_values[0]); 
   }
+  total_runs *= marching_orders->n_min_block_exponent_values;
   
+  // count the number of specified blocks-per-fragment values
+  if(marching_orders->n_blocks_per_fragment_values){
+    fprintf(stderr,"You specified %d values of blocks per fragment.\n",
+	    marching_orders->n_blocks_per_fragment_values);
+  }
+  else{
+    marching_orders->n_blocks_per_fragment_values=1;
+    marching_orders->blocks_per_fragment_values[0]=
+      PARFU_DEFAULT_BLOCKS_PER_FRAGMENT;
+    fprintf(stderr,"No values of blocks per fragment specified, so we will\n");
+    fprintf(stderr,"  be using the default, %d.\n",
+	    marching_orders->blocks_per_fragment_values[0]); 
+  }
+  total_runs *= marching_orders->n_blocks_per_fragment_values;
+
+  
+  // finally count the number of iterations per above combination of parameters
   if(marching_orders->yn_iterations_argument){
     fprintf(stderr,"You specified %d iterations per parameter combination.\n",
 	    marching_orders->n_iterations);
-    total_runs *= marching_orders->n_iterations;
   }
   else{
     fprintf(stderr,"No # of iterations specified, so 1 run\n");
@@ -79,7 +118,8 @@ int main(int argc, char *argv[]){
   }
   fprintf(stderr,"\n");
   fprintf(stderr,"So we'll being running a total of %d times.\n\n",total_runs);
-
+  total_runs *= marching_orders->n_iterations;
+  
   if(marching_orders->trial_run){
     fprintf(stderr,"You specified the \"-T\" flag for a trial run.\n");
     fprintf(stderr,"  The above list says what we WOULD have done.\n");

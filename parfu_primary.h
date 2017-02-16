@@ -258,6 +258,7 @@ typedef struct{
   char mode;
   int yn_iterations_argument;
   int n_iterations;
+  int overwrite_archive_file;
   int array_len;
   int n_archive_files;
   char **archive_files;

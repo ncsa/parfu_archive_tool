@@ -95,8 +95,10 @@ int parfu_behav_extend_array(parfu_behavior_control_t *behav){
 parfu_behavior_control_t *parfu_init_behavior_control_raw(int array_len){
   parfu_behavior_control_t *my_control=NULL;
   int i;
-
-  if((my_control=malloc(sizeof(my_control)))==NULL){
+  size_t new_size;
+  
+  //  fprintf(stderr,"INIT: %d\n",array_len);
+  if((my_control=malloc(sizeof(parfu_behavior_control_t)))==NULL){
     fprintf(stderr,"parfu_init_behavior_control_raw: \n");
     fprintf(stderr,"  could not malloc behavior control structure!\n");
     return NULL;
@@ -111,19 +113,23 @@ parfu_behavior_control_t *parfu_init_behavior_control_raw(int array_len){
   my_control->mode='\0';
   my_control->yn_iterations_argument=0;
   my_control->n_iterations=-1;
+  my_control->overwrite_archive_file=0;
   my_control->array_len=array_len;
 
   my_control->n_archive_files=0;
+  new_size = sizeof(char*) * array_len;
+  //  fprintf(stderr,"ABOUT_TO: %d\n",new_size);
   if(((my_control->archive_files)=
-      malloc(sizeof(char*)*array_len))==NULL){
+      malloc(new_size))==NULL){
     fprintf(stderr,"parfu_init_behavior_control_raw: \n");
     fprintf(stderr,"  Could not malloc archive file name array!!\n");
     return NULL;
   }
+  //  fprintf(stderr,"MALLOCED\n");
   for(i=0;i<array_len;i++){
     my_control->archive_files[i]=NULL;
   }
- 
+  //  fprintf(stderr,"MIDDLE\n");
   my_control->n_min_block_exponent_values=0;
   if(((my_control->min_block_exponent_values)=
       malloc(sizeof(int)*array_len))==NULL){
@@ -139,6 +145,7 @@ parfu_behavior_control_t *parfu_init_behavior_control_raw(int array_len){
     fprintf(stderr,"  Could not blocks_per_fragment_values array!!\n");
     return NULL;
   }
+  //  fprintf(stderr,"RETURN\n");
   return my_control;
 }
 
@@ -243,6 +250,7 @@ parfu_behavior_control_t *parfu_parse_arguments(int my_argc, char *my_argv[]){
   int next_opt;
   int opt_integer;
 
+  // fprintf(stderr,"begining parfu_parse_arguments.\n");
   if((my_orders=parfu_init_behavior_control())==NULL){
     fprintf(stderr,"parfu_parse_arguments:\n");
     fprintf(stderr,"Could not initiate behavior control module.\n");
@@ -271,6 +279,18 @@ parfu_behavior_control_t *parfu_parse_arguments(int my_argc, char *my_argv[]){
       //      fprintf(stderr,"The \"-T\" option indicates trial run.\n");
       my_orders->trial_run=1;
       break;
+    case 'F':
+      my_orders->overwrite_archive_file=1;
+      fprintf(stderr,"Option \"-F\" indicates overwriting existing archivle files.\n");
+    case 'f':
+      fprintf(stderr,"Adding archive file: %s\n",optarg);
+      if(parfu_behav_add_arc_file(my_orders,optarg)){
+	fprintf(stderr,"parfu_parse_arguments:\n");
+	fprintf(stderr,"Failed to add archive file >%s< to list!\n",
+		optarg);
+	return NULL;
+      }
+      break;
     case 'e':
       opt_integer = atoi(optarg);
       if( opt_integer < PARFU_ABSOLUTE_MIN_BLOCK_SIZE_EXPONENT || 
@@ -290,6 +310,25 @@ parfu_behavior_control_t *parfu_parse_arguments(int my_argc, char *my_argv[]){
 	return NULL;
       }
       break;
+    case 'B':
+      opt_integer = atoi(optarg);
+      if( opt_integer < PARFU_MIN_ALLOWED_BLOCKS_PER_FRAGMENT || 
+	  opt_integer > PARFU_MAX_ALLOWED_BLOCKS_PER_FRAGMENT ){
+	fprintf(stderr,"parfu_parse_arguments:\n");
+	fprintf(stderr,"The blocks-per-fragment you specified: %d,\n",
+		opt_integer);
+	fprintf(stderr,"is INVALID!  It must be between %d and %d.  Aborting.\n",
+		PARFU_MIN_ALLOWED_BLOCKS_PER_FRAGMENT,
+		PARFU_MAX_ALLOWED_BLOCKS_PER_FRAGMENT);
+	return NULL;
+      }
+      if(parfu_behav_add_bl_per_frag(my_orders,opt_integer)){
+	fprintf(stderr,"parfu_parse_arguments:\n");
+	fprintf(stderr,"Failed to blocks per fragment %d to list!\n",
+		opt_integer);
+	return NULL;
+      }
+      break;	 
     case 'N':
       if(my_orders->yn_iterations_argument){
 	fprintf(stderr,"parfu_parse_arguments:\n");

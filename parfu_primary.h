@@ -259,6 +259,9 @@ typedef struct{
   int yn_iterations_argument;
   int n_iterations;
   int overwrite_archive_file;
+  char *target_directory;
+  char *data_output_file;
+  int yn_data_to_stdout;
   int array_len;
   int n_archive_files;
   char **archive_files;

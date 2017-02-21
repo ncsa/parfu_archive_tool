@@ -114,6 +114,9 @@ parfu_behavior_control_t *parfu_init_behavior_control_raw(int array_len){
   my_control->yn_iterations_argument=0;
   my_control->n_iterations=-1;
   my_control->overwrite_archive_file=0;
+  my_control->target_directory=NULL;
+  my_control->data_output_file=NULL;
+  my_control->yn_data_to_stdout=0;
   my_control->array_len=array_len;
 
   my_control->n_archive_files=0;
@@ -262,7 +265,7 @@ parfu_behavior_control_t *parfu_parse_arguments(int my_argc, char *my_argv[]){
   // (options of the form either:
   //       -A 
   // or    -A value
-  while((next_opt=getopt(my_argc,my_argv,"CXf:F:d:N:e:B:T")) != -1){
+  while((next_opt=getopt(my_argc,my_argv,"CXd:f:F:N:e:B:TSL:")) != -1){
     //    fprintf(stderr,"option: %c\n",(char)next_opt);
     switch(next_opt){
     case 'C':
@@ -276,12 +279,53 @@ parfu_behavior_control_t *parfu_parse_arguments(int my_argc, char *my_argv[]){
       my_orders->mode=next_opt;
       break;
     case 'T':
-      //      fprintf(stderr,"The \"-T\" option indicates trial run.\n");
+      fprintf(stderr,"The \"-T\" option indicates trial run.\n");
       my_orders->trial_run=1;
+      break;
+    case 'S':
+      fprintf(stderr,"\"-S\" option: outputing data to STDOUT.\n");
+      my_orders->yn_data_to_stdout=1;
+      break;
+    case 'L':
+      if(my_orders->data_output_file != NULL){
+	fprintf(stderr,"parfu_parse_arguments:\n");	
+	fprintf(stderr,"You must only specify ONE data output file!\n");
+	fprintf(stderr,"  Exiting.\n");
+	return NULL;
+      }
+      if((my_orders->data_output_file=
+	  malloc(sizeof(char)*strlen(optarg)))==NULL){
+	fprintf(stderr,"parfu_parse_arguments:\n");	
+	fprintf(stderr,"Could not malloc string for data output file!\n");
+	fprintf(stderr,"  Exiting.\n");
+	return NULL;
+      }
+      memcpy(my_orders->data_output_file,optarg,strlen(optarg)+1);
+      fprintf(stderr,"Data output file: %s\n",my_orders->data_output_file);
+      break;
+    case 'd':
+      if(my_orders->target_directory != NULL){
+	fprintf(stderr,"parfu_parse_arguments:\n");	
+	fprintf(stderr,"You must only specify ONE target directory!\n");
+	fprintf(stderr,"  Exiting.\n");
+	return NULL;
+      }
+      if((my_orders->target_directory=
+	  malloc(sizeof(char)*strlen(optarg)))==NULL){
+	fprintf(stderr,"parfu_parse_arguments:\n");	
+	fprintf(stderr,"Could not malloc string for target dir!\n");
+	fprintf(stderr,"  Exiting.\n");
+	return NULL;
+      }
+      memcpy(my_orders->target_directory,optarg,strlen(optarg)+1);
+      fprintf(stderr,"Target dir: %s\n",my_orders->target_directory);
       break;
     case 'F':
       my_orders->overwrite_archive_file=1;
       fprintf(stderr,"Option \"-F\" indicates overwriting existing archivle files.\n");
+      // yes, there's no break here on purpose.  -f (below) specifies 
+      // a container file, -F specifies a container file AND sets 
+      // overwrite of all container files to TRUE.
     case 'f':
       fprintf(stderr,"Adding archive file: %s\n",optarg);
       if(parfu_behav_add_arc_file(my_orders,optarg)){
@@ -386,7 +430,6 @@ parfu_behavior_control_t *parfu_parse_arguments(int my_argc, char *my_argv[]){
   }
   return my_orders;
 }
-
 
 /*
 int parfu_are_we_in_MPI(void){

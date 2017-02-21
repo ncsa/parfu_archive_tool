@@ -21,6 +21,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <parfu_primary.h>
+void parfu_usage(void);
 
 int main(int argc, char *argv[]){
   //  char mode='Z'; // 'Z' is the "unset" value.  Valid modes are 'C' and 'X' 
@@ -32,14 +33,24 @@ int main(int argc, char *argv[]){
   int ind_E;
   int ind_B;
   int ind_N;
+  int ind_arc;
+  int target_for_data;
+  FILE *data_file=NULL;
+
+  if(argc<2){
+    fprintf(stderr,"You didn't enter any command-line flags or arguments\n");
+    fprintf(stderr,"  Printing usage explanation:\n");
+    parfu_usage();
+    exit(2);
+  }
 
   if((marching_orders=parfu_parse_arguments(argc,argv))==NULL){
     fprintf(stderr,"There was an error parsing the command line.  Exiting!\n");
     exit(2);
   }
-
   // Sanity check; tell the user what we understood them to tell us to do
   fprintf(stderr,"Finished parsing command line.\n\n");
+
   switch(marching_orders->mode){
   case 'X':
     fprintf(stderr,"We e(X)tracting an archive.\n");
@@ -120,15 +131,73 @@ int main(int argc, char *argv[]){
   fprintf(stderr,"So we'll being running a total of %d times.\n\n",total_runs);
   total_runs *= marching_orders->n_iterations;
   
-  if(marching_orders->trial_run){
-    fprintf(stderr,"You specified the \"-T\" flag for a trial run.\n");
-    fprintf(stderr,"  The above list says what we WOULD have done.\n");
-    fprintf(stderr,"  Exiting now.\n");
-    exit(0);
+  target_for_data=0;
+  if(marching_orders->yn_data_to_stdout){
+    fprintf(stderr,"Timing data will be written to STDOUT.\n");
+    target_for_data=1;
   }
+  if(marching_orders->data_output_file){
+    if((data_file=fopen(marching_orders->data_output_file,"a"))==NULL){
+      fprintf(stderr,"Could not open file >%s< for appending data!\n",
+	      marching_orders->data_output_file);
+      exit(3);
+    }
+    fprintf(stderr,"Timing data will be written to file >%s<\n",
+	    marching_orders->data_output_file);
+    target_for_data=1;
+  }
+  if(!target_for_data){
+    fprintf(stderr,"WARNING!  You have not specified a destination for\n");
+    fprintf(stderr,"timing data.  None will be written.\n");
+  }
+  
+  fprintf(stderr,"\nNow looping through trials.\n");
+  for(ind_arc=0;ind_arc<marching_orders->n_archive_files;ind_arc++){
+    fprintf(stderr,"  Using archive file: %s\n",
+	    marching_orders->archive_files[ind_arc]);
+    for(ind_E=0;ind_E<marching_orders->n_min_block_exponent_values;ind_E++){
+      for(ind_B=0;ind_B<marching_orders->n_blocks_per_fragment_values;ind_B++){
+	for(ind_N=0;ind_N<marching_orders->n_iterations;ind_N++){
+	  fprintf(stderr,"    Using E=%2d, B=%4d, trial #=%3d\n",
+		  marching_orders->min_block_exponent_values[ind_E],
+		  marching_orders->blocks_per_fragment_values[ind_B],
+		  ind_N);
+	  
+	}
+      }
+    }
+  }
+  fprintf(stderr,"\n\n");
   
   // now actually do stuff
   
   exit(0);
 }
 
+void parfu_usage(void){
+  fprintf(stderr,"\nparfu_bench_test_002 usage:\n\n");
+  
+  fprintf(stderr,"  Flags for this version are Gnu-style:\n");
+  fprintf(stderr,"  -A     sets \"A\" to true\n");
+  fprintf(stderr,"      OR\n");
+  fprintf(stderr,"  -A xxx    gives \"A\" the value \"xxx\"\n");
+  fprintf(stderr,"Allowed arguments:\n");
+  fprintf(stderr,"  -C    to Create an archive\n");
+  fprintf(stderr,"  -X    to eXtract an archive\n");
+  fprintf(stderr,"        (only ONE of -C or -X may be specified\n");
+  fprintf(stderr,"  -d    (Creating: target directory to create an archive of,\n");
+  fprintf(stderr,"         eXtracting: directory to extract into) (only one -d value allowed.)\n\n");
+  fprintf(stderr,"  -f my_arc_file.pfu   (File to archive into.  For Create\n");
+  fprintf(stderr,"        mode, may specify more than one to test different\n");
+  fprintf(stderr,"        target directory characteristics, like stripe counts.\n");
+  fprintf(stderr,"        In eXtract mode, only one is allowed.)\n\n");
+  fprintf(stderr,"  -e EE  Min Block Size Exponent value \"EE\" to test.\n");
+  fprintf(stderr,"         my specify any number of values. If nome specified, uses internal default.\n\n");
+  fprintf(stderr,"  -B BB  Blocks Per Fragment value \"BB\" to test.\n");
+  fprintf(stderr,"         Specify any number of values. If none specified,\n");
+  fprintf(stderr,"         uses one value, the internal default.\n\n");
+  fprintf(stderr,"  -N NN  Number of trials per parameter setup to run.\n");
+  fprintf(stderr,"         Default is 1.\n\n");
+  fprintf(stderr,"  -S     Outputs timing results to STDOUT.\n\n");
+  fprintf(stderr,"  -L logfile.out   Outputs timing results to specified file\n\n");
+}

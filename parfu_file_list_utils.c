@@ -695,6 +695,11 @@ parfu_file_fragment_entry_list_t
       // current directory, so we grab the next entry:
       next_entry=readdir(current_dir);
     } // while(next_entry!=NULL)    
+    if(closedir(current_dir)){
+      fprintf(stderr,"parful_build_file_list_from_directory:\n");
+      fprintf(stderr,"  unable to close directory index: %d !!!!\n",current_dir_index);
+      return NULL;
+    }
     current_dir_index++;
   } //   while(current_dir_index < my_dir_list->n_entries_full){  
   return full_list;

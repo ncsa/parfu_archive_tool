@@ -137,6 +137,10 @@ int main(int nargs, char *args[]){
     *bcast_archive_file_name_length=strlen(local_archive_file_name)+1;
     
   } // if(my_rank==0)
+  else{
+    directory_argument=NULL;
+  }
+
   MPI_Bcast(my_command,1,MPI_CHAR,0,MPI_COMM_WORLD);  
   MPI_Bcast(bcast_archive_file_name_length,1,MPI_INT,0,MPI_COMM_WORLD);
   if((bcast_archive_file_name=malloc(*bcast_archive_file_name_length))==NULL){

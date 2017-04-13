@@ -477,7 +477,7 @@ parfu_file_fragment_entry_list_t
   int next_archive_name_length;
   char *next_archive_name=NULL;
 
-  long int file_size;
+  long int file_size=(-1);
 
   //  fprintf(stderr,"starting parfu_build_file_list_from_directory\n");
   //  fprintf(stderr,"from directory: %s\n",top_dirname);

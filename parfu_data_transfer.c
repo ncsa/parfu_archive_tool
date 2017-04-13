@@ -62,6 +62,9 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
   long int stage_archive_file_offset;
   long int file_block_size;
 
+  long int times_through_loop;
+  long int loop_divisor=100;
+
   MPI_Info my_Info=MPI_INFO_NULL;
   MPI_Status my_MPI_Status;
 
@@ -69,6 +72,9 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
   char *file_catalog_distributed=NULL;
   //  char *file_catalog_buffer_for_ranks=NULL;
   //  int target_fragment_increment;
+
+  time_t *local_start=NULL,*local_end=NULL;
+  int local_started=0;
 
 
   if((transfer_buffer=malloc(transfer_buffer_size))==NULL){
@@ -83,6 +89,20 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
     fprintf(stderr,"rank %d could not allocate space for archive file pointer!\n",my_rank);
     MPI_Finalize();
     return 75;
+  }
+
+  if((local_start=malloc(sizeof(time_t)))==NULL){
+    fprintf(stderr,"parfu_archive_1file_singFP:\n");
+    fprintf(stderr,"  could not allocate local_start!!!\n");
+    MPI_Finalize();
+    return 85;
+  }
+
+  if((local_end=malloc(sizeof(time_t)))==NULL){
+    fprintf(stderr,"parfu_archive_1file_singFP:\n");
+    fprintf(stderr,"  could not allocate local_end!!!\n");
+    MPI_Finalize();
+    return 85;
   }
 
   //  if(my_rank==0) fprintf(stderr,"  ***** about to broadcast out archive file name.\n");
@@ -264,6 +284,7 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
   
 
   if(my_rank==0) fprintf(stderr,"  ****** about to begin big data transfer loop.\n");
+  if(my_rank==0) times_through_loop=0;
   while( current_target_fragment < rank_list->n_entries_full ){
     // we transfer data for regular files that have non-zero size. 
     // skip over non-files and zero-length files
@@ -356,16 +377,42 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
 
     MPI_File_close(&target_file_ptr);
     
+    if(my_rank==0){
+      if(!(times_through_loop % loop_divisor)){
+	//	fprintf(stderr,".");
+	fprintf(stderr,
+		"rank 0 processed slice %d of total %d : ",
+		current_target_fragment,
+		rank_list->n_entries_full);
+	if(local_started){
+	  time(local_end);
+	  fprintf(stderr,"time: %d seconds",
+		  ((int)((*local_end)-(*local_start))));
+	  (*local_start)=(*local_end);
+	}
+	else{
+	  local_started=1;
+	  time(local_start);
+	}
+	fprintf(stderr,"\n");
+      } // if(!(times_through_loop % loop_divisor))
+      times_through_loop++;
+    } // if(my_rank==0)
     current_target_fragment += n_ranks;
-
   } // while(current_target_fragment
-
-//  fprintf(stderr,"rank %4d got out of fragment loop.\n",my_rank);
+  
+  if(my_rank==0) fprintf(stderr,"\n  ****** rank zero finished big data transfer loop.\n");
+  
+  //  fprintf(stderr,"rank %4d got out of fragment loop.\n",my_rank);
     
   free(transfer_buffer);
   transfer_buffer=NULL;
 
   MPI_Barrier(MPI_COMM_WORLD);
+  if(my_rank==0){
+    fprintf(stderr,"  ****** all ranks finished big data transfer loop.\n");
+    fprintf(stderr,"      about to close archive file.\n");
+  }
   MPI_File_close(archive_file_MPI);  
   free(archive_file_MPI);
   archive_file_MPI=NULL;
@@ -425,6 +472,12 @@ int parfu_extract_1file_singFP(char *arch_file_name,
   int base_dirname_length;
 
   int i;
+  long int times_through_loop;
+  long int loop_divisor=100;
+
+  time_t *local_start=NULL,*local_end=NULL;
+  int local_started=0;
+
 
   if((transfer_buffer=malloc(transfer_buffer_size))==NULL){
     fprintf(stderr,"parfu_extract_1file_singFP:\n");
@@ -438,6 +491,20 @@ int parfu_extract_1file_singFP(char *arch_file_name,
     fprintf(stderr,"rank %d could not allocate space for archive file pointer!\n",my_rank);
     MPI_Finalize();
     return 75;
+  }
+
+  if((local_start=malloc(sizeof(time_t)))==NULL){
+    fprintf(stderr,"parfu_archive_1file_singFP:\n");
+    fprintf(stderr,"  could not allocate local_start!!!\n");
+    MPI_Finalize();
+    return 85;
+  }
+
+  if((local_end=malloc(sizeof(time_t)))==NULL){
+    fprintf(stderr,"parfu_archive_1file_singFP:\n");
+    fprintf(stderr,"  could not allocate local_end!!!\n");
+    MPI_Finalize();
+    return 85;
   }
 
   //  if(my_rank==0) fprintf(stderr,"  ***** about to broadcast out archive file name.\n");
@@ -690,7 +757,8 @@ int parfu_extract_1file_singFP(char *arch_file_name,
   
   current_target_fragment = my_rank;
 
-  //  if(my_rank==0) fprintf(stderr,"  ****** about to begin big data transfer loop.\n");
+  if(my_rank==0) fprintf(stderr,"  ****** about to begin big data transfer loop.\n");
+  times_through_loop=0;
   while( current_target_fragment < rank_list->n_entries_full ){
     // rank 0 created all the directories before we started, so we just skip them here
     if(rank_list->list[current_target_fragment].type == PARFU_FILE_TYPE_DIR){
@@ -838,9 +906,30 @@ int parfu_extract_1file_singFP(char *arch_file_name,
     
     MPI_File_close(&target_file_ptr);
     
+    if(my_rank==0){
+      if(!(times_through_loop % loop_divisor)){
+	//	fprintf(stderr,".");
+	fprintf(stderr,
+		"rank 0 processed slice %d of total %d : ",
+		current_target_fragment,
+		rank_list->n_entries_full);
+	if(local_started){
+	  time(local_end);
+	  fprintf(stderr,"time: %d seconds",
+		  ((int)((*local_end)-(*local_start))));
+	  (*local_start)=(*local_end);
+	}
+	else{
+	  local_started=1;
+	  time(local_start);
+	}
+	fprintf(stderr,"\n");
+      } // if(!(times_through_loop % loop_divisor))
+      times_through_loop++;
+    } // if(my_rank==0)
     current_target_fragment += n_ranks;
-    
   } // while(current_target_fragment
+  if(my_rank==0) fprintf(stderr,"  ****** rank 0 finished big data transfer loop.\n");
   
   //  fprintf(stderr,"rank %4d got out of fragment loop.\n",my_rank);
   
@@ -848,6 +937,7 @@ int parfu_extract_1file_singFP(char *arch_file_name,
   transfer_buffer=NULL;
 
   MPI_Barrier(MPI_COMM_WORLD);
+  if(my_rank==0) fprintf(stderr,"  ****** all ranks finished big data transfer loop.\n");
   MPI_File_close(archive_file_MPI);  
   free(archive_file_MPI);
   archive_file_MPI=NULL;

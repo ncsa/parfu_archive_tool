@@ -30,7 +30,8 @@
 CC=cc
 
 # this is assuming the C compiler is a relatively recent gcc variant
-CFLAGS := -g -I. -Wall -Wmissing-prototypes -Wstrict-prototypes
+# CFLAGS := -g -I. -Wall -Wmissing-prototypes -Wstrict-prototypes 
+CFLAGS := -g -I. -Wall -Wmissing-prototypes -Wstrict-prototypes -O3
 
 # The TARGETS variable sets what gets built. 
 

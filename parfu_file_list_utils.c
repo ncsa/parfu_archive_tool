@@ -33,7 +33,7 @@ parfu_file_fragment_entry_list_t
     fprintf(stderr," you requested %d!!!\n",in_n_entries);
     return NULL;
   }
-  if((my_list=malloc(sizeof(parfu_file_fragment_entry_list_t)+
+  if((my_list=(parfu_file_fragment_entry_list_t*)malloc(sizeof(parfu_file_fragment_entry_list_t)+
 		     ((sizeof(parfu_file_fragment_entry_t))*(in_n_entries-1))))==NULL){
     fprintf(stderr,"create_parfu_file_fragment_entry_list:\n");
     fprintf(stderr,"Could not allocate list of size %d!\n",in_n_entries);
@@ -208,7 +208,7 @@ int parfu_add_entry_to_ffel_raw(parfu_file_fragment_entry_list_t **list,
     string_size=strlen(my_relative_filename);
   else
     string_size=0;
-  if(((*list)->list[ind].relative_filename = malloc(string_size+1))==NULL){
+  if(((*list)->list[ind].relative_filename = (char*)malloc(string_size+1))==NULL){
     fprintf(stderr,"parfu_add_entry_to_ffel_raw:\n");
     fprintf(stderr,"could not allocate relative_filename string!\n");
     return 1;
@@ -222,7 +222,7 @@ int parfu_add_entry_to_ffel_raw(parfu_file_fragment_entry_list_t **list,
     string_size=strlen(my_archive_filename);
   else
     string_size=0;
-  if(((*list)->list[ind].archive_filename = malloc(string_size+1))==NULL){
+  if(((*list)->list[ind].archive_filename = (char*)malloc(string_size+1))==NULL){
     fprintf(stderr,"parfu_add_name_to_ffel:\n");
     fprintf(stderr,"could not allocate archive_filename string!\n");
     return 1;
@@ -238,7 +238,7 @@ int parfu_add_entry_to_ffel_raw(parfu_file_fragment_entry_list_t **list,
     string_size=strlen(my_target);
   else
     string_size=0;
-  if(((*list)->list[ind].target = malloc(string_size+1))==NULL){
+  if(((*list)->list[ind].target = (char*)malloc(string_size+1))==NULL){
     fprintf(stderr,"parfu_add_name_to_ffel:\n");
     fprintf(stderr,"could not allocate target string!\n");
     return 1;
@@ -350,7 +350,7 @@ int parfu_is_a_symlink(const char *pathname,
   }
   if(S_ISLNK(filestruct.st_mode)){
     buffer_length=(filestruct.st_size)+1;
-    if(((*target_text)=malloc(buffer_length))==NULL){
+    if(((*target_text)=(char*)malloc(buffer_length))==NULL){
       fprintf(stderr,"parfu_is_a_symlink:\n");
       fprintf(stderr,"  failed to allocate target text buffer!!\n");
       return -1;
@@ -507,7 +507,7 @@ parfu_file_fragment_entry_list_t
     fprintf(stderr,"  create_parfu_file_fragment_entry_list #3 returned NULL!!\n");
     return NULL;
   }
-  if((link_target=malloc(sizeof(char*)))==NULL){
+  if((link_target=(char**)malloc(sizeof(char*)))==NULL){
     fprintf(stderr,"parfu_build_file_list_from_directory:\n");
     fprintf(stderr,"  could not allocate link name buffer pointer!!\n");
     return NULL;
@@ -549,7 +549,7 @@ parfu_file_fragment_entry_list_t
   // socket, block device) that we don't want to deal with.  
 
   next_archive_name_length=0;
-  if((next_archive_name=malloc(next_archive_name_length+1))==NULL){
+  if((next_archive_name=(char*)malloc(next_archive_name_length+1))==NULL){
     fprintf(stderr,"parful_build_file_list_from_directory:\n");
     fprintf(stderr,"  could not allocate top dir string!!\n");
     return NULL;
@@ -610,7 +610,7 @@ parfu_file_fragment_entry_list_t
       next_relative_name_length = strlen(my_dir_list->list[current_dir_index].relative_filename) + 
 	strlen(next_entry->d_name) + 
 	2; // + 2 = 1 byte for the '/' and 1 for the terminating NULL
-      if((next_relative_name=malloc(next_relative_name_length))==NULL){
+      if((next_relative_name=(char*)malloc(next_relative_name_length))==NULL){
 	fprintf(stderr,"parfu_build_file_list_from_directory:\n");
 	fprintf(stderr,"could not allocate next relative name!!\n");
 	return NULL;
@@ -632,7 +632,7 @@ parfu_file_fragment_entry_list_t
       next_archive_name_length = strlen(my_dir_list->list[current_dir_index].archive_filename)+
 	strlen(next_entry->d_name) +
 	2;  // +2 = 1 byte for the '/' + 1 byte for terminating NULL
-      if((next_archive_name=malloc(next_archive_name_length))==NULL){
+      if((next_archive_name=(char*)malloc(next_archive_name_length))==NULL){
 	fprintf(stderr,"parfu_build_file_list_from_directory:\n");
 	fprintf(stderr,"could not allocate next archive name!!\n");
 	return NULL;

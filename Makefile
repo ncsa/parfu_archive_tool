@@ -27,11 +27,12 @@
 # set to MPI compiler
 # on Cray, this will be CC=cc
 # on other systems, this might be CC=mpicc
-CC=cc
+CC=CC
 
 # this is assuming the C compiler is a relatively recent gcc variant
 # CFLAGS := -g -I. -Wall -Wmissing-prototypes -Wstrict-prototypes 
-CFLAGS := -g -I. -Wall -Wmissing-prototypes -Wstrict-prototypes -O3
+# CFLAGS := -g -I. -Wall -Wmissing-prototypes -Wstrict-prototypes -O3
+CFLAGS := -g -I. -Wall -Wstrict-prototypes -O3
 
 # The TARGETS variable sets what gets built. 
 

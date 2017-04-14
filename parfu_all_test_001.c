@@ -96,12 +96,12 @@ int main(int nargs, char *args[]){
   MPI_Comm_size(MPI_COMM_WORLD,&n_ranks);
   MPI_Comm_rank(MPI_COMM_WORLD,&my_rank);
 
-  if((my_command=malloc(sizeof(char)))==NULL){
+  if((my_command=(char*)malloc(sizeof(char)))==NULL){
     fprintf(stderr,"rank %d could not allocate char for my_command!\n",my_rank);
     MPI_Finalize();
     return 1;
   }
-  if((bcast_archive_file_name_length=malloc(sizeof(int)))==NULL){
+  if((bcast_archive_file_name_length=(int*)malloc(sizeof(int)))==NULL){
     fprintf(stderr,"rank %d could not allocate bcast_archive_file_name_length!\n",my_rank);
     MPI_Finalize();
     return 237;
@@ -143,7 +143,7 @@ int main(int nargs, char *args[]){
 
   MPI_Bcast(my_command,1,MPI_CHAR,0,MPI_COMM_WORLD);  
   MPI_Bcast(bcast_archive_file_name_length,1,MPI_INT,0,MPI_COMM_WORLD);
-  if((bcast_archive_file_name=malloc(*bcast_archive_file_name_length))==NULL){
+  if((bcast_archive_file_name=(char*)malloc(*bcast_archive_file_name_length))==NULL){
     fprintf(stderr,"rank %d cannot allocate bcast archive file name!\n",my_rank);
     MPI_Finalize();
     return 238;
@@ -166,7 +166,7 @@ int main(int nargs, char *args[]){
   fprintf(stderr,"About to build directory from: %s\n",directory_argument);
   fprintf(stderr,"  and data will be archived in file %s\n",bcast_archive_file_name);
   time(&timer_before);
-  total_entries=malloc(sizeof(int));
+  total_entries=(int*)malloc(sizeof(int));
   if((my_list=parfu_build_file_list_from_directory(directory_argument,0,total_entries))==NULL){
   fprintf(stderr,"There was an error in parfu_build_file_list_from_directory!!!\n");
   return 1;
@@ -236,7 +236,7 @@ int main(int nargs, char *args[]){
     if(my_rank==0)fprintf(stderr,"Command: Create archive.\n");
     if(my_rank==0){
       time(&timer_before);
-      total_entries=malloc(sizeof(int));
+      total_entries=(int*)malloc(sizeof(int));
       if((my_list=parfu_build_file_list_from_directory(directory_argument,0,total_entries))==NULL){
 	fprintf(stderr,"There was an error in parfu_build_file_list_from_directory!!!\n");
 	return 1;
@@ -271,7 +271,7 @@ int main(int nargs, char *args[]){
     MPI_Barrier(MPI_COMM_WORLD);
     
     bpf_filename_length=strlen(bcast_archive_file_name)+8;
-    if((bpf_filename=malloc(bpf_filename_length))==NULL){
+    if((bpf_filename=(char*)malloc(bpf_filename_length))==NULL){
       fprintf(stderr,"could not malloc bpf_filename!!!\n");
       return 17;
     }

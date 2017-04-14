@@ -44,7 +44,7 @@ parfu_file_fragment_entry_list_t
   for(i=0;i<in_n_entries;i++){
     my_list->list[i].relative_filename=NULL;
     my_list->list[i].archive_filename=NULL;
-    my_list->list[i].type=PARFU_FILE_TYPE_INVALID;
+    my_list->list[i].type=(parfu_file_t)PARFU_FILE_TYPE_INVALID;
     my_list->list[i].target=NULL;
     my_list->list[i].block_size_exponent=-1;
     my_list->list[i].num_blocks_in_fragment=-1;
@@ -193,7 +193,7 @@ int parfu_add_entry_to_ffel_raw(parfu_file_fragment_entry_list_t **list,
     total_entries = (*list)->n_entries_total * 2;
     total_size = sizeof(parfu_file_fragment_entry_list_t)+
       ((sizeof(parfu_file_fragment_entry_t))*total_entries);
-    if(((*list)=realloc((*list),total_size))==NULL){
+    if(((*list)=(parfu_file_fragment_entry_list_t*)realloc((*list),total_size))==NULL){
       fprintf(stderr,"parfu_add_entry_to_ffel_raw:\n");
       fprintf(stderr,"could not realloc to extend list to length %ld!!\n",total_size);
       return 1;

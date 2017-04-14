@@ -115,7 +115,7 @@ char *parfu_fragment_list_to_buffer(parfu_file_fragment_entry_list_t *my_list,
     return NULL;
   }
   
-  if((line_buffer=malloc(line_buffer_size))==NULL){
+  if((line_buffer=(char*)malloc(line_buffer_size))==NULL){
     fprintf(stderr,"parfu_fragment_list_to_buffer:\n");
     fprintf(stderr,"could not allocate %d bytes for line buffer!\n",line_buffer_size);
     return NULL;
@@ -127,7 +127,7 @@ char *parfu_fragment_list_to_buffer(parfu_file_fragment_entry_list_t *my_list,
     fprintf(stderr," larger than max buffer size %d!\n",PARFU_MAXIMUM_BUFFER_SIZE);
     return NULL;
   }
-  if((output_buffer=malloc(output_buffer_size))==NULL){
+  if((output_buffer=(char*)malloc(output_buffer_size))==NULL){
     fprintf(stderr,"parfu_fragment_list_to_buffer:\n");
     fprintf(stderr,"could not allocate %ld bytes for line buffer!\n",output_buffer_size);
     return NULL;
@@ -199,7 +199,7 @@ char *parfu_fragment_list_to_buffer(parfu_file_fragment_entry_list_t *my_list,
       // if the line DIDN'T fit in the line buffer, we keep increasing the size until
       //   it fits.
       line_buffer_size *= 2;
-      if((new_line_buffer=realloc(line_buffer,line_buffer_size))==NULL){
+      if((new_line_buffer=(char*)realloc(line_buffer,line_buffer_size))==NULL){
 	fprintf(stderr,"dart_write_file_info_list_to_buffer:\n");
 	fprintf(stderr," could not expand line buffer to %d bytes!\n",line_buffer_size);
 	return NULL;
@@ -226,7 +226,7 @@ char *parfu_fragment_list_to_buffer(parfu_file_fragment_entry_list_t *my_list,
 	fprintf(stderr,"Exiting.\n");
 	return NULL;
       }
-      if((new_output_buffer=realloc(output_buffer,output_buffer_size))==NULL){
+      if((new_output_buffer=(char*)realloc(output_buffer,output_buffer_size))==NULL){
 	fprintf(stderr,"dart_write_file_info_list_to_buffer:\n");
 	fprintf(stderr," could not expand output buffer to %ld bytes!\n",output_buffer_size);
 	return NULL;
@@ -322,12 +322,12 @@ parfu_file_fragment_entry_list_t
   //  fprintf(stderr," cannot allocate line buffer!\n");
   // return NULL;
   //}
-  if((end_value_ptr=malloc(sizeof(char*)))==NULL){
+  if((end_value_ptr=(char**)malloc(sizeof(char*)))==NULL){
     fprintf(stderr,"parfu_buffer_to_file_fragment_list:\n");
     fprintf(stderr," could not allocate end_value_ptr pointer!\n");
     return NULL;
   }
-  if((increment=malloc(sizeof(int)))==NULL){
+  if((increment=(int*)malloc(sizeof(int)))==NULL){
     fprintf(stderr,"parfu_buffer_to_file_fragment_list:\n");
     fprintf(stderr," could not allocate return_value pointer!\n");
     return NULL;
@@ -598,7 +598,7 @@ char *parfu_get_next_filename(char *in_buf,
   characters_to_get = (next_value_terminator - in_buf);
   // the +1 is to leave space for the null terminator
   // my_list->list[i].filename=malloc(characters_to_get+1);
-  if((output_buf=malloc(characters_to_get+1))==NULL){
+  if((output_buf=(char*)malloc(characters_to_get+1))==NULL){
     fprintf(stderr,"parfu_get_next_filename:\n");
     fprintf(stderr,"coulnd\'t allocate buffer!\n");
     return NULL;
@@ -623,12 +623,12 @@ parfu_file_fragment_entry_list_t
   parfu_file_fragment_entry_list_t *outlist=NULL;
   int items_read;
 
-  if((input_buffer=malloc(size_of_length_string+1))==NULL){
+  if((input_buffer=(char*)malloc(size_of_length_string+1))==NULL){
     fprintf(stderr,"parfu_catalog_buffer_from_file: \n");
     fprintf(stderr,"  cannot allocate length buffer!\n");
     return NULL;
   }
-  if((end_of_read_ptr=malloc(sizeof(char*)))==NULL){
+  if((end_of_read_ptr=(char**)malloc(sizeof(char*)))==NULL){
     fprintf(stderr,"parfu_catalog_buffer_from_file: \n");
     fprintf(stderr,"  cannot allocate *end_of_read_ptr pointer!\n");
     return NULL;
@@ -661,7 +661,7 @@ parfu_file_fragment_entry_list_t
   // allocate a buffer for that size
   free(input_buffer);
   input_buffer=NULL;
-  if((input_buffer=malloc(my_catalog_length))==NULL){
+  if((input_buffer=(char*)malloc(my_catalog_length))==NULL){
     fprintf(stderr,"parfu_catalog_buffer_from_file: \n");
     fprintf(stderr,"  could not allocate buffer for whole catalog!!\n");
     fprintf(stderr,"  catalog size: %d\n",my_catalog_length);
@@ -729,7 +729,7 @@ int parfu_ffel_fill_rel_filenames(parfu_file_fragment_entry_list_t *my_list,
       rel_filename_length = 
 	archive_filename_length + leading_path_length + 
 	2; // 2 extra bytes: 1 for '/' and the other for trailing '\0'
-      if((rel_filename_buf=malloc(rel_filename_length))==NULL){
+      if((rel_filename_buf=(char*)malloc(rel_filename_length))==NULL){
 	fprintf(stderr,"parfu_ffel_fill_rel_filenames:\n");
 	fprintf(stderr," could not allocate %d bytes for rel filname buffer!\n",
 		rel_filename_length);
@@ -743,7 +743,7 @@ int parfu_ffel_fill_rel_filenames(parfu_file_fragment_entry_list_t *my_list,
       rel_filename_length = 
 	archive_filename_length + leading_path_length + 
 	1; // 1 extra byte: 1 for trailing '\0' ('/' already in leading_path
-      if((rel_filename_buf=malloc(rel_filename_length))==NULL){
+      if((rel_filename_buf=(char*)malloc(rel_filename_length))==NULL){
 	fprintf(stderr,"parfu_ffel_fill_rel_filenames:\n");
 	fprintf(stderr," could not allocate %d bytes for rel filname buffer!\n",
 		rel_filename_length);

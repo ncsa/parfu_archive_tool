@@ -63,7 +63,7 @@ int parfu_behav_extend_array(parfu_behavior_control_t *behav){
     fprintf(stderr,"  failed to realloc() archive_files array!!\n");
     return 1;
   }
-  behav->archive_files=new_ptr;
+  behav->archive_files=(char**)new_ptr;
   // initialize new half of values with NULL
   for(i=behav->array_len;i<new_length;i++){
     behav->archive_files[i]=NULL;
@@ -76,7 +76,7 @@ int parfu_behav_extend_array(parfu_behavior_control_t *behav){
     fprintf(stderr,"  failed to realloc() min_block_exponent_values array!!\n");
     return 1;
   }
-  behav->min_block_exponent_values=new_ptr;
+  behav->min_block_exponent_values=(int*)new_ptr;
 
   // extend blocks per fragments array
   new_size = sizeof(int)*new_length;
@@ -85,7 +85,7 @@ int parfu_behav_extend_array(parfu_behavior_control_t *behav){
     fprintf(stderr,"  failed to realloc() blocks_per_fragment_values array!!\n");
     return 1;
   }
-  behav->blocks_per_fragment_values=new_ptr;
+  behav->blocks_per_fragment_values=(int*)new_ptr;
   
   behav->array_len = new_length;
 
@@ -98,7 +98,7 @@ parfu_behavior_control_t *parfu_init_behavior_control_raw(int array_len){
   size_t new_size;
   
   //  fprintf(stderr,"INIT: %d\n",array_len);
-  if((my_control=malloc(sizeof(parfu_behavior_control_t)))==NULL){
+  if((my_control=(parfu_behavior_control_t*)malloc(sizeof(parfu_behavior_control_t)))==NULL){
     fprintf(stderr,"parfu_init_behavior_control_raw: \n");
     fprintf(stderr,"  could not malloc behavior control structure!\n");
     return NULL;
@@ -123,7 +123,7 @@ parfu_behavior_control_t *parfu_init_behavior_control_raw(int array_len){
   new_size = sizeof(char*) * array_len;
   //  fprintf(stderr,"ABOUT_TO: %d\n",new_size);
   if(((my_control->archive_files)=
-      malloc(new_size))==NULL){
+      (char**)malloc(new_size))==NULL){
     fprintf(stderr,"parfu_init_behavior_control_raw: \n");
     fprintf(stderr,"  Could not malloc archive file name array!!\n");
     return NULL;
@@ -135,7 +135,7 @@ parfu_behavior_control_t *parfu_init_behavior_control_raw(int array_len){
   //  fprintf(stderr,"MIDDLE\n");
   my_control->n_min_block_exponent_values=0;
   if(((my_control->min_block_exponent_values)=
-      malloc(sizeof(int)*array_len))==NULL){
+      (int*)malloc(sizeof(int)*array_len))==NULL){
     fprintf(stderr,"parfu_init_behavior_control_raw: \n");
     fprintf(stderr,"  Could not min_block_exp_values array!!\n");
     return NULL;
@@ -143,7 +143,7 @@ parfu_behavior_control_t *parfu_init_behavior_control_raw(int array_len){
     
   my_control->n_blocks_per_fragment_values=0;
   if(((my_control->blocks_per_fragment_values)=
-      malloc(sizeof(int)*array_len))==NULL){
+      (int*)malloc(sizeof(int)*array_len))==NULL){
     fprintf(stderr,"parfu_init_behavior_control_raw: \n");
     fprintf(stderr,"  Could not blocks_per_fragment_values array!!\n");
     return NULL;
@@ -237,7 +237,7 @@ int parfu_behav_add_arc_file(parfu_behavior_control_t *behav,
     }
   }
   in_strlen=strlen(in_filename);
-  if((behav->archive_files[new_index]=malloc(sizeof(char)*in_strlen))==NULL){
+  if((behav->archive_files[new_index]=(char*)malloc(sizeof(char)*in_strlen))==NULL){
     fprintf(stderr,"parfu_behav_add_arc_file:\n");
     fprintf(stderr,"  could not allocate string!\n");
     return 1;
@@ -294,7 +294,7 @@ parfu_behavior_control_t *parfu_parse_arguments(int my_argc, char *my_argv[]){
 	return NULL;
       }
       if((my_orders->data_output_file=
-	  malloc(sizeof(char)*strlen(optarg)))==NULL){
+	  (char*)malloc(sizeof(char)*strlen(optarg)))==NULL){
 	fprintf(stderr,"parfu_parse_arguments:\n");	
 	fprintf(stderr,"Could not malloc string for data output file!\n");
 	fprintf(stderr,"  Exiting.\n");
@@ -311,7 +311,7 @@ parfu_behavior_control_t *parfu_parse_arguments(int my_argc, char *my_argv[]){
 	return NULL;
       }
       if((my_orders->target_directory=
-	  malloc(sizeof(char)*strlen(optarg)))==NULL){
+	  (char*)malloc(sizeof(char)*strlen(optarg)))==NULL){
 	fprintf(stderr,"parfu_parse_arguments:\n");	
 	fprintf(stderr,"Could not malloc string for target dir!\n");
 	fprintf(stderr,"  Exiting.\n");

@@ -77,28 +77,28 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
   int local_started=0;
 
 
-  if((transfer_buffer=malloc(transfer_buffer_size))==NULL){
+  if((transfer_buffer=(char*)malloc(transfer_buffer_size))==NULL){
     fprintf(stderr,"parfu_archive_1file_singFP:\n");
     fprintf(stderr," could not allocate transfer buffer of size %ld bytes\n",
 	    transfer_buffer_size);
     return 99;
   }
 
-  if((archive_file_MPI=malloc(sizeof(MPI_File)))==NULL){
+  if((archive_file_MPI=(MPI_File*)malloc(sizeof(MPI_File)))==NULL){
     fprintf(stderr,"parfu_archive_1file_singFP:\n");
     fprintf(stderr,"rank %d could not allocate space for archive file pointer!\n",my_rank);
     MPI_Finalize();
     return 75;
   }
 
-  if((local_start=malloc(sizeof(time_t)))==NULL){
+  if((local_start=(time_t*)malloc(sizeof(time_t)))==NULL){
     fprintf(stderr,"parfu_archive_1file_singFP:\n");
     fprintf(stderr,"  could not allocate local_start!!!\n");
     MPI_Finalize();
     return 85;
   }
 
-  if((local_end=malloc(sizeof(time_t)))==NULL){
+  if((local_end=(time_t*)malloc(sizeof(time_t)))==NULL){
     fprintf(stderr,"parfu_archive_1file_singFP:\n");
     fprintf(stderr,"  could not allocate local_end!!!\n");
     MPI_Finalize();
@@ -121,7 +121,7 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
   MPI_Barrier(MPI_COMM_WORLD);
 
   MPI_Bcast(&filename_length,1,MPI_INT,0,MPI_COMM_WORLD);
-  if((archive_filename_buffer=malloc(filename_length))==NULL){
+  if((archive_filename_buffer=(char*)malloc(filename_length))==NULL){
     fprintf(stderr,"parfu_archive_1file_singFP:\n");
     fprintf(stderr,"rank %d could not allocate archive filename buffer!!!\n",my_rank);
     MPI_Finalize();
@@ -228,7 +228,7 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
   // all ranks allocate space for the distributed catalog buffer
   //  if(my_rank==0) fprintf(stderr,"  ****  successfully bcast buffer length.\n");
   
-  if((file_catalog_distributed=malloc(catalog_buffer_for_ranks_length))==NULL){
+  if((file_catalog_distributed=(char*)malloc(catalog_buffer_for_ranks_length))==NULL){
       fprintf(stderr,"parfu_archive_1file_singFP:\n");
       fprintf(stderr,"  rank %d failed to allocate shared buffer list!\n",my_rank);
       fprintf(stderr,"  requested size: %ld\n",catalog_buffer_for_ranks_length);
@@ -479,28 +479,28 @@ int parfu_extract_1file_singFP(char *arch_file_name,
   int local_started=0;
 
 
-  if((transfer_buffer=malloc(transfer_buffer_size))==NULL){
+  if((transfer_buffer=(char*)malloc(transfer_buffer_size))==NULL){
     fprintf(stderr,"parfu_extract_1file_singFP:\n");
     fprintf(stderr," could not allocate transfer buffer of size %ld bytes\n",
 	    transfer_buffer_size);
     return 99;
   }
 
-  if((archive_file_MPI=malloc(sizeof(MPI_File)))==NULL){
+  if((archive_file_MPI=(MPI_File*)malloc(sizeof(MPI_File)))==NULL){
     fprintf(stderr,"parfu_extract_1file_singFP:\n");
     fprintf(stderr,"rank %d could not allocate space for archive file pointer!\n",my_rank);
     MPI_Finalize();
     return 75;
   }
 
-  if((local_start=malloc(sizeof(time_t)))==NULL){
+  if((local_start=(time_t*)malloc(sizeof(time_t)))==NULL){
     fprintf(stderr,"parfu_archive_1file_singFP:\n");
     fprintf(stderr,"  could not allocate local_start!!!\n");
     MPI_Finalize();
     return 85;
   }
 
-  if((local_end=malloc(sizeof(time_t)))==NULL){
+  if((local_end=(time_t*)malloc(sizeof(time_t)))==NULL){
     fprintf(stderr,"parfu_archive_1file_singFP:\n");
     fprintf(stderr,"  could not allocate local_end!!!\n");
     MPI_Finalize();
@@ -513,7 +513,7 @@ int parfu_extract_1file_singFP(char *arch_file_name,
     filename_length=(strlen(arch_file_name))+1;
   }
   MPI_Bcast(&filename_length,1,MPI_INT,0,MPI_COMM_WORLD);
-  if((archive_filename_buffer=malloc(filename_length))==NULL){
+  if((archive_filename_buffer=(char*)malloc(filename_length))==NULL){
     fprintf(stderr,"parfu_extract_1file_singFP:\n");
     fprintf(stderr,"rank %d could not allocate archive filename buffer!!!\n",my_rank);
     MPI_Finalize();
@@ -641,7 +641,7 @@ int parfu_extract_1file_singFP(char *arch_file_name,
   // all ranks allocate space for the distributed catalog buffer
   //  if(my_rank==0) fprintf(stderr,"  ****  successfully bcast buffer length.\n");
   
-  if((file_catalog_distributed=malloc(catalog_buffer_for_ranks_length))==NULL){
+  if((file_catalog_distributed=(char*)malloc(catalog_buffer_for_ranks_length))==NULL){
       fprintf(stderr,"parfu_extract_1file_singFP:\n");
       fprintf(stderr,"  rank %d failed to allocate shared buffer list!\n",my_rank);
       fprintf(stderr,"  requested size: %ld\n",catalog_buffer_for_ranks_length);

@@ -81,6 +81,13 @@ typedef enum{PARFU_FILE_TYPE_REGULAR,PARFU_FILE_TYPE_DIR,PARFU_FILE_TYPE_SYMLINK
 #define PARFU_MIN_ALLOWED_BLOCKS_PER_FRAGMENT           1
 #define PARFU_MAX_ALLOWED_BLOCKS_PER_FRAGMENT        2000
 
+#define PARFU_WHAT_IS_PATH_REGFILE         0x001
+#define PARFU_WHAT_IS_PATH_SYMLINK         0x002
+#define PARFU_WHAT_IS_PATH_DIR             0x004
+#define PARFU_WHAT_IS_PATH_DOES_NOT_EXIST  0x100
+#define PARFU_WHAT_IS_PATH_IGNORED_TYPE    0x200
+#define PARFU_WHAT_IS_PATH_ERROR           0x400
+
 // example of file layout in archive file
 // void space is depicted by underscores:___ (3 void bytes)
 // file1=abc
@@ -193,8 +200,10 @@ int parfu_what_is_file_exponent(long int file_size,
 int parfu_set_exp_offsets_in_ffel(parfu_file_fragment_entry_list_t *myl,
 				  int min_exp,
 				  int max_exp);
-  
-
+unsigned int parfu_what_is_path(const char *pathname,
+				char **target_text,
+				long int *size,
+				int follow_symlinks);
 
 // parfu_buffer_utils.c
 char *parfu_fragment_list_to_buffer(parfu_file_fragment_entry_list_t *my_list,

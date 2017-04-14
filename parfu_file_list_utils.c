@@ -330,6 +330,65 @@ int parfu_is_a_regfile(char *pathname, long int *size){
   }
 }
 
+unsigned int parfu_what_is_path(const char *pathname,
+				char **target_text,
+				long int *size,
+				int follow_symlinks){
+  struct stat filestruct;
+  int returnval;
+  int buffer_length;
+  
+  if(target_text==NULL){
+    fprintf(stderr,"parfu_what_is_path:\n");
+    fprintf(stderr,"  target_text is NULL!!!\n");
+    return PARFU_WHAT_IS_PATH_ERROR;
+  }
+  if(follow_symlinks){ // treat symlinks like what they point to
+    if((returnval=stat(pathname,&filestruct))){
+      fprintf(stderr,"parfu_what_is_path:\n");
+      fprintf(stderr,"  stat returned %d!!!\n",returnval);
+      return PARFU_WHAT_IS_PATH_ERROR;
+    }
+  }
+  else{ // treat symlinks like symlinks
+    if((returnval=lstat(pathname,&filestruct))){
+      fprintf(stderr,"parfu_what_is_path:\n");
+      fprintf(stderr,"  lstat returned %d!!!\n",returnval);
+      return PARFU_WHAT_IS_PATH_ERROR;
+    }
+    if(S_ISLNK(filestruct.st_mode)){
+      // harvest the symlink target so that we can pass it back
+      buffer_length=(filestruct.st_size)+1;
+      if(((*target_text)=(char*)malloc(buffer_length))==NULL){
+	fprintf(stderr,"parfu_what_is_path:\n");
+	fprintf(stderr,"  failed to allocate target text buffer!!\n");
+	return PARFU_WHAT_IS_PATH_ERROR;
+      }
+      returnval=readlink(pathname,(*target_text),buffer_length);
+      if(returnval != (buffer_length-1) ){
+	fprintf(stderr,"parfu_what_is_path:\n");
+	fprintf(stderr,"  error in length of target return!!\n");
+	return PARFU_WHAT_IS_PATH_ERROR;
+      }
+      (*target_text)[returnval]='\0'; // add NULL terminator
+      // now (*target_text) is the link target, so we can return
+      return PARFU_WHAT_IS_PATH_SYMLINK;
+    } // if(S_ISLNK...
+  }
+  // if it's a directory
+  if(S_ISDIR(filestruct.st_mode)){
+    return PARFU_WHAT_IS_PATH_DIR;
+  }
+  // if it's a regular file
+  if(S_ISREG(filestruct.st_mode)){
+    if(size != NULL){
+      *size = filestruct.st_size;
+    }
+    return PARFU_WHAT_IS_PATH_REGFILE;
+  }
+  return PARFU_WHAT_IS_PATH_IGNORED_TYPE;
+}
+
 int parfu_is_a_symlink(const char *pathname,
 		       char **target_text){
   struct stat filestruct;
@@ -479,6 +538,8 @@ parfu_file_fragment_entry_list_t
 
   long int file_size=(-1);
 
+  unsigned int path_type_result;
+
   //  fprintf(stderr,"starting parfu_build_file_list_from_directory\n");
   //  fprintf(stderr,"from directory: %s\n",top_dirname);
   fprintf(stderr,"scanning directory: %s\n",top_dirname);
@@ -514,35 +575,43 @@ parfu_file_fragment_entry_list_t
   }
   *link_target=NULL;
   
-  if(parfu_does_not_exist(top_dirname)){
+  path_type_result=parfu_what_is_path(top_dirname,link_target,NULL,follow_symlinks);
+  
+  //  if(parfu_does_not_exist(top_dirname)){
+  if(path_type_result==PARFU_WHAT_IS_PATH_ERROR){
     fprintf(stderr,"parfu_build_file_list_from_directory:\n");
     fprintf(stderr,"  target we were pointed to does not exist!\n");
     fprintf(stderr,"  Exiting.\n");
     return NULL;
   }
-
-     
-  if(parfu_is_a_symlink(top_dirname,link_target) && (!follow_symlinks)){
-    fprintf(stderr,"parfu_build_file_list_from_directory:\n");
-    fprintf(stderr,"  The dir we were pointed to is a link, \n");
-    fprintf(stderr,"  and we\'re not following links.\n");
-    fprintf(stderr,"  this is an error.\n");
-    return NULL;
+  
+  if(follow_symlinks){
+    if(path_type_result==PARFU_WHAT_IS_PATH_SYMLINK){
+      
+      //       if(parfu_is_a_symlink(top_dirname,link_target) && (!follow_symlinks)){
+      fprintf(stderr,"parfu_build_file_list_from_directory:\n");
+      fprintf(stderr,"  The dir we were pointed to is a link, \n");
+      fprintf(stderr,"  and we\'re not following links.\n");
+      fprintf(stderr,"  this is an error.\n");
+      return NULL;
+    }
   }
-  if(parfu_is_a_regfile(top_dirname,NULL)){
+  //  if(parfu_is_a_regfile(top_dirname,NULL)){
+  if(path_type_result==PARFU_WHAT_IS_PATH_REGFILE){
     fprintf(stderr,"parfu_build_file_list_from_directory:\n");
     fprintf(stderr,"  The dir we were pointed to is a regular file.\n");
     fprintf(stderr,"  this is an error.\n");
     return NULL;
   }
-  if(!parfu_is_a_dir(top_dirname)){
+  //  if(!parfu_is_a_dir(top_dirname)){
+  if(path_type_result==PARFU_WHAT_IS_PATH_IGNORED_TYPE){
     fprintf(stderr,"parful_build_file_list_from_directory:\n");
     fprintf(stderr,"  The \"directory\" we were given: >%s<\n",top_dirname);
     fprintf(stderr,"  isn't a directory or a file or a symlink.\n");
     fprintf(stderr,"  We don\'t know what to do; throwing an error.\n");
     return NULL;
   }
-
+  
   // At this point, we know that the directory we were pointed to isn't
   // a symlink (or we were told to follow symlinks, and it links to a 
   // directory), it's not a file, and it's not some other entitye (pipe, 
@@ -649,7 +718,12 @@ parfu_file_fragment_entry_list_t
       // next_name now contains the next thing to check; the next 
       // entry in the directory current_dir.  
       //      fprintf(stderr,"entry name: %s\n",next_name);
-      if(parfu_is_a_symlink(next_relative_name,link_target) && (!follow_symlinks)){
+
+      path_type_result=
+	parfu_what_is_path(next_relative_name,link_target,&file_size,follow_symlinks);
+      
+      //      if(parfu_is_a_symlink(next_relative_name,link_target) && (!follow_symlinks)){
+      if(path_type_result==PARFU_WHAT_IS_PATH_SYMLINK && (!follow_symlinks)){
 	// record the entry as a symlink
 	if(parfu_add_name_to_ffel(&full_list,PARFU_FILE_TYPE_SYMLINK,
 				  next_relative_name,next_archive_name,(*link_target),
@@ -663,7 +737,8 @@ parfu_file_fragment_entry_list_t
       else{
 	// not a symlink; check to see if it's a dir or a file and 
 	// if so do the appropriate things. If not either of those, ignore it
-	if(parfu_is_a_dir(next_relative_name)){
+	//	if(parfu_is_a_dir(next_relative_name)){
+	if(path_type_result==PARFU_WHAT_IS_PATH_DIR){
 	  if(parfu_add_name_to_ffel(&full_list,PARFU_FILE_TYPE_DIR,
 				    next_relative_name,next_archive_name,NULL,
 				    PARFU_SPECIAL_SIZE_DIR)){
@@ -680,7 +755,8 @@ parfu_file_fragment_entry_list_t
 	  }
 	  (*total_entries)++;
 	} // if(parfu_is_a_dir
-	if(parfu_is_a_regfile(next_relative_name,&file_size)){
+	//	if(parfu_is_a_regfile(next_relative_name,&file_size)){
+	if(path_type_result==PARFU_WHAT_IS_PATH_REGFILE){
 	  if(parfu_add_name_to_ffel(&full_list,PARFU_FILE_TYPE_REGULAR,
 				    next_relative_name,next_archive_name,NULL,
 				    file_size)){

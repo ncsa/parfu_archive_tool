@@ -20,8 +20,10 @@
 //  
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <parfu_primary.h>
+#include "parfu_primary.h"
+#include "tarentry.hh"
 
+extern "C"
 parfu_file_fragment_entry_list_t 
 *create_parfu_file_fragment_entry_list(int in_n_entries){
   parfu_file_fragment_entry_list_t *my_list=NULL;
@@ -59,6 +61,7 @@ parfu_file_fragment_entry_list_t
   return my_list;
 }
 
+extern "C"
 void parfu_free_ffel(parfu_file_fragment_entry_list_t *my_list){
   int i;
   for(i=0;i<(my_list->n_entries_total);i++){
@@ -73,6 +76,7 @@ void parfu_free_ffel(parfu_file_fragment_entry_list_t *my_list){
 }
 
 // add name to file parfu file fragment entry list
+extern "C"
 int parfu_add_name_to_ffel(parfu_file_fragment_entry_list_t **my_list,
 			   parfu_file_t my_type,
 			   char *my_relative_filename,
@@ -95,6 +99,7 @@ int parfu_add_name_to_ffel(parfu_file_fragment_entry_list_t **my_list,
 }
 
 
+extern "C"
 int parfu_add_entry_to_ffel_mod(parfu_file_fragment_entry_list_t **list,
 				parfu_file_fragment_entry_t entry,
 				long int my_size,
@@ -123,6 +128,7 @@ int parfu_add_entry_to_ffel_mod(parfu_file_fragment_entry_list_t **list,
   return 0;  
 }
 
+extern "C"
 int parfu_add_entry_to_ffel(parfu_file_fragment_entry_list_t **list,
 			    parfu_file_fragment_entry_t entry){
   int return_value;
@@ -147,6 +153,7 @@ int parfu_add_entry_to_ffel(parfu_file_fragment_entry_list_t **list,
   return 0;  
 }
 
+extern "C"
 int parfu_add_entry_to_ffel_raw(parfu_file_fragment_entry_list_t **list,
 				char *my_relative_filename,
 				char *my_archive_filename,
@@ -265,6 +272,7 @@ int parfu_add_entry_to_ffel_raw(parfu_file_fragment_entry_list_t **list,
   return 0;
 }
 
+extern "C"
 int parfu_is_a_dir(char *pathname){
   struct stat filestruct;
   int returnval;
@@ -280,14 +288,17 @@ int parfu_is_a_dir(char *pathname){
     return 0;
 }
 
+extern "C"
 int parfu_does_not_exist(char *pathname){
   return parfu_does_not_exist_raw(pathname,1);
 }
 
+extern "C"
 int parfu_does_not_exist_quiet(char *pathname){
   return parfu_does_not_exist_raw(pathname,0);
 }
 
+extern "C"
 int parfu_does_exist_quiet(char *pathname){
   if(parfu_does_not_exist_quiet(pathname))
     return 0;
@@ -295,6 +306,7 @@ int parfu_does_exist_quiet(char *pathname){
     return 1;
 }
 
+extern "C"
 int parfu_does_not_exist_raw(char *pathname, int be_loud){
   struct stat filestruct;
   int returnval;
@@ -310,6 +322,7 @@ int parfu_does_not_exist_raw(char *pathname, int be_loud){
   }
 }
 
+extern "C"
 int parfu_is_a_regfile(char *pathname, long int *size){
   struct stat filestruct;
   int returnval;
@@ -330,6 +343,7 @@ int parfu_is_a_regfile(char *pathname, long int *size){
   }
 }
 
+extern "C"
 unsigned int parfu_what_is_path(const char *pathname,
 				char **target_text,
 				long int *size,
@@ -389,6 +403,7 @@ unsigned int parfu_what_is_path(const char *pathname,
   return PARFU_WHAT_IS_PATH_IGNORED_TYPE;
 }
 
+extern "C"
 int parfu_is_a_symlink(const char *pathname,
 		       char **target_text){
   struct stat filestruct;
@@ -429,6 +444,7 @@ int parfu_is_a_symlink(const char *pathname,
 }
 
 // return value <0 indicates error
+extern "C"
 int parfu_what_is_file_exponent(long int file_size, 
 		     int min_exponent,
 		     int max_exponent){
@@ -465,6 +481,7 @@ int parfu_what_is_file_exponent(long int file_size,
   return test_exp;
 }
 
+extern "C"
 int parfu_set_exp_offsets_in_ffel(parfu_file_fragment_entry_list_t *myl,
 				  int min_exp,
 				  int max_exp){
@@ -517,6 +534,7 @@ int parfu_set_exp_offsets_in_ffel(parfu_file_fragment_entry_list_t *myl,
   return 0;
 }
 
+extern "C"
 parfu_file_fragment_entry_list_t 
 *parfu_build_file_list_from_directory(char *top_dirname, 
 				      int follow_symlinks,
@@ -781,6 +799,7 @@ parfu_file_fragment_entry_list_t
   return full_list;
 }
 
+extern "C"
 char parfu_return_type_char(parfu_file_t in_type){
   switch(in_type){
   case PARFU_FILE_TYPE_REGULAR:
@@ -794,6 +813,7 @@ char parfu_return_type_char(parfu_file_t in_type){
   }
 }
 
+extern "C"
 void parfu_dump_fragment_entry_list(parfu_file_fragment_entry_list_t *my_list,
 				    FILE *output){
   int i,j;
@@ -819,6 +839,7 @@ void parfu_dump_fragment_entry_list(parfu_file_fragment_entry_list_t *my_list,
   fprintf(output,"\n\n");
 }
 
+extern "C"
 void parfu_check_offsets(parfu_file_fragment_entry_list_t *my_list,
 			 FILE *output){
   int i,j;
@@ -861,6 +882,7 @@ void parfu_check_offsets(parfu_file_fragment_entry_list_t *my_list,
 }
 
 // has to return int (not long int) because of qsort library function
+extern "C"
 int parfu_compare_fragment_entry_by_size(const void *vA, const void *vB){
   parfu_file_fragment_entry_t *A,*B;
   long int sizeA, sizeB;
@@ -877,6 +899,7 @@ int parfu_compare_fragment_entry_by_size(const void *vA, const void *vB){
   return strcmp(A->archive_filename,B->archive_filename);
 }
 
+extern "C"
 void parfu_qsort_entry_list(parfu_file_fragment_entry_list_t *my_list){
   qsort( (void*)(my_list->list),
 	 my_list->n_entries_full,
@@ -884,6 +907,7 @@ void parfu_qsort_entry_list(parfu_file_fragment_entry_list_t *my_list){
 	 &parfu_compare_fragment_entry_by_size);
 }
 
+extern "C"
 int int_power_of(int base, int power){
   int answer=1;
   int i;
@@ -895,10 +919,12 @@ int int_power_of(int base, int power){
   return answer;
 }
 
+extern "C"
 int int_power_of_2(int arg){
   return 1 << arg;
 }
 
+extern "C"
 parfu_file_fragment_entry_list_t 
 *parfu_split_fragments_in_list(parfu_file_fragment_entry_list_t *in_list,
 			       int min_block_size_exponent,
@@ -1064,18 +1090,19 @@ parfu_file_fragment_entry_list_t
 	if( in_list->list[i].size % file_size_max_block_exponent )
 	  (in_list->list[i].number_of_blocks)++;
       }
-      if(in_list->list[i].number_of_blocks){
-	// it's an actual file with data, so allocate space in the archive for it
-	file_block_size = int_power_of_2(in_list->list[i].block_size_exponent);
-	//	first_available_byte = last_byte_written + 1;
-
-	next_block_index = first_available_byte / file_block_size;
-	if(first_available_byte % file_block_size)
-	  next_block_index++;
-	in_list->list[i].first_block = next_block_index;
-	next_block_boundary = next_block_index * file_block_size;
-	first_available_byte = next_block_boundary + in_list->list[i].size;	
-      }
+      // allocate room for tar header and (possibly) file content
+      file_block_size = int_power_of_2(in_list->list[i].block_size_exponent);
+      //	first_available_byte = last_byte_written + 1;
+      
+      next_block_index = first_available_byte / file_block_size;
+      if(first_available_byte % file_block_size)
+        next_block_index++;
+      in_list->list[i].first_block = next_block_index;
+      next_block_boundary = next_block_index * file_block_size;
+      // TODO: do not create a temp tarentry since it calls lstat
+      first_available_byte = next_block_boundary +
+        tarentry(in_list->list[i].relative_filename,
+                 next_block_boundary).size();
       
       if(parfu_add_entry_to_ffel(&out_list,in_list->list[i])){
 	fprintf(stderr,"parfu_split_fragments_in_list:\n");

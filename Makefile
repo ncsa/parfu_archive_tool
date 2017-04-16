@@ -27,7 +27,8 @@
 # set to MPI compiler
 # on Cray, this will be CC=cc
 # on other systems, this might be CC=mpicc
-CC=CC
+CC=cc
+CXX=CC
 
 # this is assuming the C compiler is a relatively recent gcc variant
 # CFLAGS := -g -I. -Wall -Wmissing-prototypes -Wstrict-prototypes 
@@ -52,9 +53,9 @@ TARGETS := parfu_all_test_001 parfu_bench_test_002
 # it as a bug.  
 
 # header and utility function definitions
-PARFU_HEADER_FILES := parfu_primary.h
+PARFU_HEADER_FILES := parfu_primary.h tarentry.hh
 
-PARFU_OBJECT_FILES := parfu_file_list_utils.o parfu_buffer_utils.o parfu_data_transfer.o parfu_behavior_control.o
+PARFU_OBJECT_FILES := parfu_file_list_utils.o parfu_buffer_utils.o parfu_data_transfer.o parfu_behavior_control.o tarentry.o
 
 default: ${TARGETS}
 
@@ -64,16 +65,16 @@ parfu: ${PARFU_OBJECT_FILES} ${PARFU_HEADER_FILES}
 	echo "done!"
 
 parfu_file_util_test: parfu_file_util_test.o ${PARFU_OBJECT_FILES} ${PARFU_HEADER_FILES}
-	${CC} -o $@ ${CFLAGS} parfu_file_util_test.o ${PARFU_OBJECT_FILES}
+	${CXX} -o $@ ${CFLAGS} parfu_file_util_test.o ${PARFU_OBJECT_FILES}
 
 parfu_create_test_1: parfu_create_test_1.o ${PARFU_OBJECT_FILES} ${PARFU_HEADER_FILES}
-	${CC} -o $@ ${CFLAGS} parfu_create_test_1.o ${PARFU_OBJECT_FILES}
+	${CXX} -o $@ ${CFLAGS} parfu_create_test_1.o ${PARFU_OBJECT_FILES}
 
 parfu_all_test_001: parfu_all_test_001.o ${PARFU_OBJECT_FILES} ${PARFU_HEADER_FILES}
-	${CC} -o $@ ${CFLAGS} parfu_all_test_001.o ${PARFU_OBJECT_FILES}
+	${CXX} -o $@ ${CFLAGS} parfu_all_test_001.o ${PARFU_OBJECT_FILES}
 
 parfu_bench_test_002: parfu_bench_test_002.o ${PARFU_OBJECT_FILES} ${PARFU_HEADER_FILES}
-	${CC} -o $@ ${CFLAGS} parfu_bench_test_002.o ${PARFU_OBJECT_FILES}
+	${CXX} -o $@ ${CFLAGS} parfu_bench_test_002.o ${PARFU_OBJECT_FILES}
 
 # utility targets
 
@@ -82,5 +83,8 @@ clean:
 
 %.o: %.c ${PARFU_HEADER_FILES}
 	${CC} ${CFLAGS} -c $<
+
+%.o: %.cc ${PARFU_HEADER_FILES}
+	${CXX} ${CXXFLAGS} -c $<
 
 again: clean default

@@ -1131,6 +1131,15 @@ parfu_file_fragment_entry_list_t
       next_block_index = first_available_byte / file_block_size;
       if(first_available_byte % file_block_size)
 	next_block_index++;
+
+      // we squeeze the tar header just before the actual file data, keeping
+      // the file data aligned
+      // TODO: do not create a temp tarentry since it calls lstat
+      tarentry entry(in_list->list[i].relative_filename, 0);
+      if(next_block_index - first_available_byte < entry.hdr_size()){
+        next_block_index += (entry.hdr_size() + file_block_size-1) / file_block_size;
+      }
+
       // next statement was missing; caused me fits until I figured it out
       // fixed 2016nov21   -- craig 
       first_available_byte = ((long int)next_block_index) * 

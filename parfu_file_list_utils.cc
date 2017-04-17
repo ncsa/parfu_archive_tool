@@ -921,7 +921,12 @@ int int_power_of(int base, int power){
 
 extern "C"
 int int_power_of_2(int arg){
-  return 1 << arg;
+  if(arg >= 0){
+    return 1 << arg;
+  }
+  else{
+    return 1;
+  }
 }
 
 extern "C"

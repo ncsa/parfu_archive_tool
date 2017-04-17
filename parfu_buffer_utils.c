@@ -21,6 +21,29 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <parfu_primary.h>
+#include <time.h>
+
+// TODO: make tarenty usable for this.
+// tar header
+struct ustar_hdr {
+  char name[100];      /*   0 */
+  char mode[8];        /* 100 */
+  char uid[8];         /* 108 */
+  char gid[8];         /* 116 */
+  char size[12];       /* 124 */
+  char mtime[12];      /* 136 */
+  char chksum[8];      /* 148 */
+  char typeflag;       /* 156 */
+  char linkname[100];  /* 157 */
+  char magic[6];       /* 257 */
+  char version[2];     /* 263 */
+  char uname[32];      /* 265 */
+  char gname[32];      /* 297 */
+  char devmajor[8];    /* 329 */
+  char devminor[8];    /* 337 */
+  char prefix[155];    /* 345 */ /* not used in pax format */
+  char pad[12];        /* 500 */
+};
 
   // this is the catalog header; it's very important to leave the formatting alone
   // it must match the later re-writing
@@ -106,6 +129,7 @@ char *parfu_fragment_list_to_buffer(parfu_file_fragment_entry_list_t *my_list,
   int printed_bytes_to_line_buffer;
   int printed_bytes_to_output_buffer;
   long int total_bytes_to_output_buffer;
+  int tar_header_bytes = 0;
   int remaining_bytes;
   int printed_bytes;
 
@@ -120,7 +144,8 @@ char *parfu_fragment_list_to_buffer(parfu_file_fragment_entry_list_t *my_list,
     fprintf(stderr,"could not allocate %d bytes for line buffer!\n",line_buffer_size);
     return NULL;
   }
-  output_buffer_size=PARFU_DEFAULT_SIZE_PER_LINE * my_list->n_entries_full;
+  output_buffer_size=(is_archive_catalog ? sizeof(struct ustar_hdr) : 0) +
+                     PARFU_DEFAULT_SIZE_PER_LINE * my_list->n_entries_full;
   if(output_buffer_size>PARFU_MAXIMUM_BUFFER_SIZE){
     fprintf(stderr,"parfu_fragment_list_to_buffer:\n");
     fprintf(stderr," buffer size: %ld\n",output_buffer_size);
@@ -134,11 +159,37 @@ char *parfu_fragment_list_to_buffer(parfu_file_fragment_entry_list_t *my_list,
   }
   total_bytes_to_output_buffer=0;
 
+  // for archive catalogs we need to include the tar header
+  if(is_archive_catalog) {
+    // leave this static so that unfilled bytes are zero and not random
+    static struct ustar_hdr hdr = {
+      "parfu_catalog.txt", // name, duplicates don't matter
+      "0000111",           // mode
+      "0000000", "0000000",// uid and gid
+      "size",              // filled in later
+      "mtime",             // filled in later
+      "        ",          // compute later, *must* be 8 spaces for proper checksum
+      '0',                 // a regular file
+      "",                  // linkname
+      "ustar\0",           // magic
+      "00",                // version
+      "root",              // uname
+      "root",              // gname
+      "0000000", "0000000",// devmajor, devminor
+      "",                  // prefix
+    };
+    snprintf(hdr.mtime, sizeof(hdr.mtime), "%0*lo",(int)(sizeof(hdr.mtime)-1), time(NULL));
+    tar_header_bytes = (int)sizeof(hdr);
+    memcpy(output_buffer, &hdr, tar_header_bytes);
+    printed_bytes_to_output_buffer = tar_header_bytes;
+    total_bytes_to_output_buffer += printed_bytes_to_output_buffer;
+  }
+
   // write SSSSSSSSSS\n
   // writing 0 as a dummy value to hold the place; we'll write the final 
   // value after we've written all the entries
   printed_bytes_to_output_buffer=
-    sprintf(output_buffer,"%010d%c",
+    sprintf(output_buffer+total_bytes_to_output_buffer,"%010d%c",
 	    0,PARFU_CATALOG_ENTRY_TERMINATOR);
   total_bytes_to_output_buffer += printed_bytes_to_output_buffer;
 
@@ -243,14 +294,31 @@ char *parfu_fragment_list_to_buffer(parfu_file_fragment_entry_list_t *my_list,
   
   // finally print OVER the initial value of the length with the real value
   printed_bytes=
-    sprintf(output_buffer,"%010ld",
-	    total_bytes_to_output_buffer);
+    sprintf(output_buffer+tar_header_bytes,"%010ld",
+	    total_bytes_to_output_buffer-tar_header_bytes);
   if(printed_bytes != 10){
     fprintf(stderr,"dart_write_file_info_list_to_buffer:\n");
     fprintf(stderr,"failed to write final length the beginning of buffer!\n");
     return NULL;
   }
-  output_buffer[10]=PARFU_CATALOG_ENTRY_TERMINATOR;
+  output_buffer[tar_header_bytes+10]=PARFU_CATALOG_ENTRY_TERMINATOR;
+
+  // record size in tar header and compute header checksum now that everything is done
+  if(is_archive_catalog) {
+    unsigned long int checksum;
+    size_t j;
+    struct ustar_hdr *hdr = (struct ustar_hdr*)output_buffer;
+    // this *technically* breaks if the header is larger than 8GB. Contact me
+    // if this happens in real life.
+    snprintf(hdr->size, sizeof(hdr->size), "%0*lo", (int)(sizeof(hdr->size)-1),
+             total_bytes_to_output_buffer);
+    // this requires that the checksum field is set to space and all other
+    // unused bytes are zero
+    checksum = 0;
+    for(j = 0 ; j < sizeof(*hdr) ; j++)
+      checksum += ((unsigned char*)hdr)[j];
+    snprintf(hdr->chksum, sizeof(hdr->chksum), "0%-lo", checksum);
+  }
   
   // line_buffer is just used locally; free()-ing before we return
   *buffer_length=total_bytes_to_output_buffer;
@@ -338,6 +406,12 @@ parfu_file_fragment_entry_list_t
   //    fprintf(stderr," no terminator character for buffer length! invalid buffer!\n");
   //    return NULL;
   //  }
+
+  // skip tar header since we don't need it
+  if(is_archive_catalog) {
+    in_buffer += sizeof(struct ustar_hdr);
+    current_read_position = in_buffer;
+  }
 
   // read SSSSSSSSSS
   total_buffer_size=strtol(in_buffer,end_value_ptr,10);

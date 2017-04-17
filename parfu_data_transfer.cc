@@ -325,13 +325,15 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
 
     // TODO: check if one can get away with not calling stat() inside of tarentry
     {
-      tarentry entry(rank_list->list[current_target_fragment].relative_filename,
-                     stage_archive_file_offset);
+      tarentry entry(rank_list->list[current_target_fragment].relative_filename, 0);
       std::vector<char> tarheader = entry.make_tar_header();
       // we write the first fragment and thus also the header
       if(rank_list->list[current_target_fragment].fragment_offset == 0) {
-        file_result=MPI_File_write_at(*archive_file_MPI,stage_archive_file_offset,&tarheader[0],
-          			    tarheader.size(),MPI_CHAR,&my_MPI_Status);
+        file_result=MPI_File_write_at(*archive_file_MPI,
+                                      stage_archive_file_offset-tarheader.size(),
+                                      &tarheader[0],
+                                      tarheader.size(),MPI_CHAR,
+                                      &my_MPI_Status);
         if(file_result != MPI_SUCCESS){
           fprintf(stderr,"rank %d got %d from MPI_File_write_at\n",my_rank,file_result);
           fprintf(stderr,"container offset: %ld\n",stage_archive_file_offset);
@@ -341,7 +343,7 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
           return 160;
         }
       }
-      stage_archive_file_offset += tarheader.size();
+      // do *not* move file pointer since we insert tar header *before* content
     }
     
     while(stage_bytes_left_to_move > 0){

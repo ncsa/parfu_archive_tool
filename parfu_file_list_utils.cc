@@ -1106,14 +1106,19 @@ parfu_file_fragment_entry_list_t
       // we squeeze the tar header just before the actual file data, keeping
       // the file data aligned
       // TODO: do not create a temp tarentry since it calls lstat
-      tarentry entry(in_list->list[i].relative_filename, 0);
-      if(next_block_index - first_available_byte < entry.hdr_size()){
-        next_block_index += (entry.hdr_size() + file_block_size-1) / file_block_size;
+      const size_t hdr_size =
+        tarentry::compute_hdr_size(in_list->list[i].relative_filename,
+                                   in_list->list[i].target,
+                                   in_list->list[i].size);
+      if(next_block_index - first_available_byte < hdr_size){
+        next_block_index += (hdr_size + file_block_size-1) / file_block_size;
       }
 
       in_list->list[i].first_block = next_block_index;
       next_block_boundary = next_block_index * file_block_size;
-      first_available_byte = next_block_boundary + entry.size();
+      // as long as the minimum blocking is 512 this will ensure proper tar
+      // alignment
+      first_available_byte = next_block_boundary + hdr_size + in_list->list[i].size;
       
       if(parfu_add_entry_to_ffel(&out_list,in_list->list[i])){
 	fprintf(stderr,"parfu_split_fragments_in_list:\n");

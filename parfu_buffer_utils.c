@@ -714,6 +714,10 @@ parfu_file_fragment_entry_list_t
 	    archive_filename);
     return NULL;
   }
+
+  // skip over tar header for catalog
+  fseek(infile, sizeof(struct ustar_hdr), SEEK_SET);
+
   // the first 11 bytes contains the length of the catalog
   // first read that
   items_read = fread(input_buffer,sizeof(char),size_of_length_string+1,
@@ -724,7 +728,7 @@ parfu_file_fragment_entry_list_t
     fprintf(stderr,"archive file too short for catalog length entry!!\n");
     return NULL;
   }
-  my_catalog_length = strtol(input_buffer,end_of_read_ptr,10);
+  my_catalog_length = strtol(input_buffer,end_of_read_ptr,10)+sizeof(struct ustar_hdr);
   if( (*end_of_read_ptr) == input_buffer ){
     fprintf(stderr,"parfu_catalog_buffer_from_file: \n");
     fprintf(stderr," could not make sense out of catalog size entry!!\n");
@@ -742,6 +746,8 @@ parfu_file_fragment_entry_list_t
     return NULL;
   }
   // back the pointer up to the beginning of the file
+  // we need to read in the tar header as well since
+  // parfu_buffer_to_file_fragment_list expects it
   rewind(infile);
   // read the whole buffer in one operation
   fprintf(stderr," extracting catalog: about to read catalog.\n");

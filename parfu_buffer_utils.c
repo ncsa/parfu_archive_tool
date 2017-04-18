@@ -164,7 +164,7 @@ char *parfu_fragment_list_to_buffer(parfu_file_fragment_entry_list_t *my_list,
     // leave this static so that unfilled bytes are zero and not random
     static struct ustar_hdr hdr = {
       "parfu_catalog.txt", // name, duplicates don't matter
-      "0000111",           // mode
+      "0000600",           // mode
       "0000000", "0000000",// uid and gid
       "size",              // filled in later
       "mtime",             // filled in later

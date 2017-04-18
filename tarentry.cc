@@ -295,3 +295,14 @@ size_t tarentry::record_length(const char *keyword, const char *value)
 
   return size_t(newlen);
 }
+
+size_t tarentry::compute_hdr_size(const char *name, const char *linkname,
+                                  const long int size)
+{
+  tarentry dummy;
+  dummy.filename = name;
+  dummy.linkname = linkname;
+  dummy.statbuf.st_size = size;
+  dummy.statbuf.st_mode = S_IFREG;
+  return dummy.hdr_size();
+}

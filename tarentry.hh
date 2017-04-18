@@ -96,6 +96,9 @@ class tarentry
   bool is_reg() const { return S_ISREG(statbuf.st_mode); }
   size_t get_offset() const { return offset; }
 
+  static size_t compute_hdr_size(const char *name, const char *linkname,
+                                 const long int size);
+
   private:
   size_t offset;
   struct stat statbuf;

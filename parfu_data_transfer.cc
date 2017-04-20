@@ -226,7 +226,7 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
     //	    catalog_buffer_for_ranks_length);
   }
   // broadcast the LENGTH of the catalog buffer to all ranks
-  MPI_Bcast(&catalog_buffer_for_ranks_length,1,MPI_INT,0,MPI_COMM_WORLD);
+  MPI_Bcast(&catalog_buffer_for_ranks_length,1,MPI_LONG_INT,0,MPI_COMM_WORLD);
   // all ranks allocate space for the distributed catalog buffer
   //  if(my_rank==0) fprintf(stderr,"  ****  successfully bcast buffer length.\n");
   
@@ -680,7 +680,7 @@ int parfu_extract_1file_singFP(char *arch_file_name,
     //    fprintf(stderr,"  ***** have buffer; about to broadcast its length.\n");
   }
   // broadcast the LENGTH of the catalog buffer to all ranks
-  MPI_Bcast(&catalog_buffer_for_ranks_length,1,MPI_INT,0,MPI_COMM_WORLD);
+  MPI_Bcast(&catalog_buffer_for_ranks_length,1,MPI_LONG_INT,0,MPI_COMM_WORLD);
   // all ranks allocate space for the distributed catalog buffer
   //  if(my_rank==0) fprintf(stderr,"  ****  successfully bcast buffer length.\n");
   

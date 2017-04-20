@@ -23,6 +23,10 @@
 ###### site configuration options
 # generally speaking, you may have to tweak stuff in this section to get the 
 # code to build on your machine
+# we call getgrgid which requires a dynamic executable and SEGFAULTs for a
+# statically linked one
+export CRAYPE_LINK_TYPE=dynamic
+export XTPE_LINK_TYPE=dynamic
 
 # set to MPI compiler
 # on Cray, this will be CC=cc

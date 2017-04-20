@@ -284,23 +284,21 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
   //  parfu_dump_fragment_entry_list(rank_list,stdout);
   //}
 
-  // there must not be pending IO when calling MPI_File_set_size
-  MPI_Barrier(MPI_COMM_WORLD);
+  // size archive to correct size to include correct zero padding at the end
+  // as well as block size constraints by tar
+  long int file_size = -1;
   if(my_rank==0){
-    // size archive to correct size to include correct zero padding at the end
-    // as well as block size constraints by tar
     const parfu_file_fragment_entry_t *last_fragment =
       &raw_list->list[raw_list->n_entries_full-1];
     file_block_size = int_power_of_2(last_fragment->block_size_exponent);
     if(file_block_size < BLOCKSIZE)
       file_block_size = BLOCKSIZE;
-    size_t file_size=data_starting_position+
+    file_size=data_starting_position+
       (last_fragment->first_block+last_fragment->number_of_blocks)*
       file_block_size + 2*BLOCKSIZE;
-    file_result=MPI_File_set_size(*archive_file_MPI, file_size);
   }
-  MPI_Barrier(MPI_COMM_WORLD);
-  
+  MPI_Bcast(&file_size,1,MPI_LONG_INT,0,MPI_COMM_WORLD);
+  file_result=MPI_File_set_size(*archive_file_MPI,file_size);
 
   if(my_rank==0) fprintf(stderr,"  ****** about to begin big data transfer loop.\n");
   if(my_rank==0) times_through_loop=0;

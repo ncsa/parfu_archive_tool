@@ -131,6 +131,9 @@ typedef struct{
 }parfu_file_fragment_entry_list_t;
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 // parfu_file_list_utils.c
 parfu_file_fragment_entry_list_t 
 *create_parfu_file_fragment_entry_list(int in_n_entries);
@@ -292,7 +295,9 @@ int parfu_behav_add_arc_file(parfu_behavior_control_t *behav,
 int parfu_behav_extend_array(parfu_behavior_control_t *behav);
 int parfu_are_we_in_MPI(void);
 parfu_behavior_control_t *parfu_parse_arguments(int argc, char *argv[]);
-
+#ifdef __cplusplus
+}
+#endif
 
 
 

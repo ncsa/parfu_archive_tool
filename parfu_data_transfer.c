@@ -20,10 +20,8 @@
 //  
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "parfu_primary.h"
-#include "tarentry.hh"
+#include <parfu_primary.h>
 
-extern "C"
 int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
 			       char *arch_file_name,
 			       int n_ranks, int my_rank, 
@@ -283,22 +281,7 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
   //  fprintf(stdout,"about to dump create catalog. ******\n");
   //  parfu_dump_fragment_entry_list(rank_list,stdout);
   //}
-
-  // size archive to correct size to include correct zero padding at the end
-  // as well as block size constraints by tar
-  long int file_size = -1;
-  if(my_rank==0){
-    const parfu_file_fragment_entry_t *last_fragment =
-      &raw_list->list[raw_list->n_entries_full-1];
-    file_block_size = int_power_of_2(last_fragment->block_size_exponent);
-    if(file_block_size < BLOCKSIZE)
-      file_block_size = BLOCKSIZE;
-    file_size=data_starting_position+
-      (last_fragment->first_block+last_fragment->number_of_blocks)*
-      file_block_size + 2*BLOCKSIZE;
-  }
-  MPI_Bcast(&file_size,1,MPI_LONG_INT,0,MPI_COMM_WORLD);
-  file_result=MPI_File_set_size(*archive_file_MPI,file_size);
+  
 
   if(my_rank==0) fprintf(stderr,"  ****** about to begin big data transfer loop.\n");
   if(my_rank==0) times_through_loop=0;
@@ -337,29 +320,6 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
     stage_archive_file_offset = 
       data_starting_position +
       ( file_block_size * rank_list->list[current_target_fragment].first_block );
-
-    // TODO: check if one can get away with not calling stat() inside of tarentry
-    {
-      tarentry entry(rank_list->list[current_target_fragment].relative_filename, 0);
-      std::vector<char> tarheader = entry.make_tar_header();
-      // we write the first fragment and thus also the header
-      if(rank_list->list[current_target_fragment].fragment_offset == 0) {
-        file_result=MPI_File_write_at(*archive_file_MPI,
-                                      stage_archive_file_offset-tarheader.size(),
-                                      &tarheader[0],
-                                      tarheader.size(),MPI_CHAR,
-                                      &my_MPI_Status);
-        if(file_result != MPI_SUCCESS){
-          fprintf(stderr,"rank %d got %d from MPI_File_write_at\n",my_rank,file_result);
-          fprintf(stderr,"container offset: %ld\n",stage_archive_file_offset);
-          fprintf(stderr,"bytes to move: %zu\n",tarheader.size());
-          fprintf(stderr,"writing slice %d\n",current_target_fragment);
-          MPI_Finalize();
-          return 160;
-        }
-      }
-      // do *not* move file pointer since we insert tar header *before* content
-    }
     
     while(stage_bytes_left_to_move > 0){
 
@@ -461,7 +421,6 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
 }
 
 
-extern "C"
 int parfu_extract_1file_singFP(char *arch_file_name,
 			       char *extract_target_dir,
 			       int n_ranks, int my_rank, 

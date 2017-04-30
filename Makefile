@@ -38,7 +38,7 @@ CFLAGS := -g -I. -Wall -O3
 # The TARGETS variable sets what gets built. 
 
 # By default, this Makefile builds the basic proof-of-concept test code. 
-TARGETS := parfu_all_test_001 parfu_bench_test_002
+TARGETS := parfu_all_test_001 parfu_bench_test_002 parfu_write_test
 
 # Using TARGETS line would also build two utilty test codes, which are
 # probably only interesting for historical or internal testing reasons.
@@ -76,6 +76,9 @@ parfu_all_test_001: parfu_all_test_001.o ${PARFU_OBJECT_FILES} ${PARFU_HEADER_FI
 
 parfu_bench_test_002: parfu_bench_test_002.o ${PARFU_OBJECT_FILES} ${PARFU_HEADER_FILES}
 	${CXX} -o $@ ${CFLAGS} parfu_bench_test_002.o ${PARFU_OBJECT_FILES}
+
+parfu_write_test: parfu_write_test.o ${PARFU_HEADER_FILES}
+	${CXX} -o $@ ${CFLAGS} parfu_write_test.o ${PARFU_OBJECT_FILES}
 
 # utility targets
 

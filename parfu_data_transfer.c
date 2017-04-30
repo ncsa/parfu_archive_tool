@@ -52,6 +52,7 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
   int crosscheck_max_block_size_exponent;
 
   int current_target_fragment;
+  int rank0_current_target_fragment;
 
   long int bytes_to_move;
 
@@ -275,7 +276,10 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
   // this is our starting fragment
 
   
-  current_target_fragment = my_rank;
+  //  current_target_fragment = my_rank;
+  
+  rank0_current_target_fragment = 0;
+
 
   //  if(my_rank==0){
   //  fprintf(stdout,"about to dump create catalog. ******\n");
@@ -285,98 +289,149 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
 
   if(my_rank==0) fprintf(stderr,"  ****** about to begin big data transfer loop.\n");
   if(my_rank==0) times_through_loop=0;
-  while( current_target_fragment < rank_list->n_entries_full ){
-    // we transfer data for regular files that have non-zero size. 
-    // skip over non-files and zero-length files
-    if(rank_list->list[current_target_fragment].type != PARFU_FILE_TYPE_REGULAR){
-      current_target_fragment += n_ranks;
-      continue;
-    }
-    if(rank_list->list[current_target_fragment].size < 1){
-      current_target_fragment += n_ranks;
-      continue;
-    }
-    // open the file we're reading from 
-    file_result=MPI_File_open(MPI_COMM_SELF,
-			      rank_list->list[current_target_fragment].relative_filename,
-			      MPI_MODE_RDONLY,
-			      my_Info,&target_file_ptr);
-    if(file_result != MPI_SUCCESS){
-      fprintf(stderr,"rank %d got non-zero result when opening %s!\n",
-	      my_rank,
-	      rank_list->list[current_target_fragment].relative_filename);
-      fprintf(stderr,"result=%d\n",file_result);
-      return 138;
-    }
-    //    fprintf(stderr,"  rank %d  fragment   %d     file >%s< successfully open!\n",
-    //	    my_rank,current_target_fragment,rank_list->list[current_target_fragment].relative_filename);
-    file_block_size = int_power_of_2(rank_list->list[current_target_fragment].block_size_exponent);
 
-    // set up for the transfer
-    stage_bytes_left_to_move = 
-      rank_list->list[current_target_fragment].size;
-    stage_target_file_offset = 
-      rank_list->list[current_target_fragment].fragment_offset;
-    stage_archive_file_offset = 
-      data_starting_position +
-      ( file_block_size * rank_list->list[current_target_fragment].first_block );
-    
-    while(stage_bytes_left_to_move > 0){
+  //  while( current_target_fragment < rank_list->n_entries_full ){
+  while( rank0_current_target_fragment < rank_list->n_entries_full ){
 
-      //      fprintf(stderr,"rank %4d fragment %4d starting\n",my_rank,current_target_fragment);
+    current_target_fragment = rank0_current_target_fragment + my_rank;
+
+    // All ranks must participate in the collective data write to the archive file. 
+    // However, in the last pass through the ranks, we'll run out of fragments before
+    // ranks.  So some ranks are "lame ducks"; they have no fragment to write but 
+    // they must participate in the write call.  This next loop takes care of them 
+    // by those ranks participating in a zero-byte write in the collective call.
+    if( (current_target_fragment >= rank_list->n_entries_full ) ){
+
+	// setting destination of zero starting position; I *think* that's safe?
+	stage_archive_file_offset = data_starting_position;
       
-      // make sure transfer is the minimum 
-      bytes_to_move = stage_bytes_left_to_move;
-      if(bytes_to_move > transfer_buffer_size) 
-	bytes_to_move = transfer_buffer_size;
-      
-      //if(debug) 
-      //    fprintf(stderr,"rank %d slice %d moving %ld bytes file_offset %ld container_offset %ld\n",
-      //		     my_rank,current_target_slice,bytes_to_move, staging_file_offset,staging_container_offset);
-      
-      // move bytes to RAM buffer
-      //	  items_read=fread(transfer_buffer,sizeof(char),bytes_to_move,target_file_ptr);
-      file_result=MPI_File_read_at(target_file_ptr,stage_target_file_offset,transfer_buffer,
-				   bytes_to_move,MPI_CHAR,&my_MPI_Status);
+      file_result=MPI_File_write_at_all(*archive_file_MPI,stage_archive_file_offset,
+					transfer_buffer,0,MPI_CHAR,&my_MPI_Status); 
       if(file_result != MPI_SUCCESS){
-	fprintf(stderr,"rank %d got %d from MPI_File_read_at\n",my_rank,file_result);
-	fprintf(stderr,"writing fragment %d",current_target_fragment);
-	return 159;
-      }
-      //      fprintf(stderr,"rd tgt: rank %4d ofst:%10ld bytes:%10ld  >%s<\n",my_rank,stage_target_file_offset,bytes_to_move,
-      //	      rank_list->list[current_target_fragment].relative_filename);
-
-      //      fprintf(stderr,"rank %4d fragment %4d middle\n",my_rank,current_target_fragment);
-      
-      // move bytes from RAM buffer to container file
-      file_result=MPI_File_write_at(*archive_file_MPI,stage_archive_file_offset,transfer_buffer,
-				    bytes_to_move,MPI_CHAR,&my_MPI_Status);
-      if(file_result != MPI_SUCCESS){
-	fprintf(stderr,"rank %d got %d from MPI_File_write_at\n",my_rank,file_result);
+	fprintf(stderr,"rank %d got %d from MPI_File_write_at_all\n",my_rank,file_result);
+	fprintf(stderr," (lame duck writing blank slice)\n");
 	fprintf(stderr,"container offset: %ld\n",stage_archive_file_offset);
-	fprintf(stderr,"bytes to move: %ld\n",bytes_to_move);
 	fprintf(stderr,"writing slice %d\n",current_target_fragment);
 	MPI_Finalize();
 	return 160;
       }
-      //      fprintf(stderr,"wt arc: rank %4d ofst:%10ld bytes:%10ld  >%s<\n",my_rank,stage_archive_file_offset,bytes_to_move,
-      //	      rank_list->list[current_target_fragment].relative_filename);
+    }
+    else{
+      // this is NOT a lame duck rank, thus current_target_fragment is valid, so it's safe
+      // to test against. 
+      if( (rank_list->list[current_target_fragment].type != PARFU_FILE_TYPE_REGULAR) || 
+	  (rank_list->list[current_target_fragment].size < 1) ){
+	// entry is for a directory or a symlink, or a zero-byte file.  
+	// here also we must do a placebo write of zero bytes.
 
-      
-      // update the quantities left
-      // staging_bytes_remaining -= staging_buffer_size;
-      // staging_container_offset += staging_buffer_size;
-      // staging_file_offset += staging_buffer_size;
-      //      fprintf(stderr,"rank %4d fragment %4d loop_end\n",my_rank,current_target_fragment);
-      
-      stage_bytes_left_to_move -= bytes_to_move;
-      stage_target_file_offset += bytes_to_move;
-      stage_archive_file_offset += bytes_to_move;
-
-    } // while(staging_bytes_remaining
-
-    MPI_File_close(&target_file_ptr);
-    
+	// setting destination of zero starting position; I *think* that's safe?
+	stage_archive_file_offset = data_starting_position;
+	
+	file_result=MPI_File_write_at_all(*archive_file_MPI,stage_archive_file_offset,
+					  transfer_buffer,0,MPI_CHAR,&my_MPI_Status); 
+	if(file_result != MPI_SUCCESS){
+	  fprintf(stderr,"rank %d got %d from MPI_File_write_at_all\n",my_rank,file_result);
+	  fprintf(stderr," (non-lame duck, is dir or symlink or 0byte file, skipping writing)\n");
+	  fprintf(stderr,"container offset: %ld\n",stage_archive_file_offset);
+	  fprintf(stderr,"writing slice %d\n",current_target_fragment);
+	  MPI_Finalize();
+	  return 160;
+	}
+      }
+      else{
+	// this fragment isn't a lame duck, and it's an actual file containing one
+	// or more bytes.  So we MUST actually copy data.
+	
+	// open the file we're reading from 
+	file_result=MPI_File_open(MPI_COMM_SELF,
+				  rank_list->list[current_target_fragment].relative_filename,
+				  MPI_MODE_RDONLY,
+				  my_Info,&target_file_ptr);
+	if(file_result != MPI_SUCCESS){
+	  fprintf(stderr,"rank %d got non-zero result when opening %s!\n",
+		  my_rank,
+		  rank_list->list[current_target_fragment].relative_filename);
+	  fprintf(stderr,"result=%d\n",file_result);
+	  return 138;
+	}
+	//    fprintf(stderr,"  rank %d  fragment   %d     file >%s< successfully open!\n",
+	//	    my_rank,current_target_fragment,rank_list->list[current_target_fragment].relative_filename);
+	file_block_size = int_power_of_2(rank_list->list[current_target_fragment].block_size_exponent);
+	
+	// set up for the transfer
+	stage_bytes_left_to_move = 
+	  rank_list->list[current_target_fragment].size;
+	stage_target_file_offset = 
+	  rank_list->list[current_target_fragment].fragment_offset;
+	stage_archive_file_offset = 
+	  data_starting_position +
+	  ( file_block_size * rank_list->list[current_target_fragment].first_block );
+	
+	while(stage_bytes_left_to_move > 0){
+	  
+	  //      fprintf(stderr,"rank %4d fragment %4d starting\n",my_rank,current_target_fragment);
+	  
+	  // make sure transfer is the minimum 
+	  bytes_to_move = stage_bytes_left_to_move;
+	  if(bytes_to_move > transfer_buffer_size){
+	    bytes_to_move = transfer_buffer_size;
+	    fprintf(stderr,"parfu_archive_1file_singFP:\n");
+	    fprintf(stderr,"bytes_to_move bigger than trans buffer!  \n");
+	    fprintf(stderr,"  This is no longer allowed with collective file transfers.\n");
+	    fprintf(stderr,"  FATAL error!!!\n");
+	    fprintf(stderr,"  Either fragment size is too big or transfer buffer too small.\n");
+	    return 102;
+	  }
+	  
+	  //if(debug) 
+	  //    fprintf(stderr,"rank %d slice %d moving %ld bytes file_offset %ld container_offset %ld\n",
+	  //		     my_rank,current_target_slice,bytes_to_move, staging_file_offset,staging_container_offset);
+	  
+	  // move bytes to RAM buffer
+	  //	  items_read=fread(transfer_buffer,sizeof(char),bytes_to_move,target_file_ptr);
+	  file_result=MPI_File_read_at(target_file_ptr,stage_target_file_offset,transfer_buffer,
+				       bytes_to_move,MPI_CHAR,&my_MPI_Status);
+	  if(file_result != MPI_SUCCESS){
+	    fprintf(stderr,"rank %d got %d from MPI_File_read_at\n",my_rank,file_result);
+	    fprintf(stderr,"writing fragment %d",current_target_fragment);
+	    return 159;
+	  }
+	  //      fprintf(stderr,"rd tgt: rank %4d ofst:%10ld bytes:%10ld  >%s<\n",my_rank,stage_target_file_offset,bytes_to_move,
+	  //	      rank_list->list[current_target_fragment].relative_filename);
+	  
+	  //      fprintf(stderr,"rank %4d fragment %4d middle\n",my_rank,current_target_fragment);
+	  
+	  // move bytes from RAM buffer to container file
+	  file_result=MPI_File_write_at_all(*archive_file_MPI,stage_archive_file_offset,transfer_buffer,
+					    bytes_to_move,MPI_CHAR,&my_MPI_Status);
+	  if(file_result != MPI_SUCCESS){
+	    fprintf(stderr,"rank %d got %d from MPI_File_write_at_all\n",my_rank,file_result);
+	    fprintf(stderr,"container offset: %ld\n",stage_archive_file_offset);
+	    fprintf(stderr,"bytes to move: %ld\n",bytes_to_move);
+	    fprintf(stderr,"writing slice %d\n",current_target_fragment);
+	    MPI_Finalize();
+	    return 160;
+	  }
+	  //      fprintf(stderr,"wt arc: rank %4d ofst:%10ld bytes:%10ld  >%s<\n",my_rank,stage_archive_file_offset,bytes_to_move,
+	  //	      rank_list->list[current_target_fragment].relative_filename);
+	  
+	  
+	  // update the quantities left
+	  // staging_bytes_remaining -= staging_buffer_size;
+	  // staging_container_offset += staging_buffer_size;
+	  // staging_file_offset += staging_buffer_size;
+	  //      fprintf(stderr,"rank %4d fragment %4d loop_end\n",my_rank,current_target_fragment);
+	  
+	  stage_bytes_left_to_move -= bytes_to_move;
+	  stage_target_file_offset += bytes_to_move;
+	  stage_archive_file_offset += bytes_to_move;
+	  
+	} // while(staging_bytes_remaining
+	
+	MPI_File_close(&target_file_ptr);
+	
+      } // else (doing actual transfers
+    } // else (not a lame duck}
     if(my_rank==0){
       if(!(times_through_loop % loop_divisor)){
 	//	fprintf(stderr,".");
@@ -398,8 +453,8 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
       } // if(!(times_through_loop % loop_divisor))
       times_through_loop++;
     } // if(my_rank==0)
-    current_target_fragment += n_ranks;
-  } // while(current_target_fragment
+    rank0_current_target_fragment += n_ranks;
+  } // while(rank0_current_target_fragment
   
   if(my_rank==0) fprintf(stderr,"\n  ****** rank zero finished big data transfer loop.\n");
   

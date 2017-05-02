@@ -1,0 +1,49 @@
+/scratch/staff/csteffen/ParFu_test_03/archives [ 10 nodes ] aprun -n 160 -N 16
+-d 2 parfu_write_test 4000000 4200000 ./s_032/pwt_00.dat 350 4
+ Data payload: 4000000 bytes.
+ Buffer size: 4200000 bytes.
+ Writing to file: >./s_032/pwt_00.dat<
+  Performing 350 iterations
+triple [00]:    0   156     4
+triple [01]:    1   157     4
+triple [02]:    2   158     4
+triple [03]:    3   159     4
+Writing to 4 archive files:
+   ./s_032/pwt_00.dat__00
+   ./s_032/pwt_00.dat__01
+   ./s_032/pwt_00.dat__02
+   ./s_032/pwt_00.dat__03
+About to begin data writing loop.
+..................
+total_time: 41 seconds to transfer 224.0000 GB
+transfer speed: 5.4634 GB/s
+Application 56212068 resources: utime ~5862s, stime ~792s, Rss ~21624,
+inblocks ~71018, outblocks ~437689863
+/scratch/staff/csteffen/ParFu_test_03/archives [ 10 nodes ] rm
+s_032/pwt_00.dat_*
+rm: remove regular file `s_032/pwt_00.dat__00'? y
+rm: remove regular file `s_032/pwt_00.dat__01'? y
+rm: remove regular file `s_032/pwt_00.dat__02'? y
+rm: remove regular file `s_032/pwt_00.dat__03'? y
+/scratch/staff/csteffen/ParFu_test_03/archives [ 10 nodes ] aprun -n 160 -N 16
+-d 2 parfu_write_test 4000000 4200000 ./s_032/pwt_00.dat 350 4
+ Data payload: 4000000 bytes.
+ Buffer size: 4200000 bytes.
+ Writing to file: >./s_032/pwt_00.dat<
+  Performing 350 iterations
+triple [00]:    0   156     4
+triple [01]:    1   157     4
+triple [02]:    2   158     4
+triple [03]:    3   159     4
+Writing to 4 archive files:
+   ./s_032/pwt_00.dat__00
+   ./s_032/pwt_00.dat__01
+   ./s_032/pwt_00.dat__02
+   ./s_032/pwt_00.dat__03
+About to begin data writing loop.
+..................
+total_time: 46 seconds to transfer 224.0000 GB
+transfer speed: 4.8696 GB/s
+Application 56212069 resources: utime ~6568s, stime ~791s, Rss ~21624,
+inblocks ~71029, outblocks ~437689856
+/scratch/staff/csteffen/ParFu_test_03/archives [ 10 nodes ]

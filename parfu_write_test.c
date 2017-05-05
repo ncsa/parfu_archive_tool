@@ -66,10 +66,12 @@ int main(int argc, char *argv[]){
   //  int my_target_file;
 
   int rank_ranges[MAX_N_ARCHIVE_FILES][3];
+  int n_ranks_in_archive_file[MAX_N_ARCHIVE_FILES];
   MPI_Group world_group;
   MPI_Group sub_group[MAX_N_ARCHIVE_FILES];
   MPI_Comm sub_comm[MAX_N_ARCHIVE_FILES];
   int my_communicator; 
+  long int total_archive_file_size;
 
   //  fprintf(stderr,"parfu_write_test beginning\n");
   
@@ -112,7 +114,7 @@ int main(int argc, char *argv[]){
   }
   for(i=0;i<n_archive_files;i++){
     rank_ranges[0][0] = i;
-    rank_ranges[0][1] = ((n_ranks/n_archive_files)*n_archive_files + i;
+    rank_ranges[0][1] = ((n_ranks/n_archive_files)*n_archive_files) + i;
     if(rank_ranges[0][1] >= n_ranks){
       rank_ranges[0][1] -= n_archive_files;
     }
@@ -121,6 +123,7 @@ int main(int argc, char *argv[]){
       fprintf(stderr,"triple [%02d]: %4d  %4d  %4d\n",
 	      i,rank_ranges[0][0],rank_ranges[0][1],rank_ranges[0][2]);
     }
+    n_ranks_in_archive_file[i]=((rank_ranges[0][1] - rank_ranges[0][0]) / n_archive_files)+1;
     file_result=MPI_Group_range_incl(world_group,1,rank_ranges,sub_group+i);
     if(file_result != MPI_SUCCESS){
       fprintf(stderr,"rank %d MPI_Group_range_incl() returned %d\n",
@@ -197,6 +200,11 @@ int main(int argc, char *argv[]){
   */
 
   // all files open THEIR file in THEIR communicator
+  
+  total_archive_file_size = 
+    ((long int)(n_ranks_in_archive_file[my_communicator])) * 
+    ((long int)(n_iterations)) * 
+    ((long int)(buffer_size));
   file_result=MPI_File_open(sub_comm[my_communicator], archive_filenames[my_communicator], 
 			    MPI_MODE_WRONLY | MPI_MODE_CREATE , 
 			    my_Info, archive_file_MPI[my_communicator]);
@@ -207,6 +215,17 @@ int main(int argc, char *argv[]){
 
     MPI_Finalize();
     return 3; 
+  }
+  
+  file_result=MPI_File_set_size((*(archive_file_MPI[my_communicator])),total_archive_file_size);
+  
+  if(file_result != MPI_SUCCESS){
+    fprintf(stderr,"MPI_File_set_size for archive buffer:  returned error!  Rank %d file >%s< comm %d\n",
+	    my_rank,
+	    archive_filenames[my_communicator],my_communicator);
+    
+    MPI_Finalize();
+    return 4; 
   }
   
   

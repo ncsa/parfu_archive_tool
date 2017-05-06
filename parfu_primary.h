@@ -41,8 +41,20 @@
 // Constants that users might want to tweak
 // 
 
-#define PARFU_DEFAULT_MIN_BLOCK_SIZE_EXPONENT     12
-#define PARFU_DEFAULT_BLOCKS_PER_FRAGMENT             250
+// removing exponents in verson 0.5.1, starting May 5, 2017
+// leaving here so I have record of what they WERE, so I can 
+// search source files for them.
+//#define PARFU_DEFAULT_MIN_BLOCK_SIZE_EXPONENT     12
+//#define PARFU_DEFAULT_BLOCKS_PER_FRAGMENT             250
+
+// Blocks of files are padded out to be a multiple of this number of bytes
+// typically 512, to match the standard blocking of tar.
+#define PARFU_DEFAULT_BLOCKING_FACTOR    (512)
+// file fragments are padded up to this size in rank buffers and 
+// in chunks of data written to the archive file.  Optimum performance
+// probably matches this to network buffer size for I/O.  On 
+// Blue Waters (home system of parfu) 4 MB seems good.
+#define PARFU_DEFAULT_RANK_BLOCK_SIZE    (4194304)
 
 //
 // End of recommended user-tweakable constants
@@ -69,17 +81,17 @@ typedef enum{PARFU_FILE_TYPE_REGULAR,PARFU_FILE_TYPE_DIR,PARFU_FILE_TYPE_SYMLINK
 
 #define PARFU_LINE_BUFFER_DEFAULT 1000
 #define PARFU_DEFAULT_SIZE_PER_LINE 200
-#define PARFU_MAXIMUM_BUFFER_SIZE (1000000000)
+#define PARFU_MAXIMUM_BUFFER_SIZE (10000000)
 
 #define PARFU_FILE_PTR_NONSHARED (-1)
 
-#define PARFU_ABSOLUTE_MIN_BLOCK_SIZE_EXPONENT    8
-#define PARFU_LARGEST_ALLOWED_MAX_BLOCK_SIZE_EXPONENT  26
-#define PARFU_SMALLEST_ALLOWED_MAX_BLOCK_SIZE_EXPONENT 16
-#define PARFU_DEFAULT_MAX_BLOCK_SIZE_EXPONENT          20
+//#define PARFU_ABSOLUTE_MIN_BLOCK_SIZE_EXPONENT    8
+//#define PARFU_LARGEST_ALLOWED_MAX_BLOCK_SIZE_EXPONENT  26
+//#define PARFU_SMALLEST_ALLOWED_MAX_BLOCK_SIZE_EXPONENT 16
+//#define PARFU_DEFAULT_MAX_BLOCK_SIZE_EXPONENT          20
 
-#define PARFU_MIN_ALLOWED_BLOCKS_PER_FRAGMENT           1
-#define PARFU_MAX_ALLOWED_BLOCKS_PER_FRAGMENT        2000
+//#define PARFU_MIN_ALLOWED_BLOCKS_PER_FRAGMENT           1
+//#define PARFU_MAX_ALLOWED_BLOCKS_PER_FRAGMENT        2000
 
 #define PARFU_WHAT_IS_PATH_REGFILE         0x001
 #define PARFU_WHAT_IS_PATH_SYMLINK         0x002
@@ -107,20 +119,32 @@ typedef enum{PARFU_FILE_TYPE_REGULAR,PARFU_FILE_TYPE_DIR,PARFU_FILE_TYPE_SYMLINK
   // leading "/", but the archive_filename will not.
 
 typedef struct{
-  // characteristics inherent to the original file
+  // original file pathnames, type, and link target
   char *relative_filename; // apparent filename from point of view of the pwd of parfu process
   char *archive_filename; // name of file that will go in archive
   parfu_file_t type; // PARFU_FILE_TYPE_[REGULAR|DIR|SYMLINK]
   char *target; // string name of target of symlink; otherwise NULL
-  long int size; // size of this fragment (or size of whole file)
-  int block_size_exponent; // each block is 2^block_size_exponent bytes
-  int num_blocks_in_fragment; // each fragment is this many blocks (or less)
-  int file_contains_n_fragments; // file will be archived/extracted in this many pieces (derived)
+
+  // original file size and locatin, and tar header info
+  long int our_file_size; // size of this fragment (or size of whole file) in bytes
+  long int our_tar_header_size; // length of tar header in bytes
+  long int location_in_archive_file; beginning of tar header from beginning of archive file
+  long int location_in_orig_file; // fragment location (in bytes) from beginning of original file
+  //                              =0 for the first fragment of every file
+  
+  // information about padding pseudo-file following this file
+  long int pad_file_location_in_archive_file;
+  char *pad_file_archive_filename;
+  long int pad_file_tar_header_size;
+
+  //  int block_size_exponent; // each block is 2^block_size_exponent bytes
+  //  int num_blocks_in_fragment; // each fragment is this many blocks (or less)
+  //  int file_contains_n_fragments; // file will be archived/extracted in this many pieces (derived)
   // this information is used for the individual file fragments when the file 
   //   gets split up among ranks:
   long int fragment_offset; // fragment location (in bytes) from beginning of original file
-  long int first_block; // fragment location (in blocks) from beginning of data in archive file
-  long int number_of_blocks; // this fragment/file spans this many blocks
+  //  long int first_block; // fragment location (in blocks) from beginning of data in archive file
+  //  long int number_of_blocks; // this fragment/file spans this many blocks
   int file_ptr_index; // which of global file pointer this file uses
 }parfu_file_fragment_entry_t;
 

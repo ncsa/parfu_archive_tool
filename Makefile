@@ -23,6 +23,10 @@
 ###### site configuration options
 # generally speaking, you may have to tweak stuff in this section to get the 
 # code to build on your machine
+# we call getgrgid which requires a dynamic executable and SEGFAULTs for a
+# statically linked one
+export CRAYPE_LINK_TYPE=dynamic
+export XTPE_LINK_TYPE=dynamic
 
 # set to MPI compiler
 # on Cray, this will be CC=cc
@@ -55,8 +59,8 @@ TARGETS := parfu_all_test_001 parfu_bench_test_002 parfu_write_test
 # header and utility function definitions
 PARFU_HEADER_FILES := parfu_primary.h tarentry.hh
 
-#PARFU_OBJECT_FILES := parfu_file_list_utils.o parfu_buffer_utils.o parfu_data_transfer.o parfu_behavior_control.o tarentry.o
-PARFU_OBJECT_FILES := parfu_file_list_utils.o parfu_buffer_utils.o parfu_data_transfer.o parfu_behavior_control.o
+PARFU_OBJECT_FILES := parfu_file_list_utils.o parfu_buffer_utils.o parfu_data_transfer.o parfu_behavior_control.o tarentry.o
+#PARFU_OBJECT_FILES := parfu_file_list_utils.o parfu_buffer_utils.o parfu_data_transfer.o parfu_behavior_control.o
 
 default: ${TARGETS}
 

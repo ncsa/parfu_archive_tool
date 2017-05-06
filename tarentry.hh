@@ -84,6 +84,7 @@ class tarentry
   std::vector<char> make_tar_header() const;
   // size of tar entry in the file
   size_t size() const;
+  size_t hdr_size() const;
 
   // serialize and de-serialize data for MPI transmission
   size_t deserialize(const char *buf);
@@ -94,6 +95,9 @@ class tarentry
   size_t get_filesize() const { return is_reg() ? size_t(statbuf.st_size) : 0; }
   bool is_reg() const { return S_ISREG(statbuf.st_mode); }
   size_t get_offset() const { return offset; }
+
+  static size_t compute_hdr_size(const char *name, const char *linkname,
+                                 const long int size);
 
   private:
   size_t offset;

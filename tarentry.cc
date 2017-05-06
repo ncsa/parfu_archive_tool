@@ -165,10 +165,15 @@ std::vector<char> tarentry::make_tar_header() const
 
 size_t tarentry::size() const
 {
+  return hdr_size() + round_to_block(get_filesize());
+}
+
+size_t tarentry::hdr_size() const
+{
   size_t pax_sz = get_paxsize();
   size_t pax_hdr_sz = pax_sz > 0 ? round_to_block(BLOCKSIZE + pax_sz) : 0;
   size_t full_hdr_sz = BLOCKSIZE + pax_hdr_sz;
-  return round_to_block(full_hdr_sz + get_filesize());
+  return full_hdr_sz;
 }
 
 size_t tarentry::get_paxsize() const
@@ -289,4 +294,15 @@ size_t tarentry::record_length(const char *keyword, const char *value)
   } while(oldlen != newlen);
 
   return size_t(newlen);
+}
+
+size_t tarentry::compute_hdr_size(const char *name, const char *linkname,
+                                  const long int size)
+{
+  tarentry dummy;
+  dummy.filename = name;
+  dummy.linkname = linkname;
+  dummy.statbuf.st_size = size;
+  dummy.statbuf.st_mode = S_IFREG;
+  return dummy.hdr_size();
 }

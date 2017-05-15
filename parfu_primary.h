@@ -159,167 +159,171 @@ typedef struct{
 #ifdef __cplusplus
 extern "C" {
 #endif
-// parfu_file_list_utils.c
-parfu_file_fragment_entry_list_t 
-*create_parfu_file_fragment_entry_list(int in_n_entries);
-
-void parfu_free_ffel(parfu_file_fragment_entry_list_t *my_list);
-
-int parfu_add_name_to_ffel(parfu_file_fragment_entry_list_t **list,
-			   parfu_file_t type,
-			   char *relative_filename, // must be valid string
-			   char *archive_filename, // NULL is allowed for no info
-			   char *target,  // NULL is allowed for no info
-			   long int size);
-
-int parfu_add_entry_to_ffel(parfu_file_fragment_entry_list_t **list,
-			    parfu_file_fragment_entry_t entry);
-
-int parfu_add_entry_to_ffel_mod(parfu_file_fragment_entry_list_t **list,
-				parfu_file_fragment_entry_t entry,
-				long int my_size,
-				long int my_fragment_offset,
-				long int my_first_block,
-				long int my_number_of_blocks);
-
-int parfu_add_entry_to_ffel_raw(parfu_file_fragment_entry_list_t **list,
-				char *my_relative_filename,
-				char *my_archive_filename,
-				parfu_file_t my_type,
-				char *my_target,
-				int my_block_size_exponent,
-				int my_num_blocks_in_fragment,
-				int my_file_contains_n_fragments,
-				long int my_fragment_offset,
-				long int my_size,
-				long int my_first_block,
-				long int my_number_of_blocks,
-				int my_file_ptr_index);
-
-int parfu_is_a_dir(char *pathname);
-int parfu_is_a_symlink(const char *pathname,char **target_text);
-int parfu_is_a_regfile(char *pathname, long int *size);
-int parfu_does_not_exist(char *pathname);
-int parfu_does_not_exist_raw(char *pathname, int be_loud);
-int parfu_does_not_exist_quiet(char *pathname);
-int parfu_does_exist_quiet(char *pathname);
-
-parfu_file_fragment_entry_list_t *parfu_build_file_list_from_directory(char *top_dirname, 
-								       int follow_symlinks, 
-								       int *total_entries);
-char parfu_return_type_char(parfu_file_t in_type);
-void parfu_dump_fragment_entry_list(parfu_file_fragment_entry_list_t *my_list,
-				    FILE *output);
-void parfu_check_offsets(parfu_file_fragment_entry_list_t *my_list,
-			 FILE *output);
-
-int parfu_compare_fragment_entry_by_size(const void *vA, const void *vB);
-void parfu_qsort_entry_list(parfu_file_fragment_entry_list_t *my_list);
-int int_power_of(int base, int power);
-int int_power_of_2(int arg);
-parfu_file_fragment_entry_list_t 
-*parfu_split_fragments_in_list(parfu_file_fragment_entry_list_t *in_list,
-			       int min_block_size_exponent,
-			       int max_block_size_exponent, 
-			       int blocks_per_fragment);
-int parfu_what_is_file_exponent(long int file_size, 
-				int min_exponent,
-				int max_exponent);
-int parfu_set_exp_offsets_in_ffel(parfu_file_fragment_entry_list_t *myl,
-				  int min_exp,
-				  int max_exp);
-unsigned int parfu_what_is_path(const char *pathname,
-				char **target_text,
-				long int *size,
-				int follow_symlinks);
-
-// parfu_buffer_utils.c
-char *parfu_fragment_list_to_buffer(parfu_file_fragment_entry_list_t *my_list,
-				    long int *buffer_length,
-				    int max_block_size_exponent,
-				    int is_archive_catalog);
-int snprintf_to_full_buffer(char *my_buf, size_t buf_size, 
-			    parfu_file_fragment_entry_list_t *my_list,
-			    int indx);
-int snprintf_to_archive_buffer(char *my_buf, size_t buf_size, 
-			       parfu_file_fragment_entry_list_t *my_list,
-			       int indx);
-parfu_file_fragment_entry_list_t 
-*parfu_buffer_to_file_fragment_list(char *in_buffer,
-				    int *max_block_size_exponent,
-				    int is_archive_catalog);
-char *parfu_get_next_filename(char *in_buf, 
-			      char end_character,
-			      int *increment_pointer);
-
-parfu_file_fragment_entry_list_t 
-*parfu_ffel_from_file(char *archive_filename,
-		      int *max_block_size_exponent,
-		      int *catalog_buffer_length);
-
-int parfu_ffel_fill_rel_filenames(parfu_file_fragment_entry_list_t *my_list,
-				  char *leading_path);
-
-
-// parfu_data_transfer.c
-int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
-			       char *arch_file_name,
-			       int n_ranks, int my_rank, 
-			       int my_max_block_size_exponent,
-			       long int transfer_buffer_size,
-			       int blocks_per_fragment,
-			       int check_if_already_exist);
-int parfu_extract_1file_singFP(char *arch_file_name,
-			       char *extract_target_dir,
-			       int n_ranks, int my_rank, 
-			       int *my_max_block_size_exponent,
-			       long int transfer_buffer_size,
-			       int my_blocks_per_fragment,
-			       int check_if_already_exist);
-
-/////////
-//
-// Data structures for main() source files (command-line flags and stuff)
-//
-
+  // parfu_file_list_utils.c
+  parfu_file_fragment_entry_list_t 
+  *create_parfu_file_fragment_entry_list(int in_n_entries);
+  
+  void parfu_free_ffel(parfu_file_fragment_entry_list_t *my_list);
+  
+  int parfu_add_name_to_ffel(parfu_file_fragment_entry_list_t **list,
+			     parfu_file_t type,
+			     char *relative_filename, // must be valid string
+			     char *archive_filename, // NULL is allowed for no info
+			     char *target,  // NULL is allowed for no info
+			     long int size);
+  
+  int parfu_add_entry_to_ffel(parfu_file_fragment_entry_list_t **list,
+			      parfu_file_fragment_entry_t entry);
+  
+  int parfu_add_entry_to_ffel_mod(parfu_file_fragment_entry_list_t **list,
+				  parfu_file_fragment_entry_t entry,
+				  long int my_size, // fragment size
+				  long int my_fragment_loc_in_archive_file,
+				  long int my_fragment_loc_in_orig_file);
+  
+  int parfu_add_entry_to_ffel_raw(parfu_file_fragment_entry_list_t **list,
+				  char *my_relative_filename,
+				  char *my_archive_filename,
+				  parfu_file_t my_type,
+				  char *my_target,
+				  long int my_size,
+				  long int my_location_in_archive_file,
+				  long int my_location_in_orig_file,
+				  int my_file_contains_n_fragments,
+				  int my_file_ptr_index);
+  
+  // these are deprecated May 15 2017
+  // we'll remove them entirely once we know 
+  // there's nothing hidden that we need.
+  /*
+  int parfu_is_a_dir(char *pathname);
+  int parfu_is_a_symlink(const char *pathname,char **target_text);
+  int parfu_is_a_regfile(char *pathname, long int *size);
+  int parfu_does_not_exist(char *pathname);
+  int parfu_does_not_exist_raw(char *pathname, int be_loud);
+  int parfu_does_not_exist_quiet(char *pathname);
+  int parfu_does_exist_quiet(char *pathname);
+  */
+  
+  parfu_file_fragment_entry_list_t *parfu_build_file_list_from_directory(char *top_dirname, 
+									 int follow_symlinks, 
+									 int *total_entries);
+  char parfu_return_type_char(parfu_file_t in_type);
+  void parfu_dump_fragment_entry_list(parfu_file_fragment_entry_list_t *my_list,
+				      FILE *output);
+  void parfu_check_offsets(parfu_file_fragment_entry_list_t *my_list,
+			   FILE *output);
+  
+  int parfu_compare_fragment_entry_by_size(const void *vA, const void *vB);
+  void parfu_qsort_entry_list(parfu_file_fragment_entry_list_t *my_list);
+  int int_power_of(int base, int power);
+  int int_power_of_2(int arg);
+  parfu_file_fragment_entry_list_t 
+  *parfu_split_fragments_in_list(parfu_file_fragment_entry_list_t *in_list,
+				 int min_block_size_exponent,
+				 int max_block_size_exponent, 
+				 int blocks_per_fragment);
+  // removing exponent stuff in May 2017 redesign
+  /*
+  int parfu_what_is_file_exponent(long int file_size, 
+				  int min_exponent,
+				  int max_exponent);
+  int parfu_set_exp_offsets_in_ffel(parfu_file_fragment_entry_list_t *myl,
+				    int min_exp,
+				    int max_exp);
+  */
+  unsigned int parfu_what_is_path(const char *pathname,
+				  char **target_text,
+				  long int *size,
+				  int follow_symlinks);
+  
+  // parfu_buffer_utils.c
+  char *parfu_fragment_list_to_buffer(parfu_file_fragment_entry_list_t *my_list,
+				      long int *buffer_length,
+				      int max_block_size_exponent,
+				      int is_archive_catalog);
+  int snprintf_to_full_buffer(char *my_buf, size_t buf_size, 
+			      parfu_file_fragment_entry_list_t *my_list,
+			      int indx);
+  int snprintf_to_archive_buffer(char *my_buf, size_t buf_size, 
+				 parfu_file_fragment_entry_list_t *my_list,
+				 int indx);
+  parfu_file_fragment_entry_list_t 
+  *parfu_buffer_to_file_fragment_list(char *in_buffer,
+				      int *max_block_size_exponent,
+				      int is_archive_catalog);
+  char *parfu_get_next_filename(char *in_buf, 
+				char end_character,
+				int *increment_pointer);
+  
+  parfu_file_fragment_entry_list_t 
+  *parfu_ffel_from_file(char *archive_filename,
+			int *max_block_size_exponent,
+			int *catalog_buffer_length);
+  
+  int parfu_ffel_fill_rel_filenames(parfu_file_fragment_entry_list_t *my_list,
+				    char *leading_path);
+  
+  
+  // parfu_data_transfer.c
+  int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
+				 char *arch_file_name,
+				 int n_ranks, int my_rank, 
+				 int my_max_block_size_exponent,
+				 long int transfer_buffer_size,
+				 int blocks_per_fragment,
+				 int check_if_already_exist);
+  int parfu_extract_1file_singFP(char *arch_file_name,
+				 char *extract_target_dir,
+				 int n_ranks, int my_rank, 
+				 int *my_max_block_size_exponent,
+				 long int transfer_buffer_size,
+				 int my_blocks_per_fragment,
+				 int check_if_already_exist);
+  
+  /////////
+  //
+  // Data structures for main() source files (command-line flags and stuff)
+  //
+  
 #define DEFAULT_N_VALUES_IN_BEHAVIOR_CONTROL_ARRAY   10
-// Next two variables must relate, so that the indexing in file names works
-// They could be 10,1 or 100,2 or 1000,3 or 10000,4 and so on
-// so that a 0-origin index of the as many as the first value can be expressed
-// in terms of digits of the second value
+  // Next two variables must relate, so that the indexing in file names works
+  // They could be 10,1 or 100,2 or 1000,3 or 10000,4 and so on
+  // so that a 0-origin index of the as many as the first value can be expressed
+  // in terms of digits of the second value
 #define PARFU_MAX_TEST_ITERATIONS                  1000
 #define PARFU_N_DIGITS_IN_ITERATION_INDEX             3
-
-typedef struct{
-  int trial_run;
-  char mode;
-  int yn_iterations_argument;
-  int n_iterations;
-  int overwrite_archive_file;
-  char *target_directory;
-  char *data_output_file;
-  int yn_data_to_stdout;
-  int array_len;
-  int n_archive_files;
-  char **archive_files;
-  int n_min_block_exponent_values;
-  int *min_block_exponent_values;
-  int n_blocks_per_fragment_values;
-  int *blocks_per_fragment_values;
-}parfu_behavior_control_t;
-
-// parfu_behavior_control.c
-parfu_behavior_control_t *parfu_init_behavior_control(void);
-parfu_behavior_control_t *parfu_init_behavior_control_raw(int array_length);
-int parfu_behav_add_min_expon(parfu_behavior_control_t *behav,
-			      int in_exp);
-int parfu_behav_add_bl_per_frag(parfu_behavior_control_t *behav,
-				int in_bpf);
-int parfu_behav_add_arc_file(parfu_behavior_control_t *behav,
-			     char *in_filename);
-int parfu_behav_extend_array(parfu_behavior_control_t *behav);
-int parfu_are_we_in_MPI(void);
-parfu_behavior_control_t *parfu_parse_arguments(int argc, char *argv[]);
+  
+  typedef struct{
+    int trial_run;
+    char mode;
+    int yn_iterations_argument;
+    int n_iterations;
+    int overwrite_archive_file;
+    char *target_directory;
+    char *data_output_file;
+    int yn_data_to_stdout;
+    int array_len;
+    int n_archive_files;
+    char **archive_files;
+    int n_min_block_exponent_values;
+    int *min_block_exponent_values;
+    int n_blocks_per_fragment_values;
+    int *blocks_per_fragment_values;
+  }parfu_behavior_control_t;
+  
+  // parfu_behavior_control.c
+  parfu_behavior_control_t *parfu_init_behavior_control(void);
+  parfu_behavior_control_t *parfu_init_behavior_control_raw(int array_length);
+  int parfu_behav_add_min_expon(parfu_behavior_control_t *behav,
+				int in_exp);
+  int parfu_behav_add_bl_per_frag(parfu_behavior_control_t *behav,
+				  int in_bpf);
+  int parfu_behav_add_arc_file(parfu_behavior_control_t *behav,
+			       char *in_filename);
+  int parfu_behav_extend_array(parfu_behavior_control_t *behav);
+  int parfu_are_we_in_MPI(void);
+  parfu_behavior_control_t *parfu_parse_arguments(int argc, char *argv[]);
 #ifdef __cplusplus
 }
 #endif

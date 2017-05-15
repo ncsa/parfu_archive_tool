@@ -99,16 +99,15 @@ int parfu_add_name_to_ffel(parfu_file_fragment_entry_list_t **my_list,
 			   long int my_size){
   int return_value;
   if((return_value=
-     parfu_add_entry_to_ffel_raw(my_list,my_relative_filename,my_archive_filename,
-				 my_type,my_target,
-				 -1,-1,-1,-1,
-				 my_size,
-				 -1,-1,-1))){
+      parfu_add_entry_to_ffel_raw(my_list,my_relative_filename,my_archive_filename,
+				  my_type,my_target,
+				  my_size,
+				  -1,-1,-1,-1))){
     fprintf(stderr,"parfu_add_name_to_ffel:\n");
     fprintf(stderr," return from parfu_add_entry_to_ffel_raw was: %d\n",return_value);
     return return_value;
   }
-    
+  
   return 0;
 }
 
@@ -117,9 +116,8 @@ extern "C"
 int parfu_add_entry_to_ffel_mod(parfu_file_fragment_entry_list_t **list,
 				parfu_file_fragment_entry_t entry,
 				long int my_size,
-				long int my_fragment_offset,
-				long int my_first_block,
-				long int my_number_of_blocks){
+				long int my_fragment_loc_in_archive_file,
+				long int my_fragment_loc_in_orig_file){
   int return_value;
   if((return_value=
      parfu_add_entry_to_ffel_raw(list,
@@ -127,13 +125,10 @@ int parfu_add_entry_to_ffel_mod(parfu_file_fragment_entry_list_t **list,
 				 entry.archive_filename,
 				 entry.type,
 				 entry.target,
-				 entry.block_size_exponent,
-				 entry.num_blocks_in_fragment,
-				 entry.file_contains_n_fragments,
-				 my_fragment_offset,
 				 my_size,
-				 my_first_block,
-				 my_number_of_blocks,
+				 my_fragment_loc_in_archive_file,
+				 my_fragment_loc_in_orig_file,
+				 entry.file_contains_n_fragments,
 				 entry.file_ptr_index))){
     fprintf(stderr,"parfu_add_entry_to_ffel_mod:\n");
     fprintf(stderr," return from parfu_add_entry_to_ffel_raw was: %d\n",return_value);
@@ -152,13 +147,10 @@ int parfu_add_entry_to_ffel(parfu_file_fragment_entry_list_t **list,
 				 entry.archive_filename,
 				 entry.type,
 				 entry.target,
-				 entry.block_size_exponent,
-				 entry.num_blocks_in_fragment,
+				 entry.our_file_size,
+				 entry.location_in_archive_file,
+				 entry.location_in_orig_file,
 				 entry.file_contains_n_fragments,
-				 entry.fragment_offset,
-				 entry.size,
-				 entry.first_block,
-				 entry.number_of_blocks,
 				 entry.file_ptr_index))){
     fprintf(stderr,"parfu_add_entry_to_ffel:\n");
     fprintf(stderr," return from parfu_add_entry_to_ffel_raw was: %d\n",return_value);
@@ -305,6 +297,14 @@ int parfu_add_entry_to_ffel_raw(parfu_file_fragment_entry_list_t **list,
   return 0;
 }
 
+// removing all original parfu_is_a_* functions
+// in 0.5.1 redesign in May 2017.  These original functions 
+// all did stat() on their own, so we're deprecating them.
+// I'm just commenting them out for the moment just in case
+// we need to refer to the code.  --csteffen@ncsa.illinois.edu
+// 2017May15
+
+/*
 extern "C"
 int parfu_is_a_dir(char *pathname){
   struct stat filestruct;
@@ -320,7 +320,9 @@ int parfu_is_a_dir(char *pathname){
   else
     return 0;
 }
+*/
 
+/*
 extern "C"
 int parfu_does_not_exist(char *pathname){
   return parfu_does_not_exist_raw(pathname,1);
@@ -354,7 +356,9 @@ int parfu_does_not_exist_raw(char *pathname, int be_loud){
     return 0;
   }
 }
+*/
 
+/*
 extern "C"
 int parfu_is_a_regfile(char *pathname, long int *size){
   struct stat filestruct;
@@ -375,7 +379,12 @@ int parfu_is_a_regfile(char *pathname, long int *size){
     return 0;
   }
 }
+*/
 
+// this is the function that we'l use from now on (May 2017)
+// This function produced a bit-encoded unsigned int with bits
+// telling the calling function what the pathname is. 
+// this is so we only have to call stat once.  
 extern "C"
 unsigned int parfu_what_is_path(const char *pathname,
 				char **target_text,
@@ -436,6 +445,7 @@ unsigned int parfu_what_is_path(const char *pathname,
   return PARFU_WHAT_IS_PATH_IGNORED_TYPE;
 }
 
+/*
 extern "C"
 int parfu_is_a_symlink(const char *pathname,
 		       char **target_text){
@@ -475,7 +485,9 @@ int parfu_is_a_symlink(const char *pathname,
   else
     return 0;
 }
+*/
 
+/*
 // return value <0 indicates error
 extern "C"
 int parfu_what_is_file_exponent(long int file_size, 
@@ -513,6 +525,8 @@ int parfu_what_is_file_exponent(long int file_size,
   }
   return test_exp;
 }
+*/
+
 
 extern "C"
 int parfu_set_exp_offsets_in_ffel(parfu_file_fragment_entry_list_t *myl,

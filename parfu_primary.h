@@ -125,10 +125,10 @@ typedef struct{
   parfu_file_t type; // PARFU_FILE_TYPE_[REGULAR|DIR|SYMLINK]
   char *target; // string name of target of symlink; otherwise NULL
 
-  // original file size and locatin, and tar header info
+  // original file size and location, and tar header info
   long int our_file_size; // size of this fragment (or size of whole file) in bytes
   long int our_tar_header_size; // length of tar header in bytes
-  long int location_in_archive_file; beginning of tar header from beginning of archive file
+  long int location_in_archive_file; // beginning of tar header from beginning of archive file
   long int location_in_orig_file; // fragment location (in bytes) from beginning of original file
   //                              =0 for the first fragment of every file
   
@@ -137,15 +137,16 @@ typedef struct{
   char *pad_file_archive_filename;
   long int pad_file_tar_header_size;
 
+  int file_contains_n_fragments; // file will be archived/extracted in this many pieces (derived)
+  int file_ptr_index; // which of global file pointer this file uses
+
   //  int block_size_exponent; // each block is 2^block_size_exponent bytes
   //  int num_blocks_in_fragment; // each fragment is this many blocks (or less)
-  //  int file_contains_n_fragments; // file will be archived/extracted in this many pieces (derived)
   // this information is used for the individual file fragments when the file 
   //   gets split up among ranks:
-  long int fragment_offset; // fragment location (in bytes) from beginning of original file
+  //  long int fragment_offset; // fragment location (in bytes) from beginning of original file
   //  long int first_block; // fragment location (in blocks) from beginning of data in archive file
   //  long int number_of_blocks; // this fragment/file spans this many blocks
-  int file_ptr_index; // which of global file pointer this file uses
 }parfu_file_fragment_entry_t;
 
 typedef struct{

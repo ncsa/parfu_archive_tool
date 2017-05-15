@@ -48,6 +48,11 @@
 tarentry::tarentry(const std::string fn, const size_t off) : offset(off),
                    filename(fn)
 {
+  // make a private copy of the file's statbuf so that we can query 
+  // characteristics of the fn without stat()-ing every time.  This is
+  // particularly iportant on parallel file systems (Lustre in particular) when
+  // metadata is far away, time-expensive to access, and very sensitive to traffic.
+  // and parfu in particular does a lot of stat()-ing when it operates.
   int ierr = lstat(filename.c_str(), &statbuf);
   if(ierr) {
     fprintf(stderr, "Could not stat '%s': %s\n", filename.c_str(),
@@ -55,6 +60,7 @@ tarentry::tarentry(const std::string fn, const size_t off) : offset(off),
     exit(1);
   }
 
+  // if the fn is a symlink, pull a copy of its target as well.
   if(S_ISLNK(statbuf.st_mode))
   {
     char buf[PATH_MAX];
@@ -70,6 +76,8 @@ tarentry::tarentry(const std::string fn, const size_t off) : offset(off),
     linkname = buf;
   }
 
+  // if fn is a directory, append a "/" if there isn't 
+  // one there already
   if(S_ISDIR(statbuf.st_mode) && *filename.rbegin() != '/') {
     filename += "/";
   }
@@ -78,7 +86,9 @@ tarentry::tarentry(const std::string fn, const size_t off) : offset(off),
 size_t tarentry::deserialize(const char *buf)
 {
   size_t sz;
-  const char *p = buf;
+  // p walks along buf pointing to the next thing that 
+  // needs to be copied out
+  const char *p = buf;  
   memcpy(&sz, p, sizeof(sz)); p += sizeof(sz);
   memcpy(&statbuf, p, sizeof(statbuf)); p += sizeof(statbuf);
   memcpy(&offset, p, sizeof(offset)); p += sizeof(offset);
@@ -90,6 +100,8 @@ size_t tarentry::deserialize(const char *buf)
   if(linknamelen > 0) { // two statements!
     linkname = std::string(p, linknamelen); p += linknamelen;
   }
+  // error check to make sure we ran out of buffer at the same time
+  // we ran out of stuff to copy out of it.
   assert(sz == size_t(p-buf));
   return sz;
 }

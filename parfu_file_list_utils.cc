@@ -48,14 +48,26 @@ parfu_file_fragment_entry_list_t
     my_list->list[i].archive_filename=NULL;
     my_list->list[i].type=(parfu_file_t)PARFU_FILE_TYPE_INVALID;
     my_list->list[i].target=NULL;
-    my_list->list[i].block_size_exponent=-1;
-    my_list->list[i].num_blocks_in_fragment=-1;
+
+    my_list->list[i].our_file_size=PARFU_SPECIAL_SIZE_INVALID_REGFILE;
+    my_list->list[i].our_tar_header_size=-1;
+    my_list->list[i].location_in_archive_file=-1;
+    my_list->list[i].location_in_orig_file=0;
+
+    my_list->list[i].pad_file_location_in_archive_file=-1;
+    my_list->list[i].pad_file_archive_filename=NULL;
+    my_list->list[i].pad_file_tar_header_size=-1;
+
     my_list->list[i].file_contains_n_fragments=-1;
-    my_list->list[i].fragment_offset=-1;
-    my_list->list[i].size=PARFU_SPECIAL_SIZE_INVALID_REGFILE;
-    my_list->list[i].first_block=-1;
-    my_list->list[i].number_of_blocks=-1;
     my_list->list[i].file_ptr_index=-1;
+
+
+    //    my_list->list[i].block_size_exponent=-1;
+    //    my_list->list[i].num_blocks_in_fragment=-1;
+        //    my_list->list[i].fragment_offset=-1;
+    //    my_list->list[i].size=PARFU_SPECIAL_SIZE_INVALID_REGFILE;
+    // my_list->list[i].first_block=-1;
+    //    my_list->list[i].number_of_blocks=-1;
   }
   
   return my_list;
@@ -71,6 +83,8 @@ void parfu_free_ffel(parfu_file_fragment_entry_list_t *my_list){
       free(my_list->list[i].archive_filename);
     if( my_list->list[i].target != NULL )
       free(my_list->list[i].target);
+    if( my_list->list[i].pad_file_archive_filename != NULL )
+      free(my_list->list[i].pad_file_archive_filename);
   }
   free(my_list);
 }
@@ -159,13 +173,10 @@ int parfu_add_entry_to_ffel_raw(parfu_file_fragment_entry_list_t **list,
 				char *my_archive_filename,
 				parfu_file_t my_type,
 				char *my_target,
-				int my_block_size_exponent,
-				int my_num_blocks_in_fragment,
+				long int my_file_size,
+			        long int my_location_in_archive_file,
+				long int my_location_in_orig_file,
 				int my_file_contains_n_fragments,
-				long int my_fragment_offset,
-				long int my_size,
-				long int my_first_block,
-				long int my_number_of_blocks,
 				int my_file_ptr_index){
   int total_entries;
   long int total_size;
@@ -211,6 +222,7 @@ int parfu_add_entry_to_ffel_raw(parfu_file_fragment_entry_list_t **list,
   
   // now transfer over all the stuff from the individual items to the 
   // new entry in the list
+
   if(my_relative_filename!=NULL)
     string_size=strlen(my_relative_filename);
   else
@@ -255,14 +267,35 @@ int parfu_add_entry_to_ffel_raw(parfu_file_fragment_entry_list_t **list,
   else
     ((*list)->list[ind].target)[0]='\0';
   
-  (*list)->list[ind].block_size_exponent=my_block_size_exponent;
-  (*list)->list[ind].num_blocks_in_fragment = my_num_blocks_in_fragment;
+  (*list)->list[ind].our_file_size = my_file_size;
+  if(my_target){
+    (*list)->list[ind].our_tar_header_size=
+      tarentry::compute_hdr_size(my_relative_filename,
+				 my_target,my_file_size);
+  }
+  else{
+    (*list)->list[ind].our_tar_header_size=
+      tarentry::compute_hdr_size(my_relative_filename,
+				 "",my_file_size);    
+  }
+
+  (*list)->list[ind].location_in_archive_file=my_location_in_archive_file;
+  (*list)->list[ind].location_in_orig_file=my_location_in_orig_file;
+  //  (*list)->list[ind].block_size_exponent=my_block_size_exponent;
+  //  (*list)->list[ind].num_blocks_in_fragment = my_num_blocks_in_fragment;
   (*list)->list[ind].file_contains_n_fragments = my_file_contains_n_fragments;
-  (*list)->list[ind].fragment_offset = my_fragment_offset;
-  (*list)->list[ind].size = my_size;
-  (*list)->list[ind].first_block = my_first_block;
-  (*list)->list[ind].number_of_blocks = my_number_of_blocks;
+  //  (*list)->list[ind].fragment_offset = my_fragment_offset;
+  //  (*list)->list[ind].size = my_size;
+  //  (*list)->list[ind].first_block = my_first_block;
+  //  (*list)->list[ind].number_of_blocks = my_number_of_blocks;
   (*list)->list[ind].file_ptr_index = my_file_ptr_index;
+
+  // derive tar header stuff for *this* file
+  (*list)->list[ind].pad_file_location_in_archive_file = -1;
+  (*list)->list[ind].pad_file_archive_filename=NULL;
+  (*list)->list[ind].pad_file_tar_header_size=-1;
+  
+  
 
   // now finally update the number of full items in the list. 
   (*list)->n_entries_full = ind+1;

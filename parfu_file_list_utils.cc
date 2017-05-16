@@ -61,6 +61,7 @@ parfu_file_fragment_entry_list_t
     my_list->list[i].file_contains_n_fragments=-1;
     my_list->list[i].file_ptr_index=-1;
 
+    my_list->list[i].rank_bucket_index=-1;
 
     //    my_list->list[i].block_size_exponent=-1;
     //    my_list->list[i].num_blocks_in_fragment=-1;
@@ -102,7 +103,7 @@ int parfu_add_name_to_ffel(parfu_file_fragment_entry_list_t **my_list,
       parfu_add_entry_to_ffel_raw(my_list,my_relative_filename,my_archive_filename,
 				  my_type,my_target,
 				  my_size,
-				  -1,-1,-1,-1))){
+				  -1,-1,-1,-1,-1))){
     fprintf(stderr,"parfu_add_name_to_ffel:\n");
     fprintf(stderr," return from parfu_add_entry_to_ffel_raw was: %d\n",return_value);
     return return_value;
@@ -117,7 +118,10 @@ int parfu_add_entry_to_ffel_mod(parfu_file_fragment_entry_list_t **list,
 				parfu_file_fragment_entry_t entry,
 				long int my_size,
 				long int my_fragment_loc_in_archive_file,
-				long int my_fragment_loc_in_orig_file){
+				long int my_fragment_loc_in_orig_file,
+				int my_file_contains_n_fragments,
+				int my_file_ptr_index,
+				long int my_rank_bucket_index){
   int return_value;
   if((return_value=
      parfu_add_entry_to_ffel_raw(list,
@@ -128,8 +132,9 @@ int parfu_add_entry_to_ffel_mod(parfu_file_fragment_entry_list_t **list,
 				 my_size,
 				 my_fragment_loc_in_archive_file,
 				 my_fragment_loc_in_orig_file,
-				 entry.file_contains_n_fragments,
-				 entry.file_ptr_index))){
+				 my_file_contains_n_fragments,
+				 my_file_ptr_index,
+				 my_rank_bucket_index))){
     fprintf(stderr,"parfu_add_entry_to_ffel_mod:\n");
     fprintf(stderr," return from parfu_add_entry_to_ffel_raw was: %d\n",return_value);
     return return_value;
@@ -151,7 +156,8 @@ int parfu_add_entry_to_ffel(parfu_file_fragment_entry_list_t **list,
 				 entry.location_in_archive_file,
 				 entry.location_in_orig_file,
 				 entry.file_contains_n_fragments,
-				 entry.file_ptr_index))){
+				 entry.file_ptr_index,
+				 entry.rank_bucket_index))){
     fprintf(stderr,"parfu_add_entry_to_ffel:\n");
     fprintf(stderr," return from parfu_add_entry_to_ffel_raw was: %d\n",return_value);
     return return_value;
@@ -169,7 +175,8 @@ int parfu_add_entry_to_ffel_raw(parfu_file_fragment_entry_list_t **list,
 			        long int my_location_in_archive_file,
 				long int my_location_in_orig_file,
 				int my_file_contains_n_fragments,
-				int my_file_ptr_index){
+				int my_file_ptr_index, 
+				long int my_rank_bucket_index){
   int total_entries;
   long int total_size;
   int string_size;
@@ -287,7 +294,7 @@ int parfu_add_entry_to_ffel_raw(parfu_file_fragment_entry_list_t **list,
   (*list)->list[ind].pad_file_archive_filename=NULL;
   (*list)->list[ind].pad_file_tar_header_size=-1;
   
-  
+  (*list)->list[ind].rank_bucket_index = my_rank_bucket_index;
 
   // now finally update the number of full items in the list. 
   (*list)->n_entries_full = ind+1;
@@ -527,7 +534,8 @@ int parfu_what_is_file_exponent(long int file_size,
 }
 */
 
-
+// old version.  deprecated 2017May.  Keeping for reference.
+/*
 extern "C"
 int parfu_set_exp_offsets_in_ffel(parfu_file_fragment_entry_list_t *myl,
 				  int min_exp,
@@ -554,6 +562,178 @@ int parfu_set_exp_offsets_in_ffel(parfu_file_fragment_entry_list_t *myl,
 
       block_size = int_power_of_2(block_size_exponent);
       n_blocks = myl->list[i].size / block_size;
+      if(myl->list[i].size % block_size)
+	n_blocks++;
+      myl->list[i].number_of_blocks = n_blocks;
+      
+      first_block = first_avail_byte / block_size;
+      if(first_avail_byte % block_size){
+	first_block++;
+      }
+      myl->list[i].first_block=first_block;
+      
+      first_avail_byte = (first_block * block_size) + myl->list[i].size;
+    } // if type is regular
+    else{
+      // other types of entries
+      // directories, symlinks
+      myl->list[i].block_size_exponent=-1;
+      myl->list[i].number_of_blocks=0;
+      myl->list[i].first_block=0; 
+    }
+    myl->list[i].num_blocks_in_fragment = -1; // don't know fragment size yet   
+    myl->list[i].file_contains_n_fragments = -1; // likewise
+    myl->list[i].file_ptr_index=i;
+    myl->list[i].fragment_offset=0L;  // always zero in archive file
+  } // for(i  [loop over entries in myl]
+  return 0;
+}
+*/
+
+// new modified version as of May 2017
+// this function lays out the target files in the archive file.  It allows
+// space for the tar header for each file before the file itself.  It
+// also keeps in mind the blocking. 
+// 
+// this function now subsumes the "split" function that used to live
+// in a separate function farther down this file.
+extern "C"
+int parfu_set_offsets_in_ffel(parfu_file_fragment_entry_list_t *myl,
+			      int per_file_blocking_size, 
+			      int per_rank_accumulation_size){
+  int i,j;
+
+  long int sum_file_size; // sum of tar header size and file size  
+  long int blocked_sum_file_size; // above epanded out to per-file block size
+
+  long int write_loc_whole_archive_file;
+  long int write_loc_this_rank;
+  long int new_write_loc_this_rank;
+
+  long int current_rank_bucket;
+  int n_buckets_per_file;
+  int is_uneven_multiple;
+
+  long int data_to_write;
+  
+  write_loc_whole_archive_file = 0L;
+  write_loc_this_rank = 0L;
+  current_rank_bucket = 0L;
+  for(i=0;i<myl->n_entries_full;i++){
+    if(myl->list[i].our_tar_header_size < 0){
+      fprintf(stderr,"parfu_set_offsets_in_ffel:\n");
+      fprintf(stderr,"  file %d (REG file) tar_header size = %l!\n",
+	      i,myl->list[i].our_tar_header_size);
+      return -1;
+    }
+    if(myl->list[i].our_file_size >= 0L){
+      sum_file_size = myl->list[i].our_file_size + 
+	myl->list[i].our_tar_header_size;
+    }
+    else{
+      sum_file_size = myl->list[i].our_tar_header_size;
+      // because this is a special file with a negative "size" 
+      // for sorting purposes, but that means that the actual 
+      // data payload is zero
+    }
+    
+    // pad the file out if necessary
+    if( ! ( sum_file_size % per_file_blocking_size ) ){
+      // if it's already an exact multiple of the block size
+      blocked_sum_file_size = sum_file_size;
+    }
+    else{
+      // otherwise, increase it up to the next even multiple
+      blocked_sum_file_size = 
+	( ( sum_file_size / per_file_blocking_size ) + 1 ) * per_file_blocking_size;
+    }
+    
+    // now using sum_file_size as the number of actual bytes we're going to 
+    // write to the archive file on behalf of the current file, we figure
+    // out where to start writing it, depending on how big it is
+    
+    if(blocked_sum_file_size <= per_rank_accumulation_size){
+      // this file plus header will fit within a bucket (by itself)
+
+      // check to see if the current file and header will fit in the 
+      // current bucket, given the files that have already been written 
+      
+      // after we account for the current file, this is where the next 
+      // one will begin.
+      new_write_loc_this_rank = write_loc_this_rank + blocked_sum_file_size;
+      
+      if( new_write_loc_this_rank < per_rank_accumulation_size ){
+	// it will fit in the current bucket
+	myl->list[i].location_in_archive_file = write_loc_whole_archive_file;
+	write_loc_this_rank = new_write_loc_this_rank;
+	write_loc_whole_archive_file += blocked_sum_file_size;
+	// no update to bucket index; we're still in the same one
+	myl->list[i].rank_bucket_index = current_rank_bucket;
+	myl->list[i].location_in_orig_file = 0L;
+      }
+      else{
+	// it would spill off the current bucket, so we'll set it to 
+	// be at the beginning of the next one
+	if(!(write_loc_whole_archive_file % blocked_sum_file_size)){
+	  fprintf(stderr,"parfu_set_offsets_in_ffel:\n");
+	  fprintf(stderr,"  file %d weird math error; should NEVER happen!!!\n",
+		  i);
+	  return -1;
+	}
+	else{
+	  // slide the write position to the beginning of the next bucket
+	  write_loc_whole_archive_file = 
+	    ( ( write_loc_whole_archive_file / per_rank_accumulation_size ) + 1 ) 
+	    * per_rank_accumulation_size;
+	  myl->list[i].location_in_archive_file = write_loc_whole_archive_file;
+	  current_rank_bucket++;
+	  // slide write position to the end of the current file
+	  write_loc_whole_archive_file += blocked_sum_file_size;
+	  write_loc_this_rank = blocked_sum_file_size;
+	  // update what bucket we're in
+	  myl->list[i].rank_bucket_index=current_rank_bucket;
+	  myl->list[i].location_in_orig_file = 0L;
+	} // else 
+      } // else (if it would spill out of current bucket)
+    } // if(blocked_sum_file_size....
+    else{
+      // file plus tar header is bigger than a bucket, so it will 
+      // occupy more than one.  We now split the file up so that 
+      // it gets processed by more than one rank.
+      n_buckets_per_file = 
+	blocked_sum_file_size / per_rank_accumulation_size;
+      if(blocked_sum_file_size % per_rank_accumulation_size){
+	is_uneven_multiple=1;
+      }
+      else{
+	is_uneven_multiple=0;
+      }
+      data_to_write = blocked_sum_file_size;
+      for(j=0;j<n_buckets_per_file;j++){
+	myl->list[i].location_in_archive_file = 
+	  write_loc_whole_archive_file;
+	write_loc_whole_archive_file += per_rank_accumulation_size;
+	myl->list[i].rank_bucket_index = current_rank_bucket;
+	current_rank_bucket++;
+	myl->list[i].location_in_orig_file = 
+	  per_rank_accumulation_size * j;
+	data_to_write -= per_rank_accumulation_size;
+      }
+      // data_to_write now contains the sub-bucket amount to be written 
+      // in the last partial bucket
+      if(is_uneven_multiple){
+	j=n_buckets_per_file;
+	myl->list[i].location_in_archive_file = 
+	  write_loc_whole_archive_file;
+	write_loc_whole_archive_file += data_to_write;
+	myl->list[i].rank_bucket_index = current_rank_bucket;
+	current_rank_bucket++;
+	myl->list[i].location_in_orig_file = 
+	  per_rank_accumulation_size * j;
+	data_to_write -= per_rank_accumulation_size;
+	
+      }
+      
       if(myl->list[i].size % block_size)
 	n_blocks++;
       myl->list[i].number_of_blocks = n_blocks;
@@ -954,6 +1134,7 @@ void parfu_qsort_entry_list(parfu_file_fragment_entry_list_t *my_list){
 	 &parfu_compare_fragment_entry_by_size);
 }
 
+/*
 extern "C"
 int int_power_of(int base, int power){
   int answer=1;
@@ -975,6 +1156,7 @@ int int_power_of_2(int arg){
     return 1;
   }
 }
+*/
 
 extern "C"
 parfu_file_fragment_entry_list_t 

@@ -147,6 +147,13 @@ typedef struct{
   //  long int fragment_offset; // fragment location (in bytes) from beginning of original file
   //  long int first_block; // fragment location (in blocks) from beginning of data in archive file
   //  long int number_of_blocks; // this fragment/file spans this many blocks
+
+
+  // data is arranged in the archive file by "rank buckets".  These are chunks of data
+  // up to the size that one rank deals with.  Files smaller than that are grouped together. 
+  // Files bigger than that take up more than one, but each fragment exists in one 
+  // rank bucket.
+  long int rank_bucket_index;
 }parfu_file_fragment_entry_t;
 
 typedef struct{
@@ -165,6 +172,7 @@ extern "C" {
   
   void parfu_free_ffel(parfu_file_fragment_entry_list_t *my_list);
   
+  // used when initially populating a list
   int parfu_add_name_to_ffel(parfu_file_fragment_entry_list_t **list,
 			     parfu_file_t type,
 			     char *relative_filename, // must be valid string
@@ -175,11 +183,18 @@ extern "C" {
   int parfu_add_entry_to_ffel(parfu_file_fragment_entry_list_t **list,
 			      parfu_file_fragment_entry_t entry);
   
+  // used when splitting one list to another. list is new list, 
+  // entry is from the old list, the 
+  // characteristics are transferred to the new list entry with the modified
+  // characteristics of the other arguments
   int parfu_add_entry_to_ffel_mod(parfu_file_fragment_entry_list_t **list,
 				  parfu_file_fragment_entry_t entry,
 				  long int my_size, // fragment size
 				  long int my_fragment_loc_in_archive_file,
-				  long int my_fragment_loc_in_orig_file);
+				  long int my_fragment_loc_in_orig_file,
+				  int my_file_contains_n_fragments,
+				  int my_file_ptr_index,
+				  long int my_rank_bucket_index);
   
   int parfu_add_entry_to_ffel_raw(parfu_file_fragment_entry_list_t **list,
 				  char *my_relative_filename,
@@ -190,7 +205,8 @@ extern "C" {
 				  long int my_location_in_archive_file,
 				  long int my_location_in_orig_file,
 				  int my_file_contains_n_fragments,
-				  int my_file_ptr_index);
+				  int my_file_ptr_index, 
+				  long int my_rank_bucket_index);
   
   // these are deprecated May 15 2017
   // we'll remove them entirely once we know 
@@ -216,8 +232,8 @@ extern "C" {
   
   int parfu_compare_fragment_entry_by_size(const void *vA, const void *vB);
   void parfu_qsort_entry_list(parfu_file_fragment_entry_list_t *my_list);
-  int int_power_of(int base, int power);
-  int int_power_of_2(int arg);
+  //  int int_power_of(int base, int power);
+  //  int int_power_of_2(int arg);
   parfu_file_fragment_entry_list_t 
   *parfu_split_fragments_in_list(parfu_file_fragment_entry_list_t *in_list,
 				 int min_block_size_exponent,
@@ -232,6 +248,15 @@ extern "C" {
 				    int min_exp,
 				    int max_exp);
   */
+
+  // files will be spaced to begin at the next even multiple of the
+  // per-file blocking size.  Files will also be spaced so that files
+  // smaller than the per-rank blocking size will always live in
+  // only one rank's buffer, and files larger than that will 
+  // always start on an even multiple of the per-rank blocking size.
+  int parfu_set_offsets_in_ffel(parfu_file_fragment_entry_list_t *myl,
+				int per_file_blocking_size,
+				int per_rank_blocking_size);
   unsigned int parfu_what_is_path(const char *pathname,
 				  char **target_text,
 				  long int *size,

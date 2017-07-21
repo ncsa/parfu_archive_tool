@@ -244,14 +244,14 @@ extern "C" {
 				 int blocks_per_fragment);
   // removing exponent stuff in May 2017 redesign
   /*
-  int parfu_what_is_file_exponent(long int file_size, 
-				  int min_exponent,
-				  int max_exponent);
-  int parfu_set_exp_offsets_in_ffel(parfu_file_fragment_entry_list_t *myl,
-				    int min_exp,
-				    int max_exp);
+    int parfu_what_is_file_exponent(long int file_size, 
+    int min_exponent,
+    int max_exponent);
+    int parfu_set_exp_offsets_in_ffel(parfu_file_fragment_entry_list_t *myl,
+    int min_exp,
+    int max_exp);
   */
-
+  
   // files will be spaced to begin at the next even multiple of the
   // per-file blocking size.  Files will also be spaced so that files
   // smaller than the per-rank blocking size will always live in
@@ -260,6 +260,12 @@ extern "C" {
   int parfu_set_offsets_in_ffel(parfu_file_fragment_entry_list_t *myl,
 				int per_file_blocking_size,
 				int per_rank_blocking_size);
+  parfu_file_fragment_entry_list_t 
+  *parfu_set_offsets_and_split_ffel(parfu_file_fragment_entry_list_t *myl,
+				    int per_file_blocking_size, 
+				    int per_rank_accumulation_size,
+				    char *my_pad_file_filename, 
+				    int *n_rank_buckets);
   unsigned int parfu_what_is_path(const char *pathname,
 				  char **target_text,
 				  long int *size,

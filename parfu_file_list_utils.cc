@@ -616,7 +616,8 @@ parfu_file_fragment_entry_list_t
 *parfu_set_offsets_and_split_ffel(parfu_file_fragment_entry_list_t *myl,
 				  int per_file_blocking_size, 
 				  int per_rank_accumulation_size,
-				  char *my_pad_file_filename){
+				  char *my_pad_file_filename, 
+				  int *n_rank_buckets){
   parfu_file_fragment_entry_list_t *outlist=NULL;
 
   int i,j;
@@ -631,7 +632,7 @@ parfu_file_fragment_entry_list_t
   long int new_write_loc_this_rank;
 
   long int possible_pad_space;
-  long int pad_file_size;
+  //  long int pad_file_size;
   long int pad_file_header_size;
   long int new_pad_file_header_size;
 
@@ -667,7 +668,7 @@ parfu_file_fragment_entry_list_t
     // then set sum_file_size
     if(myl->list[i].our_tar_header_size < 0){
       fprintf(stderr,"parfu_set_offsets_in_ffel:\n");
-      fprintf(stderr,"  file %d (REG file) tar_header size = %l!\n",
+      fprintf(stderr,"  file %d (REG file) tar_header size = %ld!\n",
 	      i,myl->list[i].our_tar_header_size);
       return NULL;
     }
@@ -735,7 +736,7 @@ parfu_file_fragment_entry_list_t
 				       current_rank_bucket)){
 	  fprintf(stderr,"parfu_set_offsets_and_split_ffel:\n");
 	  fprintf(stderr,"  in OPTION A\n");
-	  fprintf(stderr," could not add entry %d to split list bucket %d!!!!\n",
+	  fprintf(stderr," could not add entry %d to split list bucket %ld!!!!\n",
 		  i,current_rank_bucket);
 	  return NULL;	  
 	}
@@ -814,6 +815,9 @@ parfu_file_fragment_entry_list_t
 	      fprintf(stderr,"  Dont' know how to deal with this!\n");
 	      return NULL;
 	    }
+	    // we need a pad before this file after the previous one
+	    // put that information into the INCOMING list so that it
+	    // gets propogated to the outgoing list
 	    myl->list[i].pad_file_location_in_archive_file = 
 	      write_loc_whole_archive_file;
 	    if((myl->list[i].pad_file_archive_filename=
@@ -830,7 +834,6 @@ parfu_file_fragment_entry_list_t
 	      possible_pad_space-pad_file_header_size;
 	  } // if(possible_pad_space...
 	  
-
 	  if(parfu_add_entry_to_ffel_mod(&outlist,myl->list[i],
 					 myl->list[i].our_file_size,
 					 write_loc_whole_archive_file+myl->list[i].our_tar_header_size,
@@ -840,7 +843,7 @@ parfu_file_fragment_entry_list_t
 					 current_rank_bucket)){
 	    fprintf(stderr,"parfu_set_offsets_and_split_ffel:\n");
 	    fprintf(stderr,"  in OPTION B\n");
-	    fprintf(stderr," could not add entry %d to split list bucket %d!!!!\n",
+	    fprintf(stderr," could not add entry %d to split list bucket %ld!!!!\n",
 		    i,current_rank_bucket);
 	    return NULL;	  
 	  } // if(parfu_add_entry...
@@ -886,6 +889,7 @@ parfu_file_fragment_entry_list_t
       possible_pad_space = 
 	(write_loc_whole_archive_file - old_write_loc_whole_archive_file);
       
+      myl->list[i].location_in_archive_file = write_loc_whole_archive_file;
 
       if( possible_pad_space >= per_file_blocking_size ){
 	// the space is as big as the blocking size, so we need to pad it
@@ -946,52 +950,58 @@ parfu_file_fragment_entry_list_t
 	  possible_pad_space-pad_file_header_size;
       } // if(possible_pad_space...
       
-      
       for(j=0;j<n_whole_buckets_per_file;j++){
-	myl->list[i].rank_bucket_index = current_rank_bucket;
+	//	myl->list[i].rank_bucket_index = current_rank_bucket;
 	//	data_to_write -= per_rank_accumulation_size;
 	if(j){
 	  // do all the middle bucket stuff
-	  myl->list[i].location_in_archive_file = 
-	    write_loc_whole_archive_file;
-	  myl->list[i].location_in_orig_file = 
-	    (per_rank_accumulation_size * j) - myl->list[i].our_tar_header_size;
+	  //	  myl->list[i].location_in_archive_file = 
+	  //	    write_loc_whole_archive_file;
+	  //	  myl->list[i].location_in_orig_file = 
+	  //	    (per_rank_accumulation_size * j) - myl->list[i].our_tar_header_size;
 	  if(parfu_add_entry_to_ffel_mod(&outlist,myl->list[i],
 					 per_rank_accumulation_size,
 					 write_loc_whole_archive_file,
-					 0L, // single fragment; zero by def
-					 1,  // just one fragment
+					 (per_rank_accumulation_size * j) - myl->list[i].our_tar_header_size,
+					 n_total_buckets_per_file,
 					 -1, // file pointer index; assigned elsewhere
 					 current_rank_bucket)){
 	    fprintf(stderr,"parfu_set_offsets_and_split_ffel:\n");
 	    fprintf(stderr,"  in OPTION C1\n");
 	    fprintf(stderr," could not add entry to split list!\n");
-	    fprintf(stderr,"  in list %d bucket %d to split list entry %d!!!!\n",
+	    fprintf(stderr,"  in list %d bucket %ld to split list entry %d!!!!\n",
 		    i,current_rank_bucket,j);
 	    return NULL;	  
 	  } // if(parfu_add_entry...
+	  data_to_write -= per_rank_accumulation_size;
+	  blocked_data_to_write -= per_rank_accumulation_size;
 	} // if(j)
 	else{
 	  // do the special stuff for the *first* bucket
-	  myl->list[i].location_in_archive_file = 
-	    write_loc_whole_archive_file + myl->list[i].our_tar_header_size;
-	  myl->list[i].location_in_orig_file = 0L;
+	  //	  myl->list[i].location_in_archive_file = 
+	  //	    write_loc_whole_archive_file + myl->list[i].our_tar_header_size;
+	  //	  myl->list[i].location_in_orig_file = 0L;
 	  if(parfu_add_entry_to_ffel_mod(&outlist,myl->list[i],
 					 per_rank_accumulation_size-myl->list[i].our_tar_header_size,
 					 write_loc_whole_archive_file+myl->list[i].our_tar_header_size,
 					 0L, // first fragment
-					 n_whole_buckets_per_file,  // n fragments
+					 n_total_buckets_per_file,  // n fragments
 					 -1, // file pointer index; assigned elsewhere
 					 current_rank_bucket)){
 	    fprintf(stderr,"parfu_set_offsets_and_split_ffel:\n");
 	    fprintf(stderr,"  in OPTION C1\n");
 	    fprintf(stderr," could not add entry to split list!\n");
-	    fprintf(stderr,"  in list %d bucket %d to split list entry %d!!!!\n",
+	    fprintf(stderr,"  in list %d bucket %ld to split list entry %d!!!!\n",
 		    i,current_rank_bucket,j);
 	    return NULL;	  
 	  } // if(parfu_add_entry...
-	  
-	}
+	  data_to_write -=
+	    ( per_rank_accumulation_size - 
+	      myl->list[i].our_tar_header_size );
+	  blocked_data_to_write -=
+	    ( per_rank_accumulation_size - 
+	      myl->list[i].our_tar_header_size );
+	} // else
 	current_rank_bucket++;
 	write_loc_whole_archive_file = 
 	  ( current_rank_bucket * per_rank_accumulation_size );	
@@ -1001,10 +1011,29 @@ parfu_file_fragment_entry_list_t
       // in the last partial bucket
       if(is_uneven_multiple){
 	j=n_whole_buckets_per_file;
-	myl->list[i].location_in_archive_file = 
-	  write_loc_whole_archive_file;
-	write_loc_whole_archive_file += data_to_write;
-	myl->list[i].rank_bucket_index = current_rank_bucket;
+
+
+	//	myl->list[i].location_in_archive_file = 
+	//	  write_loc_whole_archive_file;
+	//	myl->list[i].rank_bucket_index = current_rank_bucket;
+	
+	if(parfu_add_entry_to_ffel_mod(&outlist,myl->list[i],
+				       data_to_write,
+				       write_loc_whole_archive_file+myl->list[i].our_tar_header_size,
+					 (per_rank_accumulation_size * j) - myl->list[i].our_tar_header_size,				     
+				       n_total_buckets_per_file,  // n fragments
+				       -1, // file pointer index; assigned elsewhere
+				       current_rank_bucket)){
+	  fprintf(stderr,"parfu_set_offsets_and_split_ffel:\n");
+	  fprintf(stderr,"  in OPTION C3\n");
+	  fprintf(stderr," could not add entry to split list!\n");
+	  fprintf(stderr,"  in list %d bucket %ld to split list entry %d!!!!\n",
+		  i,current_rank_bucket,j);
+	  return NULL;	  
+	} // if(parfu_add_entry...
+	
+	write_loc_whole_archive_file += blocked_data_to_write;
+
 	current_rank_bucket++;
 	myl->list[i].location_in_orig_file = 
 	  per_rank_accumulation_size * j;
@@ -1013,6 +1042,7 @@ parfu_file_fragment_entry_list_t
       }
     } // else{   (this file + tar header is bigger than a bucket)
   } // for(i=0;
+  *n_rank_buckets = current_rank_bucket;
   return 0;
 }
 
@@ -1337,9 +1367,9 @@ void parfu_check_offsets(parfu_file_fragment_entry_list_t *my_list,
 			 FILE *output){
   int i,j;
   int chars_printed;
-  long int block_begins;
-  int block_size;
-  long int block_ends;
+  //  long int block_begins;
+  //  int block_size;
+  //  long int block_ends;
   fprintf(output,"\n\n");
   fprintf(output,"beginning offset checking. There are %d entries in total.\n",
 	  my_list->n_entries_full);
@@ -1354,19 +1384,12 @@ void parfu_check_offsets(parfu_file_fragment_entry_list_t *my_list,
       fprintf(output," ");
     } 
 
-    block_size=int_power_of_2(my_list->list[i].block_size_exponent);
-    block_begins = block_size * my_list->list[i].first_block;
-    if(my_list->list[i].size)
-      block_ends = (block_begins + my_list->list[i].size) - 1;
-    else
-      block_ends = block_begins;
     fprintf(output,"  %c   ",parfu_return_type_char(my_list->list[i].type));
     if(my_list->list[i].type == PARFU_FILE_TYPE_REGULAR)
-      fprintf(output,"  #bl=%3ld  exp=%d  %10ld  %10ld   %10ld",
-	      my_list->list[i].number_of_blocks,
-	      my_list->list[i].block_size_exponent,
-	      block_begins,block_ends,
-	      my_list->list[i].size);
+      fprintf(output,"  %10ld  %10ld   %10ld",
+	      my_list->list[i].our_file_size,
+	      my_list->list[i].our_tar_header_size,
+	      my_list->list[i].location_in_archive_file);
     fprintf(output,"\n");
 
   }
@@ -1381,8 +1404,8 @@ int parfu_compare_fragment_entry_by_size(const void *vA, const void *vB){
   long int sizeA, sizeB;
   A=(parfu_file_fragment_entry_t*)vA;
   B=(parfu_file_fragment_entry_t*)vB;
-  sizeA=A->size;
-  sizeB=B->size;
+  sizeA=A->our_file_size;
+  sizeB=B->our_file_size;
   
   if(sizeA > sizeB)
     return +1;
@@ -1424,6 +1447,8 @@ int int_power_of_2(int arg){
 }
 */
 
+// this function deprecated as of July 2017
+/* 
 extern "C"
 parfu_file_fragment_entry_list_t 
 *parfu_split_fragments_in_list(parfu_file_fragment_entry_list_t *in_list,
@@ -1689,3 +1714,4 @@ parfu_file_fragment_entry_list_t
   return out_list;
 }
 
+*/

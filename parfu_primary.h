@@ -132,10 +132,12 @@ typedef struct{
   long int location_in_orig_file; // fragment location (in bytes) from beginning of original file
   //                              =0 for the first fragment of every file
   
-  // information about padding pseudo-file following this file
-  long int pad_file_location_in_archive_file;
-  char *pad_file_archive_filename;
+  // information about padding pseudo-file right before this file
+  long int pad_file_location_in_archive_file; // = -1 if there's no pad between the last file and
+  // this one
+  char *pad_file_archive_filename; // file name of that pad file
   long int pad_file_tar_header_size;
+  long int pad_file_size;
 
   int file_contains_n_fragments; // file will be archived/extracted in this many pieces (derived)
   int file_ptr_index; // which of global file pointer this file uses
@@ -202,6 +204,7 @@ extern "C" {
 				  parfu_file_t my_type,
 				  char *my_target,
 				  long int my_size,
+				  long int my_tar_header_size,
 				  long int my_location_in_archive_file,
 				  long int my_location_in_orig_file,
 				  int my_file_contains_n_fragments,

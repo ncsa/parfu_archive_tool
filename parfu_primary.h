@@ -155,7 +155,7 @@ typedef struct{
   // up to the size that one rank deals with.  Files smaller than that are grouped together. 
   // Files bigger than that take up more than one, but each fragment exists in one 
   // rank bucket.
-  long int rank_bucket_index;
+  int rank_bucket_index;
 }parfu_file_fragment_entry_t;
 
 typedef struct{
@@ -297,7 +297,9 @@ extern "C" {
   
   int parfu_ffel_fill_rel_filenames(parfu_file_fragment_entry_list_t *my_list,
 				    char *leading_path);
-  
+
+  int *parfu_rank_call_list_from_ffel(parfu_file_fragment_entry_list_t *myl,
+				      int *n_rank_buckets);
   
   // parfu_data_transfer.c
   int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
@@ -314,6 +316,23 @@ extern "C" {
 				 long int transfer_buffer_size,
 				 int my_blocks_per_fragment,
 				 int check_if_already_exist);
+int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
+					 int n_ranks, int my_rank,
+					 int *rank_call_list,
+					 int rank_call_list_index,
+					 long int blocking_size,
+					 long int bucket_size,
+					 void *transfer_buffer,
+					 long int data_region_start,
+					 MPI_File *archive_file_ptr);
+int parfu_wtar_archive_allbuckets_singFP(parfu_file_fragment_entry_list_t *myl,
+					 int n_ranks, int my_rank,
+					 int *rank_call_list,
+					 int rank_call_list_length,
+					 long int blocking_size,
+					 long int bucket_size,
+					 long int data_region_start,
+					 char *archive_file_name);
   
   /////////
   //

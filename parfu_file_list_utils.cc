@@ -1715,3 +1715,55 @@ parfu_file_fragment_entry_list_t
 }
 
 */
+
+
+extern "C"
+int *parfu_rank_call_list_from_ffel(parfu_file_fragment_entry_list_t *myl,
+				    int *n_rank_buckets){
+  int i;
+  int last_bucket_index=(-1);
+  int current_bucket_index;
+  int *prelim_list=NULL;
+  int *final_list=NULL;
+  if(myl==NULL){
+    fprintf(stderr,"parfu_rank_call_list_from_ffel:\n");
+    fprintf(stderr,"  received NULL input list!!\n");
+    return NULL;
+  }
+  if((prelim_list=(int*)malloc(sizeof(int)*
+			       myl->n_entries_full))==NULL){
+    fprintf(stderr,"parfu_rank_call_list_from_ffel:\n");
+    fprintf(stderr,"  could not allocate initial list of %d entries!\n",
+	    myl->n_entries_full);
+    return NULL;
+  }
+  current_bucket_index=0;
+  
+  prelim_list[0]=0;
+  if(myl->list[0].rank_bucket_index != 0){
+    fprintf(stderr,"parfu_rank_call_list_from_ffel:\n");
+    fprintf(stderr,"  Very first rank_bucket_index=%d!\n",
+	    myl->list[0].rank_bucket_index);
+    fprintf(stderr,"  Why isn't it zero!!?!\n");
+    return NULL;
+  }
+  for( i=0 ; i< myl->n_entries_full ; i++){
+    if( myl->list[i].rank_bucket_index != last_bucket_index ){
+      prelim_list[current_bucket_index] = 
+	myl->list[i].rank_bucket_index;
+      last_bucket_index = myl->list[i].rank_bucket_index;
+      current_bucket_index++;
+    }
+  }
+  *n_rank_buckets = current_bucket_index;
+  if((final_list=(int*)malloc(sizeof(int)*
+			      current_bucket_index))==NULL){
+    fprintf(stderr,"parfu_rank_call_list_from_ffel:\n");
+    fprintf(stderr,"  could not allocate final list of %d entries!\n",
+	    current_bucket_index);
+    return NULL;
+  }
+  memcpy(final_list,prelim_list,sizeof(int)*current_bucket_index);
+  free(prelim_list);
+  return final_list;
+}

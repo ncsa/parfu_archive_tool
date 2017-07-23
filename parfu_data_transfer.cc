@@ -23,6 +23,198 @@
 #include "parfu_primary.h"
 #include "tarentry.hh"
 
+// this is an MPI function; expected to be run by all ranks.
+// we assume that each rank can allocate, fill, and use a buffer
+// the size of a whole bucket.
+
+extern "C"
+int parfu_wtar_archive_allbuckets_singFP(parfu_file_fragment_entry_list_t *myl,
+					 int n_ranks, int my_rank,
+					 int *rank_call_list,
+					 int rank_call_list_length,
+					 long int blocking_size,
+					 long int bucket_size,
+					 long int data_region_start,
+					 char *archive_file_name){
+  MPI_File *archive_file_ptr=NULL;
+  MPI_Info my_Info=MPI_INFO_NULL;
+  int return_val;
+
+  int file_result;
+  
+  int rank_iter;
+  
+  void *transfer_buffer=NULL;
+
+  if((archive_file_ptr=(MPI_File*)malloc(sizeof(MPI_File)))==NULL){
+    fprintf(stderr,"parfu_wtar_archive_allbuckets_singFP:\n");
+    fprintf(stderr,"rank %d could not allocate space for archive file pointer!\n",my_rank);
+    MPI_Finalize();
+    return 75;
+  }
+  file_result=MPI_File_open(MPI_COMM_WORLD, archive_file_name, 
+			    MPI_MODE_WRONLY | MPI_MODE_CREATE | MPI_MODE_EXCL, 
+			    my_Info, archive_file_ptr);
+  if(file_result != MPI_SUCCESS){
+    fprintf(stderr,"parfu_wtar_archive_allbuckets_singFP:\n");
+    fprintf(stderr,"parfu_archive_1file_singFP:\n");
+    fprintf(stderr,"MPI_File_open for archive buffer:  returned error!  Rank %d file >%s<\n",
+	    my_rank,
+	    archive_file_name);
+    return 3; 
+  }
+  rank_iter = my_rank;
+  while(rank_iter < rank_call_list_length){
+    if((return_val=parfu_wtar_archive_one_bucket_singFP(myl,n_ranks,my_rank,
+						       rank_call_list,
+						       rank_call_list_length,
+						       blocking_size,bucket_size,
+						       transfer_buffer,
+						       data_region_start,
+							archive_file_ptr))){
+      fprintf(stderr,"parfu_wtar_archive_allbuckets_singFP:\n");
+      fprintf(stderr,"rank_iter=%d\n",rank_iter);
+      fprintf(stderr," received value %d from parfu_wtar_archive_one_bucket_singFP.  Help!\n",
+	      return_val);
+      return 12;
+    }
+  } // while(rank_iter < ...
+  return 0;
+}
+
+extern "C"
+int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
+					 int n_ranks, int my_rank,
+					 int *rank_call_list,
+					 int rank_call_list_index,
+					 long int blocking_size,
+					 long int bucket_size,
+					 void *transfer_buffer,
+					 long int data_region_start,
+					 MPI_File *archive_file_ptr){
+  int current_entry;
+  int last_bucket_index;
+  
+  //  long int source_file_loc;
+  long int archive_file_loc;
+  //  long int current_bucket_loc;
+  long int current_write_loc_in_bucket;
+  long int blocked_data_written;
+  //  long int total_blocked_data_written;
+  
+  MPI_File target_file_ptr;
+  MPI_Info my_Info=MPI_INFO_NULL;
+  MPI_Status my_MPI_Status;
+
+  std::vector<char> temp_file_header_C;
+  tarentry my_tar_header_C;
+  int file_result;
+
+  if(bucket_size < 10000){
+    fprintf(stderr,"parfu_wtar_archive_one_bucket_singFP:\n");
+    fprintf(stderr,"  Input bucket_size is: %ld !!!\n",bucket_size);
+    fprintf(stderr,"  this is very unlikely to be right!\n");
+    return 100;
+  }
+  if(transfer_buffer == NULL){
+    fprintf(stderr,"parfu_wtar_archive_one_bucket_singFP:\n");
+    fprintf(stderr,"  transfer buffer is NULL!\n");
+    return 101;
+  }
+  current_entry=rank_call_list[rank_call_list_index];
+  last_bucket_index = myl->list[current_entry].rank_bucket_index;
+  
+  // copy data from file(s) into buffer
+  // walk through entries until we hit the next bucket
+
+  //  current_bucket_loc = 
+  //    bucket_size * rank_call_list_index;
+  current_write_loc_in_bucket = 0L;
+  //  total_blocked_data_written=0L;
+  while(myl->list[current_entry].rank_bucket_index == last_bucket_index && 
+	current_entry < myl->n_entries_full){
+    // open target file
+    file_result=MPI_File_open(MPI_COMM_SELF,
+			      myl->list[current_entry].relative_filename,
+			      MPI_MODE_RDONLY,
+			      my_Info,&target_file_ptr);
+    if(file_result != MPI_SUCCESS){
+      fprintf(stderr,"parfu_wtar_archive_one_bucket_singFP:\n");
+      fprintf(stderr,"rank %d got non-zero result when opening target file %s!\n",
+	      my_rank,
+	      myl->list[current_entry].relative_filename);
+      fprintf(stderr,"for reading.  result=%d\n",file_result);
+      return 138;
+    }
+    
+    // copy data from target file to buffer
+    file_result=
+      MPI_File_read_at(target_file_ptr,
+		       myl->list[current_entry].location_in_orig_file,
+		       ((void*)(((char*)(transfer_buffer)+current_write_loc_in_bucket))),
+		       myl->list[current_entry].our_file_size,
+		       MPI_CHAR,&my_MPI_Status);
+    if(file_result != MPI_SUCCESS){
+      fprintf(stderr,"parfu_wtar_archive_one_bucket_singFP:\n");	
+      fprintf(stderr,"rank %d got %d from MPI_File_read_at\n",my_rank,file_result);
+      fprintf(stderr,"reading fragment %d",rank_call_list_index);
+      fprintf(stderr,"file %s\n",myl->list[current_entry].relative_filename);
+      return 159;
+    }      
+
+    // create the tar header for this file, if it's the first chunk of the file
+    if(!(myl->list[current_entry].location_in_orig_file)){
+      my_tar_header_C = tarentry(myl->list[current_entry].relative_filename,0);
+      temp_file_header_C = my_tar_header_C.make_tar_header();
+      std::copy(temp_file_header_C.begin(), temp_file_header_C.end(),
+		((((char*)(transfer_buffer))+current_write_loc_in_bucket))); 
+    }
+
+    blocked_data_written = 
+      myl->list[current_entry].our_file_size;
+    if(!(myl->list[current_entry].location_in_orig_file)){
+      blocked_data_written += myl->list[current_entry].our_tar_header_size;
+    }
+    if( blocked_data_written % blocking_size ){
+      blocked_data_written = 
+	( (blocked_data_written / blocking_size) + 1) * blocking_size;
+    }
+    current_write_loc_in_bucket += blocked_data_written;
+
+    // 
+    current_entry++;
+    MPI_File_close(&target_file_ptr);
+  } // while(myl->list[current_entry].rank_bucket_index == ....
+  
+  // now copy the whole buffer to the archive file
+  archive_file_loc = data_region_start +
+    (rank_call_list_index * bucket_size);
+  /*  file_result=MPI_File_write_at_all(*archive_file_ptr,
+				    archive_file_loc,
+				    transfer_buffer,
+				    current_write_loc_in_bucket,
+				    MPI_CHAR,&my_MPI_Status);*/
+  file_result=MPI_File_write_at(*archive_file_ptr,
+				archive_file_loc,
+				transfer_buffer,
+				current_write_loc_in_bucket, // size of transfer
+				MPI_CHAR,&my_MPI_Status);
+  if(file_result != MPI_SUCCESS){
+    
+    fprintf(stderr,"rank %d got %d from MPI_File_write_at_all\n",my_rank,file_result);
+    fprintf(stderr,"archive_file_loc: %ld\n",archive_file_loc);
+    fprintf(stderr,"bytes to move: %ld\n",current_write_loc_in_bucket);
+    fprintf(stderr,"writing slice %d\n",rank_call_list_index);
+    MPI_Finalize();
+    return 160;
+  }
+  
+
+  return 0;
+}
+					 
+
+/*
 extern "C"
 int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
 			       char *arch_file_name,
@@ -313,16 +505,16 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
     current_target_fragment = rank0_current_target_fragment + my_rank;
     //    =======
     
-    /* 
+
     // set up for the transfer
-    stage_bytes_left_to_move = 
-    rank_list->list[current_target_fragment].size;
-    stage_target_file_offset = 
-    rank_list->list[current_target_fragment].fragment_offset;
-    stage_archive_file_offset = 
-    data_starting_position +
-    ( file_block_size * rank_list->list[current_target_fragment].first_block );
-    */
+//    stage_bytes_left_to_move = 
+//    rank_list->list[current_target_fragment].size;
+//    stage_target_file_offset = 
+//    rank_list->list[current_target_fragment].fragment_offset;
+ //   stage_archive_file_offset = 
+//    data_starting_position +
+ //   ( file_block_size * rank_list->list[current_target_fragment].first_block );
+
     
     // TODO: check if one can get away with not calling stat() inside of tarentry
     
@@ -564,8 +756,10 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
   
   return 0;
 }
+*/  
 
 
+/*
 extern "C"
 int parfu_extract_1file_singFP(char *arch_file_name,
 			       char *extract_target_dir,
@@ -841,33 +1035,33 @@ int parfu_extract_1file_singFP(char *arch_file_name,
     while(rank_list->list[current_target_fragment].type == PARFU_FILE_TYPE_DIR){
       fprintf(stderr,"ensuring directory # %d\n",current_target_fragment);
       
-      /*      if(!strcmp("./",rank_list->list[current_target_fragment].relative_filename)){
-	current_target_fragment++;
-	continue;
-	}*/
+  //    //      if(!strcmp("./",rank_list->list[current_target_fragment].relative_filename)){
+//	current_target_fragment++;
+	//continue;
+//	}
       base_dirname_length=strlen(rank_list->list[current_target_fragment].relative_filename);
       if( ((rank_list->list[current_target_fragment].relative_filename)[base_dirname_length-1])
 	  == '/' ){
 	current_target_fragment++;
 	continue;
       }
-	/*
-	  if((directory_to_mkdir=malloc(base_dirname_length+2))==NULL){
-	  fprintf(stderr,"parfu_extract_1file_singFP:\n");
-	  fprintf(stderr," cannot allocate new directory_to_dirname!!\n");
-	  return 110;
-	  }
-	  if( ((rank_list->list[current_target_fragment].relative_filename)[base_dirname_length-1])
-	  == '/' ){
-	  sprintf(directory_to_mkdir,"%s.",
-	  rank_list->list[current_target_fragment].relative_filename);
-	  }
-	  else{
-	  sprintf(directory_to_mkdir,"%s",
-	  rank_list->list[current_target_fragment].relative_filename);
-	  
-	  }
-	*/
+	
+//	  if((directory_to_mkdir=malloc(base_dirname_length+2))==NULL){
+//	  fprintf(stderr,"parfu_extract_1file_singFP:\n");
+//	  fprintf(stderr," cannot allocate new directory_to_dirname!!\n");
+//	  return 110;
+//	  }
+//	  if( ((rank_list->list[current_target_fragment].relative_filename)[base_dirname_length-1])
+//	  == '/' ){
+//	  sprintf(directory_to_mkdir,"%s.",
+//	  rank_list->list[current_target_fragment].relative_filename);
+//	  }
+//	  else{
+//	  sprintf(directory_to_mkdir,"%s",
+//	  rank_list->list[current_target_fragment].relative_filename);
+//	  
+//	  }
+
       directory_to_mkdir=
 	rank_list->list[current_target_fragment].relative_filename;
       if(mkdir(directory_to_mkdir,0777)){
@@ -1092,3 +1286,4 @@ int parfu_extract_1file_singFP(char *arch_file_name,
 }
 
 
+*/

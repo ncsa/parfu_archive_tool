@@ -114,7 +114,7 @@ int parfu_add_name_to_ffel(parfu_file_fragment_entry_list_t **my_list,
       parfu_add_entry_to_ffel_raw(my_list,my_relative_filename,my_archive_filename,
 				  my_type,my_target,
 				  my_size,local_tar_header_size,
-				  -1,-1,-1,-1,-1))){
+				  -1,-1,-1,NULL,-1,-1,-1,-1,-1))){
     fprintf(stderr,"parfu_add_name_to_ffel:\n");
     fprintf(stderr," return from parfu_add_entry_to_ffel_raw was: %d\n",return_value);
     return return_value;
@@ -144,6 +144,10 @@ int parfu_add_entry_to_ffel_mod(parfu_file_fragment_entry_list_t **list,
 				 entry.our_tar_header_size,
 				 my_fragment_loc_in_archive_file,
 				 my_fragment_loc_in_orig_file,
+				 entry.pad_file_location_in_archive_file,
+				 entry.pad_file_archive_filename,
+				 entry.pad_file_tar_header_size,
+				 entry.pad_file_size,
 				 my_file_contains_n_fragments,
 				 my_file_ptr_index,
 				 my_rank_bucket_index))){
@@ -168,6 +172,10 @@ int parfu_add_entry_to_ffel(parfu_file_fragment_entry_list_t **list,
 				 entry.our_tar_header_size,
 				 entry.location_in_archive_file,
 				 entry.location_in_orig_file,
+				 entry.pad_file_location_in_archive_file,
+				 entry.pad_file_archive_filename,
+				 entry.pad_file_tar_header_size,
+				 entry.pad_file_size,
 				 entry.file_contains_n_fragments,
 				 entry.file_ptr_index,
 				 entry.rank_bucket_index))){
@@ -188,6 +196,10 @@ int parfu_add_entry_to_ffel_raw(parfu_file_fragment_entry_list_t **list,
 				long int my_tar_header_size,
 			        long int my_location_in_archive_file,
 				long int my_location_in_orig_file,
+				long int my_pad_file_location_in_arch_file,
+				char *my_pad_file_archive_filename,
+				long int my_pad_file_tar_header_size,
+				long int my_pad_file_size,
 				int my_file_contains_n_fragments,
 				int my_file_ptr_index, 
 				long int my_rank_bucket_index){

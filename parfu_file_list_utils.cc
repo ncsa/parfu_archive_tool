@@ -629,7 +629,8 @@ parfu_file_fragment_entry_list_t
 				  int per_file_blocking_size, 
 				  int per_rank_accumulation_size,
 				  char *my_pad_file_filename, 
-				  int *n_rank_buckets){
+				  int *n_rank_buckets, 
+				  int max_files_per_bucket){
   parfu_file_fragment_entry_list_t *outlist=NULL;
 
   int i,j;

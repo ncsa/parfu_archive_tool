@@ -56,6 +56,9 @@
 // Blue Waters (home system of parfu) 4 MB seems good.
 #define PARFU_DEFAULT_RANK_BLOCK_SIZE    (4194304)
 
+#define PARFU_BLOCKING_FILE_NAME    ".parfu_space"
+#define PARFU_CATALOG_FILE_NAME     ".parfu_catalog"
+
 //
 // End of recommended user-tweakable constants
 //
@@ -269,7 +272,8 @@ extern "C" {
 				    int per_file_blocking_size, 
 				    int per_rank_accumulation_size,
 				    char *my_pad_file_filename, 
-				    int *n_rank_buckets);
+				    int *n_rank_buckets,
+				    int max_files_per_bucket);
   unsigned int parfu_what_is_path(const char *pathname,
 				  char **target_text,
 				  long int *size,
@@ -278,7 +282,7 @@ extern "C" {
   // parfu_buffer_utils.c
   char *parfu_fragment_list_to_buffer(parfu_file_fragment_entry_list_t *my_list,
 				      long int *buffer_length,
-				      int max_block_size_exponent,
+				      int bucket_size, 
 				      int is_archive_catalog);
   int snprintf_to_full_buffer(char *my_buf, size_t buf_size, 
 			      parfu_file_fragment_entry_list_t *my_list,
@@ -286,9 +290,14 @@ extern "C" {
   int snprintf_to_archive_buffer(char *my_buf, size_t buf_size, 
 				 parfu_file_fragment_entry_list_t *my_list,
 				 int indx);
+
+  //  parfu_file_fragment_entry_list_t 
+  //*parfu_buffer_to_file_fragment_list(char *in_buffer,
+  //				      int *max_block_size_exponent,
+  //				      int is_archive_catalog);
   parfu_file_fragment_entry_list_t 
   *parfu_buffer_to_file_fragment_list(char *in_buffer,
-				      int *max_block_size_exponent,
+				      int *return_bucket_size,
 				      int is_archive_catalog);
   char *parfu_get_next_filename(char *in_buf, 
 				char end_character,
@@ -336,7 +345,7 @@ int parfu_wtar_archive_allbuckets_singFP(parfu_file_fragment_entry_list_t *myl,
 					 long int blocking_size,
 					 long int bucket_size,
 					 long int data_region_start,
-					 char *archive_file_name);
+					 MPI_File *archive_file_ptr);
   
   /////////
   //

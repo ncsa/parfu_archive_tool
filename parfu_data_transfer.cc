@@ -27,7 +27,220 @@
 // we assume that each rank can allocate, fill, and use a buffer
 // the size of a whole bucket.
 
-extern "C"
+// This function takes the original (unsplit) list as input.  It's assumed
+// to be sorted and combined in the right way; the files are ordered as they
+// are supposed to be.  
+// This function splits the list along the way, then broadcasts the split
+// lists to the ranks for transferring.
+
+// blocking_size is the size that all files are blocked up to by reserving
+// room.  This will mostly be the same as the blocking size for tar files, 
+// which as of this writing we generally assume is 512 bytes.  Since this
+// size is tied with interoperability with tar, this will generally be
+// fixed at compile-time.
+
+// Bucket size is how much data each rank of parfu operates on.  Files are
+// blocked together to fill up that size.  If files are larger than that, 
+// they're split across multiple buckets and data is moved by multiple 
+// ranks.  
+
+// max_files_per_bucket is a limit to the number of individual files in 
+// a bucket.  If files are super-small, the ranks that read the individual
+// files from disk and push that data into the archive file may end up 
+// incurring unreasonable amount of latency to do so.  This limit can be 
+// set to limit this effect; the downside is that more space is 
+// wasted in the archive file.
+
+extern "C" 
+int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
+				       int n_ranks, int my_rank,
+				       long int blocking_size,
+				       long int bucket_size,
+				       int max_files_per_bucket,
+				       char *archive_file_name){
+  MPI_File *archive_file_ptr=NULL;
+  MPI_Info my_Info=MPI_INFO_NULL;
+  long int data_offset;
+  
+  int number_of_rank_buckets;
+
+  char *padding_filename=NULL;
+  char *arch_file_catalog_buffer=NULL;
+  long int arch_file_catalog_buffer_length;
+  long int arch_file_catalog_buffer_length_w_tar_header;
+  char *split_list_catalog_buffer=NULL;
+  long int split_list_catalog_buffer_length;
+  char *shared_split_list_catalog_buffer=NULL;
+
+  
+  parfu_file_fragment_entry_list_t *my_split_list=NULL;
+  parfu_file_fragment_entry_list_t *shared_split_list=NULL;
+
+  char *shared_archive_file_name=NULL;
+  int archive_filename_length;
+
+  int file_result;
+
+  int catalog_takes_n_buckets;
+  int catalog_tar_entry_size;
+  int return_bucket_size;
+
+  int *rank_call_list=NULL;
+  int rank_call_list_length;
+
+  MPI_Status my_MPI_Status;
+
+
+  if((padding_filename=(char*)malloc(sizeof(char)*(strlen(PARFU_BLOCKING_FILE_NAME)+1)))
+     ==NULL){
+    fprintf(stderr,"parfu_wtar_archive_list_to_singeFP:\n");
+    fprintf(stderr,"could not allocate space for pad file name.\n");
+    return 101;
+  }
+  sprintf(padding_filename,"%s",PARFU_BLOCKING_FILE_NAME);
+
+  // extract the archive (in file) catalog
+  // this will be written to the archive file on disk
+  if(my_rank==0){
+    if((arch_file_catalog_buffer=
+	parfu_fragment_list_to_buffer(myl,&arch_file_catalog_buffer_length,
+				      bucket_size,1))
+       ==NULL){
+      fprintf(stderr,"parfu_wtar_archive_list_to_singeFP:\n");
+      fprintf(stderr,"  could not write catalog to buffer\n");
+      return 103;
+    }
+    if(archive_file_name==NULL){
+      fprintf(stderr,"parfu_wtar_archive_list_to_singeFP:\n");
+      fprintf(stderr," rank 0 archive_file_name == NULL!!\n");
+      return 104;
+    }
+    if((archive_filename_length=strlen(archive_file_name))<1){
+      fprintf(stderr,"parfu_wtar_archive_list_to_singeFP:\n");
+      fprintf(stderr," archive filename length = %d!!\n",archive_filename_length);
+      return 105;
+    }
+  }
+  MPI_Bcast(&archive_filename_length,1,MPI_INT,0,MPI_COMM_WORLD);
+  if((shared_archive_file_name=(char*)malloc(archive_filename_length)+1)==NULL){
+    fprintf(stderr,"parfu_wtar_archive_list_to_singeFP:\n");
+    fprintf(stderr," could not archive shared buffer for archive name!!\n");
+    return 106;
+  }
+  if(my_rank==0)
+    sprintf(shared_archive_file_name,"%s",archive_file_name);
+  MPI_Bcast(shared_archive_file_name,archive_filename_length+1,MPI_CHAR,0,MPI_COMM_WORLD);
+  // open the archive file on all ranks with a shared pointer
+  if((archive_file_ptr=(MPI_File*)malloc(sizeof(MPI_File)))==NULL){
+    fprintf(stderr,"parfu_wtar_archive_list_to_singeFP:\n");
+    fprintf(stderr,"rank %d could not allocate space for archive file pointer!\n",my_rank);
+    MPI_Finalize();
+    return 75;
+  }
+  file_result=MPI_File_open(MPI_COMM_WORLD, shared_archive_file_name, 
+			    MPI_MODE_WRONLY | MPI_MODE_CREATE | MPI_MODE_EXCL, 
+			    my_Info, archive_file_ptr);
+  if(file_result != MPI_SUCCESS){
+    fprintf(stderr,"parfu_wtar_archive_list_to_singeFP:\n");
+    fprintf(stderr,"MPI_File_open for archive buffer:  returned error!  error=%d  Rank %d file >%s<\n",
+	    file_result,
+	    my_rank,
+	    archive_file_name);
+    return 3; 
+  }
+  // the shared archive file is open, rank 0 writes the catalog to it
+  if(my_rank==0){
+    catalog_tar_entry_size = 
+      tarentry::compute_hdr_size(PARFU_CATALOG_FILE_NAME,"",arch_file_catalog_buffer_length);
+    file_result=MPI_File_write_at(*archive_file_ptr,
+				  catalog_tar_entry_size, // write catalog just AFTER its tar header
+				  arch_file_catalog_buffer,
+				  arch_file_catalog_buffer_length,
+				  MPI_CHAR,&my_MPI_Status);
+    if(file_result != MPI_SUCCESS){
+      fprintf(stderr,"parfu_wtar_archive_list_to_singeFP:\n");      
+      fprintf(stderr,"rank 0 got %d from MPI_File_write_at_all\n",file_result);
+      fprintf(stderr," trying to write catalog of size %ld at location %d\n",
+	      arch_file_catalog_buffer_length,catalog_tar_entry_size);
+      MPI_Finalize();
+      return 160;
+    }
+  }  
+  
+  // calculate and distribute data offset
+  if(my_rank==0){
+    arch_file_catalog_buffer_length_w_tar_header = 
+      arch_file_catalog_buffer_length + catalog_tar_entry_size;
+    catalog_takes_n_buckets = arch_file_catalog_buffer_length_w_tar_header / bucket_size;
+    if( arch_file_catalog_buffer_length_w_tar_header % bucket_size )
+      catalog_takes_n_buckets++;
+    data_offset = catalog_takes_n_buckets * bucket_size;
+  }
+  MPI_Bcast(&data_offset,1,MPI_LONG_INT,0,MPI_COMM_WORLD);
+  
+  // split file list and distribute results to all ranks
+  if(my_rank==0){
+    if((my_split_list=parfu_set_offsets_and_split_ffel(myl,blocking_size,
+						       bucket_size,
+						       padding_filename,
+						       &number_of_rank_buckets))
+       ==NULL){
+      fprintf(stderr,"parfu_wtar_archive_list_to_singeFP:\n");
+      fprintf(stderr," error from parfu_set_offsets_and_split_ffel() !!!\n");
+      return 102;
+    }
+    if((split_list_catalog_buffer=
+	parfu_fragment_list_to_buffer(my_split_list,&split_list_catalog_buffer_length,
+				      bucket_size,0))
+       ==NULL){
+      fprintf(stderr,"parfu_wtar_archive_list_to_singeFP:\n");
+      fprintf(stderr,"  could not write catalog to buffer\n");
+      return 103;
+    }
+    if((rank_call_list=
+	parfu_rank_call_list_from_ffel(my_split_list,&rank_call_list_length))
+       ==NULL){
+      fprintf(stderr,"parfu_wtar_archive_list_to_singeFP:\n");
+      fprintf(stderr,"  error from parfu_rank_call_list_from_ffel!!\n");
+      return 104;
+    }
+  }
+  MPI_Bcast(&split_list_catalog_buffer_length,1,MPI_LONG_INT,0,MPI_COMM_WORLD);
+  if((shared_split_list_catalog_buffer=(char*)malloc(split_list_catalog_buffer_length))==NULL){
+    fprintf(stderr,"parfu_wtar_archive_list_to_singeFP:\n");
+    fprintf(stderr," could not allocate split_list buffer!  rank %d\n",my_rank);
+    return 76;
+  }
+  if(my_rank==0)
+    memcpy(shared_split_list_catalog_buffer,split_list_catalog_buffer,split_list_catalog_buffer_length);
+  MPI_Bcast(shared_split_list_catalog_buffer,split_list_catalog_buffer_length,MPI_CHAR,0,MPI_COMM_WORLD);
+  if((shared_split_list=
+      parfu_buffer_to_file_fragment_list(shared_split_list_catalog_buffer,
+					 &return_bucket_size,0))==NULL){
+    fprintf(stderr,"parfu_wtar_archive_list_to_singeFP:\n");
+    fprintf(stderr,"rank %d could not create split list!!\n",my_rank);
+    return 78;
+  }
+  MPI_Bcast(rank_call_list,rank_call_list_length,MPI_INT,0,MPI_COMM_WORLD);
+  // all ranks have their own list, and valid file pointers, and the call list
+						      
+  if((file_result=parfu_wtar_archive_allbuckets_singFP(shared_split_list,
+						       n_ranks,my_rank,
+						       rank_call_list,
+						       rank_call_list_length,
+						       blocking_size,
+						       bucket_size,
+						       data_offset,
+						       archive_file_ptr))!=0){
+    fprintf(stderr,"parfu_wtar_archive_list_to_singeFP:\n");
+    fprintf(stderr,"  rank %d got error %d from parfu_wtar_archive_allbuckets_singFP()!\n",
+	    my_rank,file_result);
+    return 88;
+  }
+  return 0;
+}
+
+extern "C" 
 int parfu_wtar_archive_allbuckets_singFP(parfu_file_fragment_entry_list_t *myl,
 					 int n_ranks, int my_rank,
 					 int *rank_call_list,
@@ -35,17 +248,22 @@ int parfu_wtar_archive_allbuckets_singFP(parfu_file_fragment_entry_list_t *myl,
 					 long int blocking_size,
 					 long int bucket_size,
 					 long int data_region_start,
-					 char *archive_file_name){
-  MPI_File *archive_file_ptr=NULL;
-  MPI_Info my_Info=MPI_INFO_NULL;
+					 MPI_File *archive_file_ptr){
+  //  MPI_Info my_Info=MPI_INFO_NULL;
   int return_val;
 
-  int file_result;
+  //  int file_result;
   
   int rank_iter;
   
   void *transfer_buffer=NULL;
 
+  if(archive_file_ptr==NULL){
+    fprintf(stderr,"parfu_wtar_archive_allbuckets_singFP:\n");
+    fprintf(stderr,"  help!  archive_file_ptr is NULL!!\n");
+    return 2;
+  }
+  /*
   if((archive_file_ptr=(MPI_File*)malloc(sizeof(MPI_File)))==NULL){
     fprintf(stderr,"parfu_wtar_archive_allbuckets_singFP:\n");
     fprintf(stderr,"rank %d could not allocate space for archive file pointer!\n",my_rank);
@@ -63,6 +281,7 @@ int parfu_wtar_archive_allbuckets_singFP(parfu_file_fragment_entry_list_t *myl,
 	    archive_file_name);
     return 3; 
   }
+  */
   rank_iter = my_rank;
   while(rank_iter < rank_call_list_length){
     if((return_val=parfu_wtar_archive_one_bucket_singFP(myl,n_ranks,my_rank,

@@ -183,7 +183,9 @@ int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
     if((my_split_list=parfu_set_offsets_and_split_ffel(myl,blocking_size,
 						       bucket_size,
 						       padding_filename,
-						       &number_of_rank_buckets))
+						       &number_of_rank_buckets,
+						       -1 // indicating no max files per bucket
+						       ))
        ==NULL){
       fprintf(stderr,"parfu_wtar_archive_list_to_singeFP:\n");
       fprintf(stderr," error from parfu_set_offsets_and_split_ffel() !!!\n");

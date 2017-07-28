@@ -626,7 +626,7 @@ int parfu_set_exp_offsets_in_ffel(parfu_file_fragment_entry_list_t *myl,
 extern "C"
 parfu_file_fragment_entry_list_t 
 *parfu_set_offsets_and_split_ffel(parfu_file_fragment_entry_list_t *myl,
-				  int per_file_blocking_size, 
+				  int per_file_blocking_size,
 				  int per_rank_accumulation_size,
 				  char *my_pad_file_filename, 
 				  int *n_rank_buckets, 

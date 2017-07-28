@@ -59,6 +59,9 @@
 #define PARFU_BLOCKING_FILE_NAME    ".parfu_space"
 #define PARFU_CATALOG_FILE_NAME     ".parfu_catalog"
 
+#define PARFU_LARGEST_ALLOWED_BUCKET_SIZE     (500000000)
+#define PARFU_SMALLEST_ALLOWED_BUCKET_SIZE       (100000)
+
 //
 // End of recommended user-tweakable constants
 //
@@ -306,13 +309,16 @@ extern "C" {
   parfu_file_fragment_entry_list_t 
   *parfu_ffel_from_file(char *archive_filename,
 			int *max_block_size_exponent,
-			int *catalog_buffer_length);
+			int *catalog_buffer_length,
+			int skip_tar_header);
   
   int parfu_ffel_fill_rel_filenames(parfu_file_fragment_entry_list_t *my_list,
 				    char *leading_path);
 
   int *parfu_rank_call_list_from_ffel(parfu_file_fragment_entry_list_t *myl,
 				      int *n_rank_buckets);
+  void parfu_construct_tar_header_for_catalog(void *output_buffer, int total_bytes_to_output_buffer);
+  void parfu_skip_over_catalog_tar_header(FILE *fp);
   
   // parfu_data_transfer.c
   int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
@@ -338,7 +344,7 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
 					 void *transfer_buffer,
 					 long int data_region_start,
 					 MPI_File *archive_file_ptr);
-int parfu_wtar_archive_allbuckets_singFP(parfu_file_fragment_entry_list_t *myl,
+  int parfu_wtar_archive_allbuckets_singFP(parfu_file_fragment_entry_list_t *myl,
 					 int n_ranks, int my_rank,
 					 int *rank_call_list,
 					 int rank_call_list_length,
@@ -346,6 +352,7 @@ int parfu_wtar_archive_allbuckets_singFP(parfu_file_fragment_entry_list_t *myl,
 					 long int bucket_size,
 					 long int data_region_start,
 					 MPI_File *archive_file_ptr);
+
   
   /////////
   //

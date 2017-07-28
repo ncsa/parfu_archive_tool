@@ -48,19 +48,9 @@ struct ustar_hdr {
   // this is the catalog header; it's very important to leave the formatting alone
   // it must match the later re-writing
 
-  // parfu file format version 1
-  // started 2016 SEP 20
-  // block sizes are all powers of 2
-  // what's specified is the exponent
-  // ie 
-  // exponent = 10 means block size = 1024
-  // exponent = 12 means block size = 4096
-
   // catalog header:
   // each of the initial header numbers is a 10-digit number delineated 
   // by an '\n' at the end
-  // per-file lines also contain the block size exponenet for that 
-  // file's block size
 
   // all numbers or quantities in the catalog head or catalog are written 
   // out in ASCII.  This makes it human readable, among other things.
@@ -75,35 +65,46 @@ struct ustar_hdr {
 
   // catalog header (full):
   // SSSSSSSSSS\n  total size of catalog, in bytes, including whole header
-  // parfu_v01 \n  version string
+  // parfu_v04 \n  version string
   // full      \n  indicates full catalog
-  // BBBBBBBBBB\n  max block size exponent
+  // BBBBBBBBBB\n  bucket size (a whole number of buckets reserved for catalog
   // FFFFFFFFFF\n  total number of file entries in catalog
   
-  // catalog header (full):
+  // catalog header (archive):
   // SSSSSSSSSS\n  total size of catalog, in bytes, including whole header
-  // parfu_v01 \n  version string
+  // parfu_v04 \n  version string
   // archive   \n  indicates is the catalog to be put in the archive file
-  // BBBBBBBBBB\n  max block size exponent
+  // BBBBBBBBBB\n  bucket size (a whole number of buckets reserved for catalog
   // FFFFFFFFFF\n  total number of file entries in catalog
-  
-  // catalog body, full catalog, consisting of many lines of this form:
-  // RRR \t AAA \t T \t TGT \t EE \t NB \t NF \t OFF \t SZ \t FB \t NB \t FPI \n
-  // catalog body, archive catalog, consisting of many lines of this form:
-  // AAA \t T \t TGT \t EE \t SZ \t FB \t NB \n
-  // where:
+
+  // then, depending on if it's a full catalog or an archive catalog, then FFFFFFFFFF as many lines, each one of this format:
+  // catalog body line, full catalog:
+  // RRR \t AAA \t T \t TGT \t SZ \t THSZ \t LOC_AR \t LOC_OR \t LOC_PD \t NAM_PD \t THSZ_PD \t SZ_PD \t N_FRG \t FP_IND \t RNK_BKT \n
+
+  // catalog body line, archive catalog
+  // AAA \t T \t TGT \t SZ \t THSZ \t LOC_AR \n
+
+  // with the entries defined thusly:
+
   //   RRR path+filename, relative to CWD of running process
   //   AAA path+filename within the archive
   //   T  type of entry: dir, symlink, or regular file
   //   TGT: if symlink, the target, otherwise empty
-  //   EE is the block size exponent for THIS file
-  //   NB is number of blocks in the largest possible fragment
-  //   NF: file will be spread across this many fragments
-  //   OFF is the file offset  (always zero in container on disk)
+
   //   SZ is size of file in bytes
-  //   FB is first block
-  //   NB is number of blocks (should be 1 if EE is less than BBBBBBBBBBB
-  //   FPI: file pointer index (used in MPI code for global file pointer)
+  //   THSZ is the size of the tar header in bytes
+  //   LOC_AR is the beginning of file or fragment in archive file
+  //   LOC_OR is location of fragment in orig file (zero for single file)
+
+  //   LOC_PD pad file location in archive file of preceeding pad file
+  //   NAM_PD filename name of preceeding pad file
+  //   THSZ_PD tar header size of preceeding pad file
+  //   SZ_PD size of preceeding pad file
+
+  //   N_FRG file is divided into this many fragments
+  //   FP_IND file pointer index; internal use only
+
+  //   RNK_BKT rank bucket index of the file fragment
 
 // my_list is the list to be written to the output buffer
 // buffer_length is the returned total length of the buffer
@@ -114,7 +115,7 @@ struct ustar_hdr {
 //   only relevant to the running program is also included.
 char *parfu_fragment_list_to_buffer(parfu_file_fragment_entry_list_t *my_list,
 				    long int *buffer_length,
-				    int max_block_size_exponent,
+				    int bucket_size,
 				    int is_archive_catalog){
   int i;
 
@@ -159,32 +160,6 @@ char *parfu_fragment_list_to_buffer(parfu_file_fragment_entry_list_t *my_list,
   }
   total_bytes_to_output_buffer=0;
 
-  // for archive catalogs we need to include the tar header
-  if(is_archive_catalog) {
-    // leave this static so that unfilled bytes are zero and not random
-    static struct ustar_hdr hdr = {
-      "parfu_catalog.txt", // name, duplicates don't matter
-      "0000600",           // mode
-      "0000000", "0000000",// uid and gid
-      "size",              // filled in later
-      "mtime",             // filled in later
-      "        ",          // compute later, *must* be 8 spaces for proper checksum
-      '0',                 // a regular file
-      "",                  // linkname
-      "ustar\0",           // magic
-      "00",                // version
-      "root",              // uname
-      "root",              // gname
-      "0000000", "0000000",// devmajor, devminor
-      "",                  // prefix
-    };
-    snprintf(hdr.mtime, sizeof(hdr.mtime), "%0*lo",(int)(sizeof(hdr.mtime)-1), time(NULL));
-    tar_header_bytes = (int)sizeof(hdr);
-    memcpy(output_buffer, &hdr, tar_header_bytes);
-    printed_bytes_to_output_buffer = tar_header_bytes;
-    total_bytes_to_output_buffer += printed_bytes_to_output_buffer;
-  }
-
   // write SSSSSSSSSS\n
   // writing 0 as a dummy value to hold the place; we'll write the final 
   // value after we've written all the entries
@@ -196,7 +171,7 @@ char *parfu_fragment_list_to_buffer(parfu_file_fragment_entry_list_t *my_list,
   // write version string
   printed_bytes_to_output_buffer=
     sprintf(output_buffer+total_bytes_to_output_buffer,
-	    "parfu_v01 %c",
+	    "parfu_v04 %c",
 	    PARFU_CATALOG_ENTRY_TERMINATOR);  
   total_bytes_to_output_buffer += printed_bytes_to_output_buffer;
   
@@ -219,7 +194,7 @@ char *parfu_fragment_list_to_buffer(parfu_file_fragment_entry_list_t *my_list,
   printed_bytes_to_output_buffer=
     sprintf(output_buffer+total_bytes_to_output_buffer,
 	    "%010d%c",
-	    max_block_size_exponent,
+	    bucket_size,
 	    PARFU_CATALOG_ENTRY_TERMINATOR);
   total_bytes_to_output_buffer += printed_bytes_to_output_buffer;
   //  fprintf(stderr,"  ******* max block size exp = %d\n",max_block_size_exponent);
@@ -303,23 +278,6 @@ char *parfu_fragment_list_to_buffer(parfu_file_fragment_entry_list_t *my_list,
   }
   output_buffer[tar_header_bytes+10]=PARFU_CATALOG_ENTRY_TERMINATOR;
 
-  // record size in tar header and compute header checksum now that everything is done
-  if(is_archive_catalog) {
-    unsigned long int checksum;
-    size_t j;
-    struct ustar_hdr *hdr = (struct ustar_hdr*)output_buffer;
-    // this *technically* breaks if the header is larger than 8GB. Contact me
-    // if this happens in real life.
-    snprintf(hdr->size, sizeof(hdr->size), "%0*lo", (int)(sizeof(hdr->size)-1),
-             total_bytes_to_output_buffer);
-    // this requires that the checksum field is set to space and all other
-    // unused bytes are zero
-    checksum = 0;
-    for(j = 0 ; j < sizeof(*hdr) ; j++)
-      checksum += ((unsigned char*)hdr)[j];
-    snprintf(hdr->chksum, sizeof(hdr->chksum), "0%-lo", checksum);
-  }
-  
   // line_buffer is just used locally; free()-ing before we return
   *buffer_length=total_bytes_to_output_buffer;
   free(line_buffer);
@@ -330,6 +288,93 @@ char *parfu_fragment_list_to_buffer(parfu_file_fragment_entry_list_t *my_list,
   return output_buffer;    
 }
 
+// structure tar header of catalog
+
+void parfu_construct_tar_header_for_catalog(void *output_buffer, int total_bytes_to_output_buffer){
+
+  {
+    // leave this static so that unfilled bytes are zero and not random
+    int tar_header_bytes;
+    static struct ustar_hdr hdr = {
+      "parfu_catalog.txt", // name, duplicates don't matter
+      "0000600",           // mode
+      "0000000", "0000000",// uid and gid
+      "size",              // filled in later
+      "mtime",             // filled in later
+      "        ",          // compute later, *must* be 8 spaces for proper checksum
+      '0',                 // a regular file
+      "",                  // linkname
+      "ustar\0",           // magic
+      "00",                // version
+      "root",              // uname
+      "root",              // gname
+      "0000000", "0000000",// devmajor, devminor
+      "",                  // prefix
+    };
+    snprintf(hdr.mtime, sizeof(hdr.mtime), "%0*lo",(int)(sizeof(hdr.mtime)-1), time(NULL));
+    tar_header_bytes = (int)sizeof(hdr);
+    memcpy(output_buffer, &hdr, tar_header_bytes);
+    //    printed_bytes_to_output_buffer = tar_header_bytes;
+    //    total_bytes_to_output_buffer += printed_bytes_to_output_buffer;
+  }
+
+  // record size in tar header and compute header checksum now that everything is done
+  {
+    unsigned long int checksum;
+    size_t j;
+    struct ustar_hdr *hdr = (struct ustar_hdr*)output_buffer;
+    // this *technically* breaks if the header is larger than 8GB. 
+    snprintf(hdr->size, sizeof(hdr->size), "%0*lo", (int)(sizeof(hdr->size)-1),
+             (long unsigned int)(total_bytes_to_output_buffer));
+    // this requires that the checksum field is set to space and all other
+    // unused bytes are zero
+    checksum = 0;
+    for(j = 0 ; j < sizeof(*hdr) ; j++)
+      checksum += ((unsigned char*)hdr)[j];
+    snprintf(hdr->chksum, sizeof(hdr->chksum), "0%-lo", checksum);
+  }
+} 
+
+int snprintf_to_full_buffer(char *my_buf, size_t buf_size, 
+			    parfu_file_fragment_entry_list_t *my_list,
+			    int indx){
+  return 
+    snprintf(my_buf,buf_size,
+	     "%s%c%s%c%c%c%s%c%ld%c%ld%c%ld%c%ld%c%ld%c%s%c%ld%c%ld%c%d%c%d%c%d%c",
+	     my_list->list[indx].relative_filename,PARFU_CATALOG_VALUE_TERMINATOR,
+	     my_list->list[indx].archive_filename,PARFU_CATALOG_VALUE_TERMINATOR,
+	     parfu_return_type_char(my_list->list[indx].type),PARFU_CATALOG_VALUE_TERMINATOR,
+	     my_list->list[indx].target,PARFU_CATALOG_VALUE_TERMINATOR,
+	     my_list->list[indx].our_file_size,PARFU_CATALOG_VALUE_TERMINATOR,
+	     my_list->list[indx].our_tar_header_size,PARFU_CATALOG_VALUE_TERMINATOR,
+	     my_list->list[indx].location_in_archive_file,PARFU_CATALOG_VALUE_TERMINATOR,
+	     my_list->list[indx].location_in_orig_file,PARFU_CATALOG_VALUE_TERMINATOR,
+	     my_list->list[indx].pad_file_location_in_archive_file,PARFU_CATALOG_VALUE_TERMINATOR,
+	     my_list->list[indx].pad_file_archive_filename,PARFU_CATALOG_VALUE_TERMINATOR,
+	     my_list->list[indx].pad_file_tar_header_size,PARFU_CATALOG_VALUE_TERMINATOR,
+	     my_list->list[indx].pad_file_size,PARFU_CATALOG_VALUE_TERMINATOR,
+	     my_list->list[indx].file_contains_n_fragments,PARFU_CATALOG_VALUE_TERMINATOR,
+	     my_list->list[indx].file_ptr_index,PARFU_CATALOG_VALUE_TERMINATOR,
+	     my_list->list[indx].rank_bucket_index,PARFU_CATALOG_ENTRY_TERMINATOR);
+  
+}
+
+int snprintf_to_archive_buffer(char *my_buf, size_t buf_size, 
+			       parfu_file_fragment_entry_list_t *my_list,
+			       int indx){
+  return 
+    snprintf(my_buf,buf_size,
+	     "%s%c%c%c%s%c%ld%c%ld%c%ld%c",
+	     my_list->list[indx].archive_filename,PARFU_CATALOG_VALUE_TERMINATOR,
+	     parfu_return_type_char(my_list->list[indx].type),PARFU_CATALOG_VALUE_TERMINATOR,
+	     my_list->list[indx].target,PARFU_CATALOG_VALUE_TERMINATOR,
+	     my_list->list[indx].our_file_size,PARFU_CATALOG_VALUE_TERMINATOR,
+	     my_list->list[indx].our_tar_header_size,PARFU_CATALOG_VALUE_TERMINATOR,
+	     my_list->list[indx].location_in_archive_file,PARFU_CATALOG_ENTRY_TERMINATOR);
+}
+
+
+/* versions for old file format (July 2017)
 int snprintf_to_full_buffer(char *my_buf, size_t buf_size, 
 			    parfu_file_fragment_entry_list_t *my_list,
 			    int indx){
@@ -364,10 +409,11 @@ int snprintf_to_archive_buffer(char *my_buf, size_t buf_size,
 	     my_list->list[indx].first_block,PARFU_CATALOG_VALUE_TERMINATOR,
 	     my_list->list[indx].number_of_blocks,PARFU_CATALOG_ENTRY_TERMINATOR);
 }
+*/
 
 parfu_file_fragment_entry_list_t 
 *parfu_buffer_to_file_fragment_list(char *in_buffer,
-				    int *max_block_size_exponent,
+				    int *bucket_size,
 				    int is_archive_catalog){
   //  char *line_buffer=NULL;
   //  char *next_value_terminator;
@@ -407,11 +453,13 @@ parfu_file_fragment_entry_list_t
   //    return NULL;
   //  }
 
+  /*
   // skip tar header since we don't need it
   if(is_archive_catalog) {
     in_buffer += sizeof(struct ustar_hdr);
     current_read_position = in_buffer;
   }
+  */
 
   // read SSSSSSSSSS
   total_buffer_size=strtol(in_buffer,end_value_ptr,10);
@@ -423,7 +471,7 @@ parfu_file_fragment_entry_list_t
   current_read_position = *end_value_ptr + 1;
   
   // check the version string to see if it matches
-  if(strncmp(current_read_position,"parfu_v01 ",10)){
+  if(strncmp(current_read_position,"parfu_v04 ",10)){
     fprintf(stderr,"parfu_buffer_to_file_fragment_list:\n");
     fprintf(stderr,"version mismatch!  Aborting!\n");
     return NULL;
@@ -450,26 +498,26 @@ parfu_file_fragment_entry_list_t
   current_read_position += 11;
   
   // get BBBBBBBBBB\n
-  (*max_block_size_exponent)=strtol(current_read_position,end_value_ptr,10);
+  (*bucket_size)=strtol(current_read_position,end_value_ptr,10);
   if( *end_value_ptr == current_read_position ){
     fprintf(stderr,"parfu_buffer_to_file_fragment_list:\n");
     fprintf(stderr," buffer did not have a valid length header!\n");
     return NULL;
   }
-  if( (*max_block_size_exponent) < PARFU_SMALLEST_ALLOWED_MAX_BLOCK_SIZE_EXPONENT){
+  if( (*bucket_size) < PARFU_SMALLEST_ALLOWED_BUCKET_SIZE){
     fprintf(stderr,"parfu_buffer_to_file_fragment_list:\n");
-    fprintf(stderr,"  max_block_size_exponnent smaller than allowed!\n");
-    fprintf(stderr,"  given max block exponent: %d\n",(*max_block_size_exponent));
+    fprintf(stderr,"  bucket_size smaller than allowed!\n");
+    fprintf(stderr,"  given bucket size: %d\n",(*bucket_size));
     fprintf(stderr,"  smallest allowed value: %d\n",
-	    PARFU_SMALLEST_ALLOWED_MAX_BLOCK_SIZE_EXPONENT);
+	    PARFU_SMALLEST_ALLOWED_BUCKET_SIZE);
     return NULL;
   }
-  if( (*max_block_size_exponent) > PARFU_LARGEST_ALLOWED_MAX_BLOCK_SIZE_EXPONENT){
+  if( (*bucket_size) > PARFU_LARGEST_ALLOWED_BUCKET_SIZE){
     fprintf(stderr,"parfu_buffer_to_file_fragment_list:\n");
-    fprintf(stderr,"  max_block_size_exponnent larger than allowed!\n");
-    fprintf(stderr,"  max block exponent from buffer: %d\n",(*max_block_size_exponent));
+    fprintf(stderr,"  bucket size larger than allowed!\n");
+    fprintf(stderr,"  bucket size from buffer: %d\n",(*bucket_size));
     fprintf(stderr,"  largest allowed value: %d\n",
-	    PARFU_LARGEST_ALLOWED_MAX_BLOCK_SIZE_EXPONENT);
+	    PARFU_LARGEST_ALLOWED_BUCKET_SIZE);
     return NULL;
   }
   current_read_position = *end_value_ptr + 1;
@@ -566,86 +614,107 @@ parfu_file_fragment_entry_list_t
 
     // get numerical values
 
-    my_list->list[i].block_size_exponent =
+    my_list->list[i].our_file_size =
       strtol(current_read_position,end_value_ptr,10);
     if( (*end_value_ptr) == current_read_position ){
       fprintf(stderr,"parfu_buffer_to_file_fragment_list:\n");
-      fprintf(stderr,"iteration %d could not find block size exponent!\n",i);
+      fprintf(stderr,"iteration %d could not find file size!\n",i);
+      return NULL;
+    }
+    current_read_position = *end_value_ptr + 1;
+    
+    my_list->list[i].our_tar_header_size =
+      strtol(current_read_position,end_value_ptr,10);
+    if( (*end_value_ptr) == current_read_position ){
+      fprintf(stderr,"parfu_buffer_to_file_fragment_list:\n");
+      fprintf(stderr,"iteration %d could not find tar header size for this file!\n",i);
+      return NULL;
+    }
+    current_read_position = *end_value_ptr + 1;
+    
+    my_list->list[i].location_in_archive_file =
+      strtol(current_read_position,end_value_ptr,10);
+    if( (*end_value_ptr) == current_read_position ){
+      fprintf(stderr,"parfu_buffer_to_file_fragment_list:\n");
+      fprintf(stderr,"iteration %d could not find location in archive file!\n",i);
       return NULL;
     }
     current_read_position = *end_value_ptr + 1;
     
     if(!is_archive_catalog){
-      my_list->list[i].num_blocks_in_fragment =
+      my_list->list[i].location_in_orig_file =
 	strtol(current_read_position,end_value_ptr,10);
       if( (*end_value_ptr) == current_read_position ){
 	fprintf(stderr,"parfu_buffer_to_file_fragment_list:\n");
-	fprintf(stderr,"iteration %d could not find n blocks in fragment!\n",i);
+	fprintf(stderr,"iteration %d could not find location in original file!\n",i);
 	return NULL;
       }
       current_read_position = *end_value_ptr + 1;
-    }
+      
+      my_list->list[i].pad_file_location_in_archive_file =
+	strtol(current_read_position,end_value_ptr,10);
+      if( (*end_value_ptr) == current_read_position ){
+	fprintf(stderr,"parfu_buffer_to_file_fragment_list:\n");
+	fprintf(stderr,"iteration %d could not find pad_file_location_in_archive_file!\n",i);
+	return NULL;
+      }
+      current_read_position = *end_value_ptr + 1;
 
-    if(!is_archive_catalog){
+      if((my_list->list[i].pad_file_archive_filename=
+	  parfu_get_next_filename(current_read_position,
+				  PARFU_CATALOG_VALUE_TERMINATOR,
+				  increment))==NULL){
+	fprintf(stderr,"parfu_buffer_to_file_fragment_list:\n");
+	fprintf(stderr,"  could not get pad_file_name string from buffer!\n");
+	return NULL;
+      }
+      current_read_position += (*increment);
+      
+      my_list->list[i].pad_file_tar_header_size =
+	strtol(current_read_position,end_value_ptr,10);
+      if( (*end_value_ptr) == current_read_position ){
+	fprintf(stderr,"parfu_buffer_to_file_fragment_list:\n");
+	fprintf(stderr,"iteration %d could not find pad_file_tar_header_size!\n",i);
+	return NULL;
+      }
+      current_read_position = *end_value_ptr + 1;
+      
+      my_list->list[i].pad_file_size =
+	strtol(current_read_position,end_value_ptr,10);
+      if( (*end_value_ptr) == current_read_position ){
+	fprintf(stderr,"parfu_buffer_to_file_fragment_list:\n");
+	fprintf(stderr,"iteration %d could not find pad_file_size!\n",i);
+	return NULL;
+      }
+      current_read_position = *end_value_ptr + 1;
+      
       my_list->list[i].file_contains_n_fragments =
 	strtol(current_read_position,end_value_ptr,10);
       if( (*end_value_ptr) == current_read_position ){
 	fprintf(stderr,"parfu_buffer_to_file_fragment_list:\n");
-	fprintf(stderr,"iteration %d could not find file contains n fragments!\n",i);
+	fprintf(stderr,"iteration %d could not find file_contains_n_fragments!\n",i);
 	return NULL;
       }
       current_read_position = *end_value_ptr + 1;
-    }
-    
-    if(!is_archive_catalog){
-      my_list->list[i].fragment_offset =
-	strtol(current_read_position,end_value_ptr,10);
-      if( (*end_value_ptr) == current_read_position ){
-	fprintf(stderr,"parfu_buffer_to_file_fragment_list:\n");
-	fprintf(stderr,"iteration %d could not find fragment offset!\n",i);
-	return NULL;
-      }
-      current_read_position = *end_value_ptr + 1;
-    }
-
-    my_list->list[i].size =
-      strtol(current_read_position,end_value_ptr,10);
-    if( (*end_value_ptr) == current_read_position ){
-      fprintf(stderr,"parfu_buffer_to_file_fragment_list:\n");
-      fprintf(stderr,"iteration %d could not find file size\n",i);
-      return NULL;
-    }
-    current_read_position = *end_value_ptr + 1;
-    
-    my_list->list[i].first_block =
-      strtol(current_read_position,end_value_ptr,10);
-    if( (*end_value_ptr) == current_read_position ){
-      fprintf(stderr,"parfu_buffer_to_file_fragment_list:\n");
-      fprintf(stderr,"iteration %d could not find first block!\n",i);
-      return NULL;
-    }
-    current_read_position = *end_value_ptr + 1;
-    
-    my_list->list[i].number_of_blocks = 
-      strtol(current_read_position,end_value_ptr,10);
-    if( (*end_value_ptr) == current_read_position ){
-      fprintf(stderr,"parfu_buffer_to_file_fragment_list:\n");
-      fprintf(stderr,"iteration %d could not find number of blocks!\n",i);
-      return NULL;
-    }
-    current_read_position = *end_value_ptr + 1;
-
-    if(!is_archive_catalog){
+      
       my_list->list[i].file_ptr_index =
 	strtol(current_read_position,end_value_ptr,10);
       if( (*end_value_ptr) == current_read_position ){
 	fprintf(stderr,"parfu_buffer_to_file_fragment_list:\n");
-	fprintf(stderr,"iteration %d could not find file pointer index!\n",i);
+	fprintf(stderr,"iteration %d could not find file_ptr_index!\n",i);
 	return NULL;
       }
       current_read_position = *end_value_ptr + 1;
-    }    
-
+    
+      my_list->list[i].rank_bucket_index =
+	strtol(current_read_position,end_value_ptr,10);
+      if( (*end_value_ptr) == current_read_position ){
+	fprintf(stderr,"parfu_buffer_to_file_fragment_list:\n");
+	fprintf(stderr,"iteration %d could not find rank_bucket_index!\n",i);
+	return NULL;
+      }
+      current_read_position = *end_value_ptr + 1;
+    } // if(!archive_file)
   } // for(i=0;... 
   
   free(end_value_ptr); 
@@ -685,10 +754,16 @@ char *parfu_get_next_filename(char *in_buf,
   return output_buf;
 }
 
+void parfu_skip_over_catalog_tar_header(FILE *fp){
+  // skip over tar header for catalog
+  fseek(fp, sizeof(struct ustar_hdr), SEEK_SET);
+}
+
 parfu_file_fragment_entry_list_t 
 *parfu_ffel_from_file(char *archive_filename,
 		      int *max_block_size_exponent,
-		      int *catalog_buffer_length){
+		      int *catalog_buffer_length, 
+		      int skip_tar_header){
   FILE *infile=NULL;
   int size_of_length_string=10;
   char *input_buffer=NULL;
@@ -715,8 +790,8 @@ parfu_file_fragment_entry_list_t
     return NULL;
   }
 
-  // skip over tar header for catalog
-  fseek(infile, sizeof(struct ustar_hdr), SEEK_SET);
+  if(skip_tar_header)
+    parfu_skip_over_catalog_tar_header(infile);
 
   // the first 11 bytes contains the length of the catalog
   // first read that

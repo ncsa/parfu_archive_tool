@@ -675,6 +675,9 @@ parfu_file_fragment_entry_list_t
   write_loc_whole_archive_file = 0L;
   write_loc_this_rank = 0L;
   current_rank_bucket = 0L;
+  
+  fprintf(stderr,"*** split list: starting main loop. Target: %d iterations\n",
+	  myl->n_entries_full);
   for(i=0;i<myl->n_entries_full;i++){
 
     // check for errors in our_tar_header_size
@@ -1056,7 +1059,8 @@ parfu_file_fragment_entry_list_t
     } // else{   (this file + tar header is bigger than a bucket)
   } // for(i=0;
   *n_rank_buckets = current_rank_bucket;
-  return 0;
+  fprintf(stderr,"*** split list success!!\n");
+  return outlist;
 }
 
 // This function combines two lists.  The order is preserved.  The final

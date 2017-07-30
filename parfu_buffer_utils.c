@@ -296,7 +296,52 @@ void parfu_construct_tar_header_for_catalog(void *output_buffer, int total_bytes
     // leave this static so that unfilled bytes are zero and not random
     int tar_header_bytes;
     static struct ustar_hdr hdr = {
-      "parfu_catalog.txt", // name, duplicates don't matter
+      ".parfu_catalog",    // name, duplicates don't matter
+      "0000600",           // mode
+      "0000000", "0000000",// uid and gid
+      "size",              // filled in later
+      "mtime",             // filled in later
+      "        ",          // compute later, *must* be 8 spaces for proper checksum
+      '0',                 // a regular file
+      "",                  // linkname
+      "ustar\0",           // magic
+      "00",                // version
+      "root",              // uname
+      "root",              // gname
+      "0000000", "0000000",// devmajor, devminor
+      "",                  // prefix
+    };
+    snprintf(hdr.mtime, sizeof(hdr.mtime), "%0*lo",(int)(sizeof(hdr.mtime)-1), time(NULL));
+    tar_header_bytes = (int)sizeof(hdr);
+    memcpy(output_buffer, &hdr, tar_header_bytes);
+    //    printed_bytes_to_output_buffer = tar_header_bytes;
+    //    total_bytes_to_output_buffer += printed_bytes_to_output_buffer;
+  }
+
+  // record size in tar header and compute header checksum now that everything is done
+  {
+    unsigned long int checksum;
+    size_t j;
+    struct ustar_hdr *hdr = (struct ustar_hdr*)output_buffer;
+    // this *technically* breaks if the header is larger than 8GB. 
+    snprintf(hdr->size, sizeof(hdr->size), "%0*lo", (int)(sizeof(hdr->size)-1),
+             (long unsigned int)(total_bytes_to_output_buffer));
+    // this requires that the checksum field is set to space and all other
+    // unused bytes are zero
+    checksum = 0;
+    for(j = 0 ; j < sizeof(*hdr) ; j++)
+      checksum += ((unsigned char*)hdr)[j];
+    snprintf(hdr->chksum, sizeof(hdr->chksum), "0%-lo", checksum);
+  }
+} 
+
+void parfu_construct_tar_header_for_space(void *output_buffer, int total_bytes_to_output_buffer){
+
+  {
+    // leave this static so that unfilled bytes are zero and not random
+    int tar_header_bytes;
+    static struct ustar_hdr hdr = {
+      ".parfu_spacer",    // name, duplicates don't matter
       "0000600",           // mode
       "0000000", "0000000",// uid and gid
       "size",              // filled in later

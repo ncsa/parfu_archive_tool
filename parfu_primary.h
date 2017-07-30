@@ -318,6 +318,7 @@ extern "C" {
   int *parfu_rank_call_list_from_ffel(parfu_file_fragment_entry_list_t *myl,
 				      int *n_rank_buckets);
   void parfu_construct_tar_header_for_catalog(void *output_buffer, int total_bytes_to_output_buffer);
+  void parfu_construct_tar_header_for_space(void *output_buffer, int total_bytes_to_output_buffer);
   void parfu_skip_over_catalog_tar_header(FILE *fp);
   
   // parfu_data_transfer.c

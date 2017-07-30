@@ -24,8 +24,8 @@
 #include <parfu_primary.h>
 
 int main(int nargs, char *args[]){
-  int blocking_size = 512;
-  int bucket_size = 4000000;
+  int blocking_size = PARFU_DEFAULT_BLOCKING_FACTOR;
+  int bucket_size = PARFU_DEFAULT_RANK_BLOCK_SIZE;
 
   char mode;
   char *arc_filename=NULL;

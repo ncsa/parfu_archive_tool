@@ -72,6 +72,7 @@ int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
   long int split_list_catalog_buffer_length;
   char *shared_split_list_catalog_buffer=NULL;
 
+  char *catalog_tar_header_buffer=NULL;
   
   parfu_file_fragment_entry_list_t *my_split_list=NULL;
   parfu_file_fragment_entry_list_t *shared_split_list=NULL;
@@ -170,6 +171,28 @@ int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
   if(my_rank==0){
     catalog_tar_entry_size = 
       tarentry::compute_hdr_size(PARFU_CATALOG_FILE_NAME,"",arch_file_catalog_buffer_length);
+    if((catalog_tar_header_buffer=(char*)malloc(catalog_tar_entry_size))==NULL){
+      fprintf(stderr,"parfu_wtar_archive_list_to_singeFP:\n");
+      fprintf(stderr,"  couldn not allocate catalog_tar_header_buffer!\n");
+      return 9;
+    }
+    parfu_construct_tar_header_for_catalog(catalog_tar_header_buffer,
+					   arch_file_catalog_buffer_length);
+    file_result=MPI_File_write_at(*archive_file_ptr,
+				  0, // tar header for catalog goes at beginning of file
+				  catalog_tar_header_buffer,
+				  catalog_tar_entry_size,
+				  MPI_CHAR,&my_MPI_Status);
+    if(file_result != MPI_SUCCESS){
+      fprintf(stderr,"parfu_wtar_archive_list_to_singeFP:\n");      
+      fprintf(stderr,"rank 0 got %d from MPI_File_write_at_all\n",file_result);
+      fprintf(stderr," trying to write catalog tar header at location zero\n");
+      MPI_Finalize();
+      return 169;
+    }
+    
+					   
+
     fprintf(stderr,"rank 0 about to write data catalog to archive file.\n");
     file_result=MPI_File_write_at(*archive_file_ptr,
 				  catalog_tar_entry_size, // write catalog just AFTER its tar header
@@ -184,17 +207,55 @@ int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
       MPI_Finalize();
       return 160;
     }
+    // create tar header for parfu catalog
   }  
   
   // calculate and distribute data offset
   if(my_rank==0){
+    int loc_of_end_of_catalog;
+    int space_between_catalog_and_data;
+    int loc_of_tar_header_for_spacing;
+    int spacer_file_size;
     arch_file_catalog_buffer_length_w_tar_header = 
       arch_file_catalog_buffer_length + catalog_tar_entry_size;
     catalog_takes_n_buckets = arch_file_catalog_buffer_length_w_tar_header / bucket_size;
     if( arch_file_catalog_buffer_length_w_tar_header % bucket_size )
       catalog_takes_n_buckets++;
     data_offset = catalog_takes_n_buckets * bucket_size;
-  }
+    
+    loc_of_end_of_catalog 
+      = catalog_tar_entry_size + arch_file_catalog_buffer_length;
+    space_between_catalog_and_data = data_offset - loc_of_end_of_catalog;
+    if(space_between_catalog_and_data > blocking_size){
+      // then we need to put in a tar header to fill in the gap between
+      // the end of the catalog and the beginning of the main data block
+      loc_of_tar_header_for_spacing = loc_of_end_of_catalog;
+      if(loc_of_end_of_catalog % blocking_size){
+	// if the end of the catalog isn't on a block boundary, push it
+	// exactly to the next one
+	loc_of_tar_header_for_spacing += 
+	  (blocking_size - (loc_of_end_of_catalog % blocking_size));
+      }
+      spacer_file_size = 
+	(data_offset - loc_of_tar_header_for_spacing) 
+	- catalog_tar_entry_size;
+      
+      parfu_construct_tar_header_for_space(catalog_tar_header_buffer,
+					   spacer_file_size);
+      file_result=MPI_File_write_at(*archive_file_ptr,
+				    loc_of_tar_header_for_spacing,
+				    catalog_tar_header_buffer,
+				    catalog_tar_entry_size,
+				    MPI_CHAR,&my_MPI_Status);
+      if(file_result != MPI_SUCCESS){
+	fprintf(stderr,"parfu_wtar_archive_list_to_singeFP:\n");      
+	fprintf(stderr,"rank 0 got %d from MPI_File_write_at_all\n",file_result);
+	fprintf(stderr," trying to write tar_header for post-catalog file.\n");
+	MPI_Finalize();
+	return 169;
+      }
+    } // if(space_between_catalog_and_data...
+  } // if(my_rank==0....
   MPI_Bcast(&data_offset,1,MPI_LONG_INT,0,MPI_COMM_WORLD);
   fprintf(stderr," *** data move 05\n");
 

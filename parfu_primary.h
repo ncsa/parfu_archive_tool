@@ -352,7 +352,13 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
 					 long int bucket_size,
 					 long int data_region_start,
 					 MPI_File *archive_file_ptr);
-
+  int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
+					 int n_ranks, int my_rank,
+					 long int blocking_size,
+					 long int bucket_size,
+					 int max_files_per_bucket,
+					 char *archive_file_name);
+  
   
   /////////
   //

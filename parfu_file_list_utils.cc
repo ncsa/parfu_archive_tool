@@ -1747,6 +1747,8 @@ int *parfu_rank_call_list_from_ffel(parfu_file_fragment_entry_list_t *myl,
     fprintf(stderr,"  received NULL input list!!\n");
     return NULL;
   }
+  //  fprintf(stderr,"  >>> rank call list starting with %d entries\n",
+  //	  myl->n_entries_full);
   if((prelim_list=(int*)malloc(sizeof(int)*
 			       myl->n_entries_full))==NULL){
     fprintf(stderr,"parfu_rank_call_list_from_ffel:\n");

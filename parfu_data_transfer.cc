@@ -428,7 +428,7 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
   
   //  long int source_file_loc;
   long int archive_file_loc;
-  //  long int current_bucket_loc;
+  long int current_bucket_loc;
   long int current_write_loc_in_bucket;
   long int blocked_data_written;
   //  long int total_blocked_data_written;
@@ -458,8 +458,8 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
   // copy data from file(s) into buffer
   // walk through entries until we hit the next bucket
 
-  //  current_bucket_loc = 
-  //    bucket_size * rank_call_list_index;
+  current_bucket_loc = 
+    bucket_size * rank_call_list_index;
   current_write_loc_in_bucket = 0L;
   //  total_blocked_data_written=0L;
   while(myl->list[current_entry].rank_bucket_index == last_bucket_index && 
@@ -489,10 +489,18 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
       
       
       // copy data from target file to buffer
+      //      file_result=
+      //	MPI_File_read_at(target_file_ptr,
+      //		 myl->list[current_entry].location_in_orig_file,
+      //		 ((void*)(((char*)(transfer_buffer)+current_write_loc_in_bucket))),
+      //		 myl->list[current_entry].our_file_size,
+      //		 MPI_CHAR,&my_MPI_Status);
       file_result=
 	MPI_File_read_at(target_file_ptr,
 			 myl->list[current_entry].location_in_orig_file,
-			 ((void*)(((char*)(transfer_buffer)+current_write_loc_in_bucket))),
+			 (void*)(((char*)(transfer_buffer)+
+				  (myl->list[current_entry].location_in_archive_file-
+				   current_bucket_loc))),
 			 myl->list[current_entry].our_file_size,
 			 MPI_CHAR,&my_MPI_Status);
       if(file_result != MPI_SUCCESS){
@@ -510,7 +518,11 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
       my_tar_header_C = tarentry(myl->list[current_entry].relative_filename,0);
       temp_file_header_C = my_tar_header_C.make_tar_header();
       std::copy(temp_file_header_C.begin(), temp_file_header_C.end(),
-		((((char*)(transfer_buffer))+current_write_loc_in_bucket))); 
+		((((char*)(transfer_buffer))+
+		  ((myl->list[current_entry].location_in_archive_file - 
+		    current_bucket_loc)
+		   - myl->list[current_entry].our_tar_header_size)
+		  ))); 
     }
     
     blocked_data_written = 

@@ -36,8 +36,8 @@ int main(int nargs, char *args[]){
   char *bcast_archive_file_name=NULL;
   
   parfu_file_fragment_entry_list_t *raw_list=NULL;
-  parfu_file_fragment_entry_list_t *split_list=NULL;
-  parfu_file_fragment_entry_list_t *shared_split_list=NULL;
+  //  parfu_file_fragment_entry_list_t *split_list=NULL;
+  //  parfu_file_fragment_entry_list_t *shared_split_list=NULL;
   int raw_file_entries;
 
     // MPI stuff
@@ -46,19 +46,19 @@ int main(int nargs, char *args[]){
 
   int *bcast_archive_file_name_length=NULL;
 
-  int rank_buckets_total;
+  //  int rank_buckets_total;
   time_t timer_before,timer_after;
 
-  int *rank_call_list=NULL;
-  int rank_call_list_length;
+  //  int *rank_call_list=NULL;
+  //  int rank_call_list_length;
 
   int return_val;
 
-  char *split_list_buffer=NULL;
-  char *shared_split_list_buffer=NULL;
-  long int shared_split_list_buffer_length;
+  //  char *split_list_buffer=NULL;
+  //  char *shared_split_list_buffer=NULL;
+  //  long int shared_split_list_buffer_length;
 
-  int shared_bucket_size;
+  //  int shared_bucket_size;
 
   if(nargs > 1)
     mode=*args[1];

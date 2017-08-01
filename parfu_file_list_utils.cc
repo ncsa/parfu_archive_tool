@@ -682,12 +682,13 @@ parfu_file_fragment_entry_list_t
 
     // check for errors in our_tar_header_size
     // then set sum_file_size
-    if(myl->list[i].our_tar_header_size < 0){
+    if(myl->list[i].our_tar_header_size <= 0){
       fprintf(stderr,"parfu_set_offsets_in_ffel:\n");
       fprintf(stderr,"  file %d (REG file) tar_header size = %ld!\n",
 	      i,myl->list[i].our_tar_header_size);
       return NULL;
     }
+    
 
     // our_file_size, the internal value, is the size in the structure
     // for the file.  These values may be negative values which flag

@@ -57,6 +57,7 @@ parfu_file_fragment_entry_list_t
     my_list->list[i].pad_file_location_in_archive_file=-1;
     my_list->list[i].pad_file_archive_filename=NULL;
     my_list->list[i].pad_file_tar_header_size=-1;
+    my_list->list[1].pad_file_size=-1;
 
     my_list->list[i].file_contains_n_fragments=-1;
     my_list->list[i].file_ptr_index=-1;
@@ -758,7 +759,7 @@ parfu_file_fragment_entry_list_t
 	  return NULL;	  
 	}
 
-	// Here's where we would determine if we need to locate a padding file
+	// Here's where we *would* determine if we need to locate a padding file
 	// before this one.  Since we're putting it in the same bucket up close, 
 	// we believe we won't need to, and so we don't update anything.
 
@@ -773,105 +774,111 @@ parfu_file_fragment_entry_list_t
 	// known as "option B"
 
 	// this is a contingency math check; it should never happen
-	if(!(write_loc_whole_archive_file % blocked_sum_file_size)){
-	  fprintf(stderr,"parfu_set_offsets_in_ffel:\n");
-	  fprintf(stderr,"  file %d weird math error; should NEVER happen!!!\n",
-		  i);
-	  return NULL;
-	}
-	else{
-	  // slide the write position to the beginning of the next bucket
-	  current_rank_bucket++;
-	  new_write_loc_whole_archive_file = 
-	    ( current_rank_bucket * per_rank_accumulation_size );
-	  myl->list[i].location_in_archive_file = new_write_loc_whole_archive_file;
-	  // Deal with the possibility we may have to put a pad after the last 
-	  // file to fill up the space between it and the file we're placing
-	  possible_pad_space = 
-	    (new_write_loc_whole_archive_file - write_loc_whole_archive_file);
-	  if( possible_pad_space >= per_file_blocking_size ){
-	    // the space is as big as the blocking size, so we need to pad it
-	    if(myl->list[i].target){
-	      pad_file_header_size = 
-		tarentry::compute_hdr_size(my_pad_file_filename,
-					   myl->list[i].target,
-					   possible_pad_space);
-	    }
-	    else{
-	      pad_file_header_size = 
-		tarentry::compute_hdr_size(my_pad_file_filename,
-					   "",
-					   possible_pad_space);	      
-	    }
-	    if(pad_file_header_size > 
-	       possible_pad_space){
-	      fprintf(stderr,"parfu_set_offsets_and_split_ffel:\n");
-	      fprintf(stderr,"  file index %d option B\n",i);
-	      fprintf(stderr,"  file %s\n",myl->list[i].relative_filename);
-	      fprintf(stderr,"  We need to pad the file but the header is\n");
-	      fprintf(stderr,"  bigger than the available pad space.  Help!\n");
-	      fprintf(stderr,"  header size: %ld space to fill: %ld\n",
-		      pad_file_header_size,possible_pad_space);
-	      return NULL;
-	    }	
-	    if(myl->list[i].target){
-	      new_pad_file_header_size = 
-		tarentry::compute_hdr_size(my_pad_file_filename,
-					   myl->list[i].target,
-					   possible_pad_space-pad_file_header_size);
-	    }
-	    else{
-	      new_pad_file_header_size = 
-		tarentry::compute_hdr_size(my_pad_file_filename,
-					   "",
-					   possible_pad_space-pad_file_header_size);	      
-	    }
-	    if(new_pad_file_header_size != pad_file_header_size){
-	      fprintf(stderr,"parfu_set_offsets_and_split_ffel:\n");
-	      fprintf(stderr,"  pad file tar header changed size!!!\n");
-	      fprintf(stderr,"  Dont' know how to deal with this!\n");
-	      return NULL;
-	    }
-	    // we need a pad before this file after the previous one
-	    // put that information into the INCOMING list so that it
-	    // gets propogated to the outgoing list
-	    myl->list[i].pad_file_location_in_archive_file = 
-	      write_loc_whole_archive_file;
-	    if((myl->list[i].pad_file_archive_filename=
-		(char*)malloc(strlen(my_pad_file_filename)+1))==NULL){
-	      fprintf(stderr,"parfu_set_offsets_and_split_ffel:\n");
-	      fprintf(stderr," input file index %d \n",i);
-	      fprintf(stderr," could not allocate space for pad file!\n");
-	      return NULL;
-	    }
-	    sprintf(myl->list[i].pad_file_archive_filename,"%s",
-		    my_pad_file_filename);
-	    myl->list[i].pad_file_tar_header_size=pad_file_header_size;
-	    myl->list[i].pad_file_size = 
-	      possible_pad_space-pad_file_header_size;
-	  } // if(possible_pad_space...
-	  
-	  if(parfu_add_entry_to_ffel_mod(&outlist,myl->list[i],
-					 myl->list[i].our_file_size,
-					 write_loc_whole_archive_file+myl->list[i].our_tar_header_size,
-					 0L, // single fragment; zero by def
-					 1,  // just one fragment
-					 -1, // file pointer index; assigned elsewhere
-					 current_rank_bucket)){
-	    fprintf(stderr,"parfu_set_offsets_and_split_ffel:\n");
-	    fprintf(stderr,"  in OPTION B\n");
-	    fprintf(stderr," could not add entry %d to split list bucket %ld!!!!\n",
-		    i,current_rank_bucket);
-	    return NULL;	  
-	  } // if(parfu_add_entry...
-	  myl->list[i].rank_bucket_index=current_rank_bucket;
-	  myl->list[i].location_in_orig_file = 0L;
+	//	if(!(write_loc_whole_archive_file % blocked_sum_file_size)){
+	//	  fprintf(stderr,"parfu_set_offsets_in_ffel:\n");
+	//  fprintf(stderr,"  op B rank %d file %d weird math error; should NEVER happen!!! >%s<\n",
+	//		  i,
+	//		  myl->list[i].relative_filename);
+	//  return NULL;
+	//}
+	//	else{
 
-	  // slide write position to the end of the current file
-	  write_loc_this_rank = blocked_sum_file_size;
-	  write_loc_whole_archive_file += blocked_sum_file_size;
-	  
-	} // else 
+	// slide the write position to the beginning of the next bucket
+	current_rank_bucket++;
+	new_write_loc_whole_archive_file = 
+	  ( current_rank_bucket * per_rank_accumulation_size );
+	myl->list[i].location_in_archive_file = new_write_loc_whole_archive_file;
+	// Deal with the possibility we may have to put a pad after the last 
+	// file to fill up the space between it and the file we're placing
+	possible_pad_space = 
+	  (new_write_loc_whole_archive_file - write_loc_whole_archive_file);
+	//	fprintf(stderr,"  SSS i=%d spilled into bucket %d\n",
+	//	i,current_rank_bucket);
+
+	if( possible_pad_space >= per_file_blocking_size ){
+	  // the space is as big as the blocking size, so we need to pad it
+	  if(myl->list[i].target){
+	    pad_file_header_size = 
+	      tarentry::compute_hdr_size(my_pad_file_filename,
+					 myl->list[i].target,
+					 possible_pad_space);
+	  }
+	  else{
+	    pad_file_header_size = 
+	      tarentry::compute_hdr_size(my_pad_file_filename,
+					 "",
+					 possible_pad_space);	      
+	  }
+	  if(pad_file_header_size > 
+	     possible_pad_space){
+	    fprintf(stderr,"parfu_set_offsets_and_split_ffel:\n");
+	    fprintf(stderr,"  file index %d option B\n",i);
+	    fprintf(stderr,"  file %s\n",myl->list[i].relative_filename);
+	    fprintf(stderr,"  We need to pad the file but the header is\n");
+	    fprintf(stderr,"  bigger than the available pad space.  Help!\n");
+	    fprintf(stderr,"  header size: %ld space to fill: %ld\n",
+		    pad_file_header_size,possible_pad_space);
+	    return NULL;
+	  }	
+	  if(myl->list[i].target){
+	    new_pad_file_header_size = 
+	      tarentry::compute_hdr_size(my_pad_file_filename,
+					 myl->list[i].target,
+					 possible_pad_space-pad_file_header_size);
+	  }
+	  else{
+	    new_pad_file_header_size = 
+	      tarentry::compute_hdr_size(my_pad_file_filename,
+					 "",
+					 possible_pad_space-pad_file_header_size);	      
+	  }
+	  if(new_pad_file_header_size != pad_file_header_size){
+	    fprintf(stderr,"parfu_set_offsets_and_split_ffel:\n");
+	    fprintf(stderr,"  pad file tar header changed size!!!\n");
+	    fprintf(stderr,"  Dont' know how to deal with this!\n");
+	    return NULL;
+	  }
+	  // we need a pad before this file after the previous one
+	  // put that information into the INCOMING list so that it
+	  // gets propogated to the outgoing list
+	  myl->list[i].pad_file_location_in_archive_file = 
+	    write_loc_whole_archive_file;
+	  if((myl->list[i].pad_file_archive_filename=
+	      (char*)malloc(strlen(my_pad_file_filename)+1))==NULL){
+	    fprintf(stderr,"parfu_set_offsets_and_split_ffel:\n");
+	    fprintf(stderr," input file index %d \n",i);
+	    fprintf(stderr," could not allocate space for pad file!\n");
+	    return NULL;
+	  }
+	  sprintf(myl->list[i].pad_file_archive_filename,"%s",
+		  my_pad_file_filename);
+	  myl->list[i].pad_file_tar_header_size=pad_file_header_size;
+	  myl->list[i].pad_file_size = 
+	    possible_pad_space-pad_file_header_size;
+	} // if(possible_pad_space...
+	
+	if(parfu_add_entry_to_ffel_mod(&outlist,myl->list[i],
+				       myl->list[i].our_file_size,
+				       new_write_loc_whole_archive_file+myl->list[i].our_tar_header_size,
+				       0L, // single fragment; zero by def
+				       1,  // just one fragment
+				       -1, // file pointer index; assigned elsewhere
+				       current_rank_bucket)){
+	  fprintf(stderr,"parfu_set_offsets_and_split_ffel:\n");
+	  fprintf(stderr,"  in OPTION B\n");
+	  fprintf(stderr," could not add entry %d to split list bucket %ld!!!!\n",
+		  i,current_rank_bucket);
+	  return NULL;	  
+	} // if(parfu_add_entry...
+	myl->list[i].rank_bucket_index=current_rank_bucket;
+	myl->list[i].location_in_orig_file = 0L;
+	
+	// slide write position to the end of the current file
+	write_loc_this_rank = blocked_sum_file_size;
+	write_loc_whole_archive_file = new_write_loc_whole_archive_file;
+	write_loc_whole_archive_file += blocked_sum_file_size;
+	
+	//      } // else 
       } // else (if it would spill out of current bucket)
     } // if(blocked_sum_file_size....
     else{
@@ -903,9 +910,14 @@ parfu_file_fragment_entry_list_t
 	    ( current_rank_bucket * per_rank_accumulation_size );	
       }
 
+      fprintf(stderr,"  SSS i=%d starting in bucket %d\n",
+	      i,current_rank_bucket);
+
       possible_pad_space = 
 	(write_loc_whole_archive_file - old_write_loc_whole_archive_file);
       
+      // this is for the catalog.  This indicates where the tar header
+      // will go.
       myl->list[i].location_in_archive_file = write_loc_whole_archive_file;
 
       if( possible_pad_space >= per_file_blocking_size ){
@@ -952,7 +964,7 @@ parfu_file_fragment_entry_list_t
 	  return NULL;
 	}
 	myl->list[i].pad_file_location_in_archive_file = 
-	  write_loc_whole_archive_file;
+	  old_write_loc_whole_archive_file;
 	if((myl->list[i].pad_file_archive_filename=
 	    (char*)malloc(strlen(my_pad_file_filename)+1))==NULL){
 	  fprintf(stderr,"parfu_set_offsets_and_split_ffel op C:\n");
@@ -1036,7 +1048,7 @@ parfu_file_fragment_entry_list_t
 	
 	if(parfu_add_entry_to_ffel_mod(&outlist,myl->list[i],
 				       data_to_write,
-				       write_loc_whole_archive_file+myl->list[i].our_tar_header_size,
+				       write_loc_whole_archive_file,
 					 (per_rank_accumulation_size * j) - myl->list[i].our_tar_header_size,				     
 				       n_total_buckets_per_file,  // n fragments
 				       -1, // file pointer index; assigned elsewhere
@@ -1051,9 +1063,9 @@ parfu_file_fragment_entry_list_t
 	
 	write_loc_whole_archive_file += blocked_data_to_write;
 
-	current_rank_bucket++;
-	myl->list[i].location_in_orig_file = 
-	  per_rank_accumulation_size * j;
+	//	current_rank_bucket++;
+	//	myl->list[i].location_in_orig_file = 
+	//	  per_rank_accumulation_size * j;
 	data_to_write -= per_rank_accumulation_size;
 	
       }
@@ -1768,9 +1780,12 @@ int *parfu_rank_call_list_from_ffel(parfu_file_fragment_entry_list_t *myl,
     return NULL;
   }
   for( i=0 ; i< myl->n_entries_full ; i++){
+    //    fprintf(stderr,"  make_RCL: %7d  %7d\n",
+    //	    i,myl->list[i].rank_bucket_index);
     if( myl->list[i].rank_bucket_index != last_bucket_index ){
-      prelim_list[current_bucket_index] = 
-	myl->list[i].rank_bucket_index;
+      prelim_list[current_bucket_index] = i;
+      //      fprintf(stderr," CBI: %5d   %5d\n",
+      //	      current_bucket_index,prelim_list[current_bucket_index]);
       last_bucket_index = myl->list[i].rank_bucket_index;
       current_bucket_index++;
     }

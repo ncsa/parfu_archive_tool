@@ -58,6 +58,8 @@ int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
 				       long int bucket_size,
 				       int max_files_per_bucket,
 				       char *archive_file_name){
+  int debug=0;
+  
   MPI_File *archive_file_ptr=NULL;
   MPI_Info my_Info=MPI_INFO_NULL;
   long int data_offset;
@@ -92,7 +94,10 @@ int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
 
   MPI_Status my_MPI_Status;
 
-  fprintf(stderr," *** data move 00\n");
+  int i;
+
+  if(debug)
+    fprintf(stderr," *** data move 00\n");
 
   if((padding_filename=(char*)malloc(sizeof(char)*(strlen(PARFU_BLOCKING_FILE_NAME)+1)))
      ==NULL){
@@ -124,7 +129,8 @@ int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
       return 105;
     }
   }
-  fprintf(stderr," *** data move 01\n");
+  if(debug)
+    fprintf(stderr," *** data move 01\n");
   MPI_Bcast(&archive_filename_length,1,MPI_INT,0,MPI_COMM_WORLD);
 
   /////////
@@ -145,7 +151,8 @@ int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
   }
   MPI_Bcast(shared_archive_file_name,archive_filename_length+1,MPI_CHAR,0,MPI_COMM_WORLD);
   // open the archive file on all ranks with a shared pointer
-  fprintf(stderr," *** data move 02\n");
+  if(debug)
+    fprintf(stderr," *** data move 02\n");
   if((archive_file_ptr=(MPI_File*)malloc(sizeof(MPI_File)))==NULL){
     fprintf(stderr,"parfu_wtar_archive_list_to_singeFP:\n");
     fprintf(stderr,"rank %d could not allocate space for archive file pointer!\n",my_rank);
@@ -154,7 +161,8 @@ int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
   }
   if(my_rank==0)
     fprintf(stderr,"about to open archive file on all ranks.\n");
-  fprintf(stderr," *** data move 03\n");
+  if(debug)
+    fprintf(stderr," *** data move 03\n");
   file_result=MPI_File_open(MPI_COMM_WORLD, shared_archive_file_name, 
 			    MPI_MODE_WRONLY | MPI_MODE_CREATE , 
 			    my_Info, archive_file_ptr);
@@ -166,7 +174,8 @@ int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
 	    archive_file_name);
     return 3; 
   }
-  fprintf(stderr," *** data move 04, file open on all ranks.\n");
+  if(debug)
+    fprintf(stderr," *** data move 04, file open on all ranks.\n");
   // the shared archive file is open, rank 0 writes the catalog to it
   if(my_rank==0){
     catalog_tar_entry_size = 
@@ -257,8 +266,9 @@ int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
     } // if(space_between_catalog_and_data...
   } // if(my_rank==0....
   MPI_Bcast(&data_offset,1,MPI_LONG_INT,0,MPI_COMM_WORLD);
-  fprintf(stderr," *** data move 05\n");
-
+  if(debug)
+    fprintf(stderr," *** data move 05\n");
+  
   
   // split file list and distribute results to all ranks
   if(my_rank==0){
@@ -290,8 +300,9 @@ int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
     }
   }
   MPI_Bcast(&split_list_catalog_buffer_length,1,MPI_LONG_INT,0,MPI_COMM_WORLD);
-  fprintf(stderr," *** data move 06\n");
-
+  if(debug)
+    fprintf(stderr," *** data move 06\n");
+  
   if((shared_split_list_catalog_buffer=(char*)malloc(split_list_catalog_buffer_length))==NULL){
     fprintf(stderr,"parfu_wtar_archive_list_to_singeFP:\n");
     fprintf(stderr," could not allocate split_list buffer!  rank %d\n",my_rank);
@@ -300,7 +311,8 @@ int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
   if(my_rank==0)
     memcpy(shared_split_list_catalog_buffer,split_list_catalog_buffer,split_list_catalog_buffer_length);
   MPI_Bcast(shared_split_list_catalog_buffer,split_list_catalog_buffer_length,MPI_CHAR,0,MPI_COMM_WORLD);
-  fprintf(stderr," *** data move 07\n");
+  if(debug)
+    fprintf(stderr," *** data move 07\n");
   if((shared_split_list=
       parfu_buffer_to_file_fragment_list(shared_split_list_catalog_buffer,
 					 &return_bucket_size,0))==NULL){
@@ -308,8 +320,9 @@ int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
     fprintf(stderr,"rank %d could not create split list!!\n",my_rank);
     return 78;
   }
-  fprintf(stderr," *** data move 08\n");
-
+  if(debug)
+    fprintf(stderr," *** data move 08\n");
+  
   
   MPI_Bcast(&rank_call_list_length,1,MPI_INT,0,MPI_COMM_WORLD);
   if((shared_rank_call_list=(int*)malloc(sizeof(int)*rank_call_list_length))
@@ -321,12 +334,24 @@ int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
   if(my_rank==0)
     memcpy(shared_rank_call_list,rank_call_list,rank_call_list_length*sizeof(int));
   MPI_Bcast(shared_rank_call_list,rank_call_list_length,MPI_INT,0,MPI_COMM_WORLD);
-  fprintf(stderr," *** data move 09  rcll=%d \n",rank_call_list_length);
+  fprintf(stderr," *** data move 09  rcll=%d rank=%d\n",rank_call_list_length,my_rank);
   // all ranks have their own list, and valid file pointers, and the call list
+  
+  if(my_rank==0){
+    fprintf(stderr,"rank 0 debugging\n");
+    fprintf(stderr," original list length: %d\n",myl->n_entries_full);
+    fprintf(stderr," split list length: %d\n",shared_split_list->n_entries_full);
+    fprintf(stderr,"dumping rank call list: endpoint=%d\n",
+	    shared_split_list->n_entries_full);
+    //    for(i=0;i<rank_call_list_length;i++){
+    //      fprintf(stderr," i=%05d  bucket_beginning_index=%05d\n",
+    //	      i,rank_call_list[i]);
+    //    }
+  }
 						      
   if((file_result=parfu_wtar_archive_allbuckets_singFP(shared_split_list,
 						       n_ranks,my_rank,
-						       rank_call_list,
+						       shared_rank_call_list,
 						       rank_call_list_length,
 						       blocking_size,
 						       bucket_size,
@@ -370,6 +395,12 @@ int parfu_wtar_archive_allbuckets_singFP(parfu_file_fragment_entry_list_t *myl,
     return 3;
   }
 
+  if(rank_call_list==NULL){
+    fprintf(stderr,"parfu_wtar_archive_allbuckets_singFP:\n");
+    fprintf(stderr,"  We received a rank_call_list that was NULL!!\n");
+    return 7;
+  }
+
   /*
   if((archive_file_ptr=(MPI_File*)malloc(sizeof(MPI_File)))==NULL){
     fprintf(stderr,"parfu_wtar_archive_allbuckets_singFP:\n");
@@ -392,6 +423,8 @@ int parfu_wtar_archive_allbuckets_singFP(parfu_file_fragment_entry_list_t *myl,
 
   rank_iter = my_rank;
 
+  fprintf(stderr,"  @@@ rank %5d about to enter loop of _one_bucket calls\n",
+	  my_rank);
   while(rank_iter < rank_call_list_length){
     if((return_val=parfu_wtar_archive_one_bucket_singFP(myl,n_ranks,my_rank,
 						       rank_call_list,
@@ -432,6 +465,7 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
   long int current_write_loc_in_bucket;
   long int blocked_data_written;
   //  long int total_blocked_data_written;
+  long int data_offset_in_buffer;
   
   MPI_File target_file_ptr;
   MPI_Info my_Info=MPI_INFO_NULL;
@@ -462,10 +496,11 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
     bucket_size * rank_call_list_index;
   current_write_loc_in_bucket = 0L;
   //  total_blocked_data_written=0L;
+  fprintf(stderr," ^^^ rank %d beginning single bucket while loop\n",my_rank);
   while(myl->list[current_entry].rank_bucket_index == last_bucket_index && 
 	current_entry < myl->n_entries_full){
     // open target file
-    fprintf(stderr," @@@  rank %d opening file %s",
+    fprintf(stderr," @@@  rank %d opening file > %s <\n",
 	    my_rank,
 	    myl->list[current_entry].relative_filename);
 
@@ -486,6 +521,7 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
 	fprintf(stderr,"for reading.  result=%d\n",file_result);
 	return 138;
       }
+      //      fprintf(stderr,"   ??? rank %5d has opened 
       
       
       // copy data from target file to buffer
@@ -495,6 +531,16 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
       //		 ((void*)(((char*)(transfer_buffer)+current_write_loc_in_bucket))),
       //		 myl->list[current_entry].our_file_size,
       //		 MPI_CHAR,&my_MPI_Status);
+      data_offset_in_buffer=
+	myl->list[current_entry].location_in_archive_file-
+	current_bucket_loc;      
+      if(data_offset_in_buffer < 0 ||
+	 data_offset_in_buffer >= bucket_size){
+	fprintf(stderr,"parfu_wtar_archive_one_bucket_singFP:\n");		
+	fprintf(stderr," rank %d has data_offset_in_buffer=%ld !\n,",
+		my_rank,data_offset_in_buffer);
+	return 149;
+      }
       file_result=
 	MPI_File_read_at(target_file_ptr,
 			 myl->list[current_entry].location_in_orig_file,
@@ -509,7 +555,7 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
 	fprintf(stderr,"reading fragment %d",rank_call_list_index);
 	fprintf(stderr,"file %s\n",myl->list[current_entry].relative_filename);
 	return 159;
-      }      
+      }
       
     } // if it's a real file with data
     

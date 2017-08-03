@@ -94,7 +94,7 @@ int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
 
   MPI_Status my_MPI_Status;
 
-  int i;
+  //  int i;
 
   if(debug)
     fprintf(stderr," *** data move 00\n");
@@ -466,6 +466,8 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
   long int blocked_data_written;
   //  long int total_blocked_data_written;
   long int data_offset_in_buffer;
+
+  long int pad_file_location_in_bucket;
   
   MPI_File target_file_ptr;
   MPI_Info my_Info=MPI_INFO_NULL;
@@ -474,6 +476,10 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
   std::vector<char> temp_file_header_C;
   tarentry my_tar_header_C;
   int file_result;
+  int local_pad_file_size;
+  int pad_space;
+  
+  int remainder;
 
   if(bucket_size < 10000){
     fprintf(stderr,"parfu_wtar_archive_one_bucket_singFP:\n");
@@ -497,8 +503,9 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
   current_write_loc_in_bucket = 0L;
   //  total_blocked_data_written=0L;
   fprintf(stderr," ^^^ rank %d beginning single bucket while loop\n",my_rank);
-  while(myl->list[current_entry].rank_bucket_index == last_bucket_index && 
-	current_entry < myl->n_entries_full){
+  while( current_entry < myl->n_entries_full &&
+	 myl->list[current_entry].rank_bucket_index == last_bucket_index ){
+    
     // open target file
     fprintf(stderr," @@@  rank %d opening file > %s <\n",
 	    my_rank,
@@ -586,6 +593,66 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
     current_entry++;
     MPI_File_close(&target_file_ptr);
   } // while(myl->list[current_entry].rank_bucket_index == ....
+
+  // now check to see if we need to add a tar header at the end to pad space 
+  // from the end of our data to the beginning of the next bucket
+
+  pad_space = bucket_size-current_write_loc_in_bucket;
+  if( (pad_space - blocking_size) >= 0 ){
+    //write a tar header to bridge the gap to the next bucket
+    local_pad_file_size = pad_space - blocking_size;
+    parfu_construct_tar_header_for_space( ((char*)(transfer_buffer))+
+					  current_write_loc_in_bucket,
+					  local_pad_file_size);
+    /*    my_tar_header_C = tarentry(".parfu_spacer",0);
+	  temp_file_header_C = my_tar_header_C.make_tar_header();
+	  std::copy(temp_file_header_C.begin(), temp_file_header_C.end(),
+	  ((((char*)(transfer_buffer))+
+	  current_write_loc_in_bucket)));*/
+    // we're assuming here the tar header is the blocking size
+    // not guaranteed but in practice is always true.
+    current_write_loc_in_bucket += blocking_size;
+  }
+  
+  /*
+  if( current_entry < myl->n_entries_full ){
+    // if we're not at the end of the list
+
+    // we look at first entry of the NEXT rank to see if it needs a pad
+    // in our section.  If it has a name, then there's an entry.
+    if(myl->list[current_entry].pad_file_archive_filename != NULL){
+
+
+      //      pad_file_location_in_bucket = 
+      //	myl->list[current_entry].pad_file_location_in_archive_file - 
+      //	current_bucket_loc;
+      //      if(pad_file_location_in_bucket < 0 || 
+      //	 pad_file_location_in_bucket >= bucket_size){
+      //	fprintf(stderr,"  HELP HELP!!   spaceer tar headre outside buffer!!! rank=%5d ; %ld\n",
+      //		my_rank,pad_file_location_in_bucket);
+      //      }
+      //      parfu_construct_tar_header_for_space( ((char*)(transfer_buffer))+
+      //					    pad_file_location_in_bucket,
+      //
+      //myl->list[current_entry].pad_file_size);     
+      if(
+      
+      parfu_construct_tar_header_for_space( ((char*)(transfer_buffer))+
+					    current_write_loc_in_bucket,
+					    myl->list[current_entry].pad_file_size);
+      
+
+    }
+    } */
+  
+  // if we're the very very last transfer in the archive file, pad the file out to
+  // the block size to make tar happy.
+  if(current_entry == myl->n_entries_full){
+    if((remainder=(current_write_loc_in_bucket % blocking_size))){
+      current_write_loc_in_bucket += 
+	(blocking_size - remainder);
+    }
+  }
 
   fprintf(stderr," ### rank %d copied data to buffer.  Now moving to archive file.\n",my_rank);
   

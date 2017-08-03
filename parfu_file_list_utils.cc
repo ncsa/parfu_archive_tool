@@ -910,7 +910,7 @@ parfu_file_fragment_entry_list_t
 	    ( current_rank_bucket * per_rank_accumulation_size );	
       }
 
-      fprintf(stderr,"  SSS i=%d starting in bucket %d\n",
+      fprintf(stderr,"  SSS i=%d starting in bucket %ld\n",
 	      i,current_rank_bucket);
 
       possible_pad_space = 
@@ -976,7 +976,7 @@ parfu_file_fragment_entry_list_t
 		my_pad_file_filename);
 	myl->list[i].pad_file_tar_header_size=pad_file_header_size;
 	myl->list[i].pad_file_size = 
-	  possible_pad_space-pad_file_header_size;
+	  possible_pad_space-new_pad_file_header_size;
       } // if(possible_pad_space...
       
       for(j=0;j<n_whole_buckets_per_file;j++){

@@ -341,7 +341,7 @@ void parfu_construct_tar_header_for_space(void *output_buffer, int total_bytes_t
     // leave this static so that unfilled bytes are zero and not random
     int tar_header_bytes;
     static struct ustar_hdr hdr = {
-      ".parfu_spacer",    // name, duplicates don't matter
+      ".parfu_spacer ",    // name, duplicates don't matter
       "0000600",           // mode
       "0000000", "0000000",// uid and gid
       "size",              // filled in later

@@ -467,7 +467,7 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
   //  long int total_blocked_data_written;
   long int data_offset_in_buffer;
 
-  long int pad_file_location_in_bucket;
+  //  long int pad_file_location_in_bucket;
   
   MPI_File target_file_ptr;
   MPI_Info my_Info=MPI_INFO_NULL;
@@ -479,7 +479,10 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
   int local_pad_file_size;
   int pad_space;
   
-  int remainder;
+  //  int remainder;
+
+  int i;
+  int terminator_length=1024;
 
   if(bucket_size < 10000){
     fprintf(stderr,"parfu_wtar_archive_one_bucket_singFP:\n");
@@ -645,14 +648,7 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
     }
     } */
   
-  // if we're the very very last transfer in the archive file, pad the file out to
-  // the block size to make tar happy.
-  if(current_entry == myl->n_entries_full){
-    if((remainder=(current_write_loc_in_bucket % blocking_size))){
-      current_write_loc_in_bucket += 
-	(blocking_size - remainder);
-    }
-  }
+  
 
   fprintf(stderr," ### rank %d copied data to buffer.  Now moving to archive file.\n",my_rank);
   
@@ -679,6 +675,37 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
     MPI_Finalize();
     return 160;
   }
+
+  if(current_entry == myl->n_entries_full){
+    //    if((remainder=(current_write_loc_in_bucket % blocking_size))){
+      //      current_write_loc_in_bucket += 
+      //	(blocking_size - remainder);
+      for(i=0;i<terminator_length;i++){
+	sprintf(  ((char*)(transfer_buffer))+i,"%c",'\0');
+      }
+      archive_file_loc = data_region_start +
+	((rank_call_list_index+1) * bucket_size);      
+      file_result=MPI_File_write_at(*archive_file_ptr,
+				    archive_file_loc,
+				    transfer_buffer,
+				    terminator_length,
+				    MPI_CHAR,&my_MPI_Status);
+      if(file_result != MPI_SUCCESS){
+	
+	fprintf(stderr,"rank %d got %d from MPI_File_write_at_all\n",my_rank,file_result);
+	fprintf(stderr,"  writing tar file terminator block.\n");
+	MPI_Finalize();
+	return 160;
+
+      }
+      
+      //    } // if(remainder==(current_write_loc_in_bucket....
+  } // if(current_entry == ...
+  
+  // if we're the very very last transfer in the archive file, pad the file out to
+  // the block size to make tar happy.
+
+  
   
   return 0;
 }

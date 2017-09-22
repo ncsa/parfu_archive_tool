@@ -141,7 +141,7 @@ int main(int nargs, char *args[]){
       
       
       fprintf(stderr,"unsorted file list: \n");
-      parfu_dump_fragment_entry_list(raw_list,stdout);
+      //      parfu_dump_fragment_entry_list(raw_list,stdout);
       fprintf(stderr,"finishing dumping list.\n");
       
       time(&timer_before);
@@ -151,7 +151,7 @@ int main(int nargs, char *args[]){
 	      difftime(timer_after,timer_before));
       
       fprintf(stderr,"sorted file list: \n");
-      parfu_dump_fragment_entry_list(raw_list,stdout);
+      //      parfu_dump_fragment_entry_list(raw_list,stdout);
       fprintf(stderr,"finishing dumping list.\n");
       
       /*
@@ -254,13 +254,8 @@ int main(int nargs, char *args[]){
     if(my_rank==0)
       fprintf(stderr,"All ranks finished transferring data!\n");
     
-    
-
     break;
   }
-  
-  
 
   return 0;
-
 }

@@ -147,12 +147,16 @@ char *parfu_fragment_list_to_buffer(parfu_file_fragment_entry_list_t *my_list,
   }
   output_buffer_size=(is_archive_catalog ? sizeof(struct ustar_hdr) : 0) +
                      PARFU_DEFAULT_SIZE_PER_LINE * my_list->n_entries_full;
-  if(output_buffer_size>PARFU_MAXIMUM_BUFFER_SIZE){
-    fprintf(stderr,"parfu_fragment_list_to_buffer:\n");
-    fprintf(stderr," buffer size: %ld\n",output_buffer_size);
-    fprintf(stderr," larger than max buffer size %d!\n",PARFU_MAXIMUM_BUFFER_SIZE);
-    return NULL;
-  }
+  
+  // this test taken out 2017sep20 
+  // why was it here?  Who knows.  Buffer length expanded liberally in the big
+  // writing loop, so I have no idea why this was here.  :-/
+  //  if(output_buffer_size>PARFU_MAXIMUM_BUFFER_SIZE){
+  //    fprintf(stderr,"parfu_fragment_list_to_buffer:\n");
+  //    fprintf(stderr," buffer size: %ld\n",output_buffer_size);
+  //    fprintf(stderr," larger than max buffer size %d!\n",PARFU_MAXIMUM_BUFFER_SIZE);
+  //    return NULL;
+  //  }
   if((output_buffer=(char*)malloc(output_buffer_size))==NULL){
     fprintf(stderr,"parfu_fragment_list_to_buffer:\n");
     fprintf(stderr,"could not allocate %ld bytes for line buffer!\n",output_buffer_size);

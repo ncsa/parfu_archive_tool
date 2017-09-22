@@ -334,7 +334,7 @@ int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
   if(my_rank==0)
     memcpy(shared_rank_call_list,rank_call_list,rank_call_list_length*sizeof(int));
   MPI_Bcast(shared_rank_call_list,rank_call_list_length,MPI_INT,0,MPI_COMM_WORLD);
-  fprintf(stderr," *** data move 09  rcll=%d rank=%d\n",rank_call_list_length,my_rank);
+  //  fprintf(stderr," *** data move 09  rcll=%d rank=%d\n",rank_call_list_length,my_rank);
   // all ranks have their own list, and valid file pointers, and the call list
   
   if(my_rank==0){
@@ -423,8 +423,8 @@ int parfu_wtar_archive_allbuckets_singFP(parfu_file_fragment_entry_list_t *myl,
 
   rank_iter = my_rank;
 
-  fprintf(stderr,"  @@@ rank %5d about to enter loop of _one_bucket calls\n",
-	  my_rank);
+  //  fprintf(stderr,"  @@@ rank %5d about to enter loop of _one_bucket calls\n",
+  //	  my_rank);
   while(rank_iter < rank_call_list_length){
     if((return_val=parfu_wtar_archive_one_bucket_singFP(myl,n_ranks,my_rank,
 						       rank_call_list,
@@ -444,6 +444,16 @@ int parfu_wtar_archive_allbuckets_singFP(parfu_file_fragment_entry_list_t *myl,
   fprintf(stderr," &&& rank %d exiting all buckets loop at rank iter %d\n",
 	  my_rank,rank_iter);
   return 0;
+}
+
+extern "C"
+void parfu_print_MPI_error(FILE *target,
+			   int error_number){
+  char MPI_error_msg[MPI_MAX_ERROR_STRING];
+  int return_length;
+  MPI_Error_string(error_number, MPI_error_msg, &return_length);
+  fprintf(target,"MPI error string: >%s<\n",MPI_error_msg);
+  return; 
 }
 
 extern "C"
@@ -484,6 +494,7 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
   int i;
   int terminator_length=1024;
 
+
   if(bucket_size < 10000){
     fprintf(stderr,"parfu_wtar_archive_one_bucket_singFP:\n");
     fprintf(stderr,"  Input bucket_size is: %ld !!!\n",bucket_size);
@@ -505,14 +516,14 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
     bucket_size * rank_call_list_index;
   current_write_loc_in_bucket = 0L;
   //  total_blocked_data_written=0L;
-  fprintf(stderr," ^^^ rank %d beginning single bucket while loop\n",my_rank);
+  //  fprintf(stderr," ^^^ rank %d beginning single bucket while loop\n",my_rank);
   while( current_entry < myl->n_entries_full &&
 	 myl->list[current_entry].rank_bucket_index == last_bucket_index ){
     
     // open target file
-    fprintf(stderr," @@@  rank %d opening file > %s <\n",
-	    my_rank,
-	    myl->list[current_entry].relative_filename);
+    //    fprintf(stderr," @@@  rank %d opening file > %s <\n",
+    //	    my_rank,
+    //	    myl->list[current_entry].relative_filename);
 
     // we only need to open and read from files that are 
     // actual files and have non-zero size
@@ -561,9 +572,13 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
 			 MPI_CHAR,&my_MPI_Status);
       if(file_result != MPI_SUCCESS){
 	fprintf(stderr,"parfu_wtar_archive_one_bucket_singFP:\n");	
-	fprintf(stderr,"rank %d got %d from MPI_File_read_at\n",my_rank,file_result);
+	fprintf(stderr,"rank %d got %d from MPI_File_read_at\n",my_rank,file_result);	
 	fprintf(stderr,"reading fragment %d",rank_call_list_index);
 	fprintf(stderr,"file %s\n",myl->list[current_entry].relative_filename);
+	parfu_print_MPI_error(stderr,file_result);
+	fprintf(stderr,"YY:r=%d,OF=%ld,SZ=%ld,FN=>%s<\n",
+		my_rank,myl->list[current_entry].location_in_orig_file,myl->list[current_entry].our_file_size,
+		myl->list[current_entry].relative_filename);
 	return 159;
       }
       
@@ -650,7 +665,7 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
   
   
 
-  fprintf(stderr," ### rank %d copied data to buffer.  Now moving to archive file.\n",my_rank);
+  //  fprintf(stderr," ### rank %d copied data to buffer.  Now moving to archive file.\n",my_rank);
   
   
   // now copy the whole buffer to the archive file
@@ -993,7 +1008,7 @@ int parfu_archive_1file_singFP(parfu_file_fragment_entry_list_t *raw_list,
   MPI_Bcast(&file_size,1,MPI_LONG_INT,0,MPI_COMM_WORLD);
   file_result=MPI_File_set_size(*archive_file_MPI,file_size);
 
-  if(my_rank==0) fprintf(stderr,"  ****** about to begin big data transfer loop.\n");
+//  if(my_rank==0) fprintf(stderr,"  ****** about to begin big data transfer loop.\n");
   if(my_rank==0) times_through_loop=0;
   
   //  <<<<<<< HEAD:parfu_data_transfer.c

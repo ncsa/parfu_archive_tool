@@ -907,11 +907,11 @@ parfu_file_fragment_entry_list_t
       if( write_loc_whole_archive_file % per_rank_accumulation_size ){
 	current_rank_bucket++;
 	  write_loc_whole_archive_file = 
-	    ( current_rank_bucket * per_rank_accumulation_size );	
+	    ( current_rank_bucket * ((long int)(per_rank_accumulation_size)) );	
       }
 
-      fprintf(stderr,"  SSS i=%d starting in bucket %ld\n",
-	      i,current_rank_bucket);
+      //      fprintf(stderr,"  SSS i=%d starting in bucket %ld\n",
+      //	      i,current_rank_bucket);
 
       possible_pad_space = 
 	(write_loc_whole_archive_file - old_write_loc_whole_archive_file);
@@ -991,7 +991,7 @@ parfu_file_fragment_entry_list_t
 	  if(parfu_add_entry_to_ffel_mod(&outlist,myl->list[i],
 					 per_rank_accumulation_size,
 					 write_loc_whole_archive_file,
-					 (per_rank_accumulation_size * j) - myl->list[i].our_tar_header_size,
+					 ( ((long int)(per_rank_accumulation_size)) * ((long int)(j)) ) - ((long int)(myl->list[i].our_tar_header_size)),
 					 n_total_buckets_per_file,
 					 -1, // file pointer index; assigned elsewhere
 					 current_rank_bucket)){
@@ -1049,7 +1049,7 @@ parfu_file_fragment_entry_list_t
 	if(parfu_add_entry_to_ffel_mod(&outlist,myl->list[i],
 				       data_to_write,
 				       write_loc_whole_archive_file,
-					 (per_rank_accumulation_size * j) - myl->list[i].our_tar_header_size,				     
+				       ( ((long int)(per_rank_accumulation_size)) * ((long int)(j)) ) - ((long int)(myl->list[i].our_tar_header_size)),				     
 				       n_total_buckets_per_file,  // n fragments
 				       -1, // file pointer index; assigned elsewhere
 				       current_rank_bucket)){

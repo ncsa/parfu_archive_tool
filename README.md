@@ -1,5 +1,5 @@
 # parfu_archive_tool
-Parfu tar-like (but not compatible) MPI tool for creating or extracting directory tree archives.  In "create" mode it packages one (for now) directory into a single archive file.  In "extract" mode it takes an archive file and unpacks the original file and directory structure into a directory the user specifies.  
+Parfu tar-like MPI tool for creating or extracting directory tree archives.  In "create" mode it packages one (for now) directory into a single archive file.  In "extract" mode it takes an archive file and unpacks the original file and directory structure into a directory the user specifies.  Note: version 0.5.1 (currently under development and debugging) produces files that are tar-compatible.  Earlier versions, including the current trunk version, are not.  0.5.1 will be released once testing is finished.  
 
 This release is an alpha-level testing release.  This is to allow people to see if parfu is a useful tool for them and for benchmarking and testing.  
 Be aware that the command-lin interface is very likely to change drastically in future releases.  

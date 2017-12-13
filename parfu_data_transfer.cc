@@ -479,7 +479,7 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
 
   //  long int pad_file_location_in_bucket;
   
-  MPI_File target_file_ptr;
+  MPI_File *target_file_ptr_ptr=NULL;
   MPI_Info my_Info=MPI_INFO_NULL;
   MPI_Status my_MPI_Status;
 
@@ -506,6 +506,11 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
     fprintf(stderr,"  transfer buffer is NULL!\n");
     return 101;
   }
+  if((target_file_ptr_ptr=(MPI_File*)malloc(sizeof(MPI_File)))==NULL){
+    fprintf(stderr,"parfu_wtar_archive_one_bucket_singFP:\n");
+    fprintf(stderr,"could not allocate target_file_ptr_ptr!!\n");
+    return 102;
+  }
   current_entry=rank_call_list[rank_call_list_index];
   last_bucket_index = myl->list[current_entry].rank_bucket_index;
   
@@ -517,6 +522,7 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
   current_write_loc_in_bucket = 0L;
   //  total_blocked_data_written=0L;
   //  fprintf(stderr," ^^^ rank %d beginning single bucket while loop\n",my_rank);
+  //  fprintf(stderr,"CCC_1 rank=%5d  index=%5d\n",my_rank,rank_call_list_index);
   while( current_entry < myl->n_entries_full &&
 	 myl->list[current_entry].rank_bucket_index == last_bucket_index ){
     
@@ -533,7 +539,7 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
       file_result=MPI_File_open(MPI_COMM_SELF,
 				myl->list[current_entry].relative_filename,
 				MPI_MODE_RDONLY,
-				my_Info,&target_file_ptr);
+				my_Info,target_file_ptr_ptr);
       if(file_result != MPI_SUCCESS){
 	fprintf(stderr,"parfu_wtar_archive_one_bucket_singFP:\n");
 	fprintf(stderr,"rank %d got non-zero result when opening target file >%s<!\n",
@@ -554,16 +560,19 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
       //		 MPI_CHAR,&my_MPI_Status);
       data_offset_in_buffer=
 	myl->list[current_entry].location_in_archive_file-
-	current_bucket_loc;      
+	current_bucket_loc;
       if(data_offset_in_buffer < 0 ||
 	 data_offset_in_buffer >= bucket_size){
 	fprintf(stderr,"parfu_wtar_archive_one_bucket_singFP:\n");		
-	fprintf(stderr," rank %d has data_offset_in_buffer=%ld !\n,",
+	fprintf(stderr," rank %d has data_offset_in_buffer=%ld which is outside buffer!\n",
 		my_rank,data_offset_in_buffer);
+	fprintf(stderr," rank %d bucketsz=%ld datasz=%ld filename=>%s<\n",my_rank, bucket_size,
+		myl->list[current_entry].our_file_size,
+		myl->list[current_entry].relative_filename);
 	return 149;
       }
       file_result=
-	MPI_File_read_at(target_file_ptr,
+	MPI_File_read_at(*target_file_ptr_ptr,
 			 myl->list[current_entry].location_in_orig_file,
 			 (void*)(((char*)(transfer_buffer)+
 				  (myl->list[current_entry].location_in_archive_file-
@@ -597,7 +606,7 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
     }
     
     blocked_data_written = 
-      myl->list[current_entry].our_file_size;
+      (myl->list[current_entry].our_file_size >= 0 ? myl->list[current_entry].our_file_size : 0);
     if(!(myl->list[current_entry].location_in_orig_file)){
       blocked_data_written += myl->list[current_entry].our_tar_header_size;
     }
@@ -609,8 +618,10 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
 
     // 
     current_entry++;
-    MPI_File_close(&target_file_ptr);
+    MPI_File_close(target_file_ptr_ptr);
   } // while(myl->list[current_entry].rank_bucket_index == ....
+  free(target_file_ptr_ptr);
+  target_file_ptr_ptr=NULL;
 
   // now check to see if we need to add a tar header at the end to pad space 
   // from the end of our data to the beginning of the next bucket
@@ -667,7 +678,9 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
 
   //  fprintf(stderr," ### rank %d copied data to buffer.  Now moving to archive file.\n",my_rank);
   
-  
+
+  //  fprintf(stderr,"CCC_2 rank=%5d  index=%5d\n",my_rank,rank_call_list_index);
+
   // now copy the whole buffer to the archive file
   archive_file_loc = data_region_start +
     (rank_call_list_index * bucket_size);
@@ -719,8 +732,7 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
   
   // if we're the very very last transfer in the archive file, pad the file out to
   // the block size to make tar happy.
-
-  
+  //  fprintf(stderr,"CCC_3 rank=%5d  index=%5d\n",my_rank,rank_call_list_index);
   
   return 0;
 }

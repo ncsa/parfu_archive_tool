@@ -52,7 +52,7 @@ parfu_file_fragment_entry_list_t
     my_list->list[i].our_file_size=PARFU_SPECIAL_SIZE_INVALID_REGFILE;
     my_list->list[i].our_tar_header_size=-1;
     my_list->list[i].location_in_archive_file=-1;
-    my_list->list[i].location_in_orig_file=0;
+    my_list->list[i].location_in_orig_file=-1;
 
     my_list->list[i].pad_file_location_in_archive_file=-1;
     my_list->list[i].pad_file_archive_filename=NULL;
@@ -613,7 +613,7 @@ int parfu_set_exp_offsets_in_ffel(parfu_file_fragment_entry_list_t *myl,
 // space for the tar header for each file before the file itself.  It
 // also keeps in mind the blocking. 
 // 
-// The order that things happen.  Firs we will form a list of the files.
+// The order that things happen.  First we will form a list of the files.
 // Then that list is passed into the following function.  This function lays out
 // the position of the files in the archive and splits them among ranks.  However, 
 // while it's doing so, it also pushes locations back into the list that was input
@@ -741,6 +741,10 @@ parfu_file_fragment_entry_list_t
 	// it will fit in the remainder of the current bucket
 	// known as option "A"
 
+	// (notes 2017sep29) convention here appears to be
+	// notes: the unsplit list locations (that end up going to the parfu file catalog)
+	// notes: indicate where the beginning of the tar header, but in the split 
+	// notes: list, it's the beginning of the file data itself
 	myl->list[i].location_in_archive_file = write_loc_whole_archive_file;
 	// no update to bucket index; we're still in the same one
 	myl->list[i].rank_bucket_index = current_rank_bucket;
@@ -758,7 +762,7 @@ parfu_file_fragment_entry_list_t
 		  i,current_rank_bucket);
 	  return NULL;	  
 	}
-
+  
 	// Here's where we *would* determine if we need to locate a padding file
 	// before this one.  Since we're putting it in the same bucket up close, 
 	// we believe we won't need to, and so we don't update anything.
@@ -872,9 +876,39 @@ parfu_file_fragment_entry_list_t
 	} // if(parfu_add_entry...
 	myl->list[i].rank_bucket_index=current_rank_bucket;
 	myl->list[i].location_in_orig_file = 0L;
+
+	if(1){
+	  // final test
+	  long int begin_tar_header;
+	  long int begin_payload;
+	  long int end_data;
+	  long int begin_bucket;
+	  long int end_bucket;
+	  
+	  begin_bucket = ((long int)(current_rank_bucket)) * ((long int)(per_rank_accumulation_size));
+	  end_bucket = ( ((long int)(current_rank_bucket+1)) * ((long int)(per_rank_accumulation_size)) ) - 1;
+	  begin_tar_header = new_write_loc_whole_archive_file;
+	  begin_payload = begin_tar_header + myl->list[i].our_tar_header_size;
+	  end_data = begin_tar_header + myl->list[i].our_tar_header_size + myl->list[i].our_file_size;
+	  
+	  if(begin_tar_header < begin_bucket || 
+	     begin_tar_header > end_bucket || 
+	     end_data < begin_bucket || 
+	     end_data > end_bucket){
+	    fprintf(stderr,"  ALERT!  2017 bug!  i=%d  out=%d  header=%ld  size=%ld  fname=>%s<\n",
+		    i,outlist->n_entries_full,myl->list[i].our_tar_header_size,myl->list[i].our_file_size,
+		    myl->list[i].relative_filename);
+	    fprintf(stderr,"  ALERT2! i=%d out=%d  bucket: %ld   %ld  data: %ld  %ld  %ld\n",
+		    i,outlist->n_entries_full,
+		    begin_bucket,end_bucket,begin_tar_header,begin_payload,end_data);
+	    
+	  }
+	}
+	
 	
 	// slide write position to the end of the current file
-	write_loc_this_rank = blocked_sum_file_size;
+	//  fixed 2017dec04 (coulnd't have been right, but never used?)	write_loc_this_rank = blocked_sum_file_size;
+	write_loc_this_rank += blocked_sum_file_size;
 	write_loc_whole_archive_file = new_write_loc_whole_archive_file;
 	write_loc_whole_archive_file += blocked_sum_file_size;
 	
@@ -907,7 +941,8 @@ parfu_file_fragment_entry_list_t
       if( write_loc_whole_archive_file % per_rank_accumulation_size ){
 	current_rank_bucket++;
 	  write_loc_whole_archive_file = 
-	    ( current_rank_bucket * ((long int)(per_rank_accumulation_size)) );	
+	    ( ((long int)current_rank_bucket) * 
+	      ((long int)(per_rank_accumulation_size)) );	
       }
 
       //      fprintf(stderr,"  SSS i=%d starting in bucket %ld\n",

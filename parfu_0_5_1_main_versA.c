@@ -197,6 +197,8 @@ int main(int nargs, char *args[]){
       MPI_Finalize();
       return 237;
     }
+    // dummy assign to make SURE to initialize the value, even though it will be overwritten by the bcast
+    *bcast_archive_file_name_length=0;
     if(my_rank==0)
       *bcast_archive_file_name_length=strlen(arc_filename)+1;
     MPI_Bcast(bcast_archive_file_name_length,1,MPI_INT,0,MPI_COMM_WORLD);

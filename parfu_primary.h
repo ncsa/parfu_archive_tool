@@ -54,6 +54,7 @@
 // in chunks of data written to the archive file.  Optimum performance
 // probably matches this to network buffer size for I/O.  On 
 // Blue Waters (home system of parfu) 4 MB seems good.
+//#define PARFU_DEFAULT_RANK_BLOCK_SIZE    (2097152)
 #define PARFU_DEFAULT_RANK_BLOCK_SIZE    (4194304)
 
 #define PARFU_BLOCKING_FILE_NAME    ".parfu_space"
@@ -87,7 +88,7 @@ typedef enum{PARFU_FILE_TYPE_REGULAR,PARFU_FILE_TYPE_DIR,PARFU_FILE_TYPE_SYMLINK
 
 #define PARFU_LINE_BUFFER_DEFAULT 1000
 #define PARFU_DEFAULT_SIZE_PER_LINE 200
-#define PARFU_MAXIMUM_BUFFER_SIZE (10000000)
+#define PARFU_MAXIMUM_BUFFER_SIZE (1000000000)
 
 #define PARFU_FILE_PTR_NONSHARED (-1)
 

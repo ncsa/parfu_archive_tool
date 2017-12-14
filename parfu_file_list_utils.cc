@@ -295,23 +295,27 @@ int parfu_add_entry_to_ffel_raw(parfu_file_fragment_entry_list_t **list,
   
   (*list)->list[ind].our_file_size = my_file_size;
   (*list)->list[ind].our_tar_header_size = my_tar_header_size;
-
   (*list)->list[ind].location_in_archive_file=my_location_in_archive_file;
   (*list)->list[ind].location_in_orig_file=my_location_in_orig_file;
-  //  (*list)->list[ind].block_size_exponent=my_block_size_exponent;
-  //  (*list)->list[ind].num_blocks_in_fragment = my_num_blocks_in_fragment;
+
+  // 2017 dec 14
+  // I *think* the proper thing to do here is to pass the inputs through
+  // rather than initialize with blank values.  I'm keeping the 
+  // commented-out originals just in case though.
+
+  //(*list)->list[ind].pad_file_location_in_archive_file = -1;
+  //(*list)->list[ind].pad_file_archive_filename=NULL;
+  //(*list)->list[ind].pad_file_tar_header_size=-1;
+  //(*list)->list[ind].pad_file_size=-1;
+  
+  (*list)->list[ind].pad_file_location_in_archive_file = my_pad_file_location_in_arch_file;
+  (*list)->list[ind].pad_file_archive_filename=my_pad_file_archive_filename;
+  (*list)->list[ind].pad_file_tar_header_size=my_pad_file_tar_header_size;
+  (*list)->list[ind].pad_file_size=my_pad_file_size;
+  
   (*list)->list[ind].file_contains_n_fragments = my_file_contains_n_fragments;
-  //  (*list)->list[ind].fragment_offset = my_fragment_offset;
-  //  (*list)->list[ind].size = my_size;
-  //  (*list)->list[ind].first_block = my_first_block;
-  //  (*list)->list[ind].number_of_blocks = my_number_of_blocks;
   (*list)->list[ind].file_ptr_index = my_file_ptr_index;
 
-  // derive tar header stuff for *this* file
-  (*list)->list[ind].pad_file_location_in_archive_file = -1;
-  (*list)->list[ind].pad_file_archive_filename=NULL;
-  (*list)->list[ind].pad_file_tar_header_size=-1;
-  
   (*list)->list[ind].rank_bucket_index = my_rank_bucket_index;
 
   // now finally update the number of full items in the list. 

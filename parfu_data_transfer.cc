@@ -71,7 +71,7 @@ int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
   long int arch_file_catalog_buffer_length;
   long int arch_file_catalog_buffer_length_w_tar_header;
   char *split_list_catalog_buffer=NULL;
-  long int split_list_catalog_buffer_length;
+  long int split_list_catalog_buffer_length=0;
   char *shared_split_list_catalog_buffer=NULL;
 
   char *catalog_tar_header_buffer=NULL;
@@ -388,12 +388,13 @@ int parfu_wtar_archive_allbuckets_singFP(parfu_file_fragment_entry_list_t *myl,
     fprintf(stderr,"  help!  archive_file_ptr is NULL!!\n");
     return 2;
   }
-
+  
   if((transfer_buffer=malloc(bucket_size))==NULL){
     fprintf(stderr,"parfu_wtar_archive_allbuckets_singFP:\n");
     fprintf(stderr,"  could not allocate transfer buffer!\n");
     return 3;
   }
+  memset(transfer_buffer,'\0',bucket_size);
 
   if(rank_call_list==NULL){
     fprintf(stderr,"parfu_wtar_archive_allbuckets_singFP:\n");

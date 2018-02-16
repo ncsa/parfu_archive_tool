@@ -44,7 +44,7 @@ int main(int nargs, char *args[]){
   int n_ranks;
   int my_rank;
 
-  int *bcast_archive_file_name_length=NULL;
+  int **bcast_archive_file_name_length=NULL;
 
   //  int rank_buckets_total;
   time_t timer_before,timer_after;
@@ -109,6 +109,20 @@ int main(int nargs, char *args[]){
     }
     sprintf(pad_filename,PARFU_BLOCKING_FILE_NAME);
   }
+  
+  if((bcast_archive_file_name_length=(int**)malloc(sizeof(int*)))==NULL){
+    fprintf(stderr,"rank %d could not allocation bcast_archive_file_name_length!\n",my_rank);
+    MPI_Finalize();
+    return 237;
+  }
+      
+  if(((*bcast_archive_file_name_length)=(int*)malloc(sizeof(int)))==NULL){
+    fprintf(stderr,"rank %d could not allocate *bcast_archive_file_name_length!\n",my_rank);
+    MPI_Finalize();
+    return 237;
+  }
+  // dummy assign to make SURE to initialize the value, even though it will be overwritten by the bcast
+  **bcast_archive_file_name_length=0;
   
 
   switch(mode){
@@ -192,17 +206,12 @@ int main(int nargs, char *args[]){
       */
       
     } // if my_rank==0
-    if((bcast_archive_file_name_length=(int*)malloc(sizeof(int)))==NULL){
-      fprintf(stderr,"rank %d could not allocate bcast_archive_file_name_length!\n",my_rank);
-      MPI_Finalize();
-      return 237;
-    }
-    // dummy assign to make SURE to initialize the value, even though it will be overwritten by the bcast
-    *bcast_archive_file_name_length=0;
     if(my_rank==0)
-      *bcast_archive_file_name_length=strlen(arc_filename)+1;
-    MPI_Bcast(bcast_archive_file_name_length,1,MPI_INT,0,MPI_COMM_WORLD);
-    if((bcast_archive_file_name=(char*)malloc(*bcast_archive_file_name_length))==NULL){
+      (**bcast_archive_file_name_length)=strlen(arc_filename)+1;
+    else
+      (**bcast_archive_file_name_length)=0;
+    MPI_Bcast(*bcast_archive_file_name_length,1,MPI_INT,0,MPI_COMM_WORLD);
+    if((bcast_archive_file_name=(char*)malloc(**bcast_archive_file_name_length))==NULL){
       fprintf(stderr,"rank %d cannot allocate bcast archive file name!\n",my_rank);
       MPI_Finalize();
       return 238;
@@ -210,7 +219,7 @@ int main(int nargs, char *args[]){
     if(my_rank==0){
       sprintf(bcast_archive_file_name,"%s",arc_filename);
     }
-    MPI_Bcast(bcast_archive_file_name,*bcast_archive_file_name_length,MPI_CHAR,0,MPI_COMM_WORLD);
+    MPI_Bcast(bcast_archive_file_name,**bcast_archive_file_name_length,MPI_CHAR,0,MPI_COMM_WORLD);
 
     /*
       MPI_Bcast(&shared_split_list_buffer_length,1,MPI_LONG_INT,0,MPI_COMM_WORLD);
@@ -257,7 +266,7 @@ int main(int nargs, char *args[]){
       fprintf(stderr,"All ranks finished transferring data!\n");
     
     break;
-  }
+  } // switch(mode)
 
   return 0;
 }

@@ -865,6 +865,12 @@ parfu_file_fragment_entry_list_t
 	    possible_pad_space-pad_file_header_size;
 	} // if(possible_pad_space...
 	
+	// 2017 dec 14 
+	// moved these two assignments BEFORE the add_entry function call to make 
+	// sure that the proper information is in the current entry before it 
+	// gets propogated to the split list.
+	myl->list[i].rank_bucket_index=current_rank_bucket;
+	myl->list[i].location_in_orig_file = 0L;
 	if(parfu_add_entry_to_ffel_mod(&outlist,myl->list[i],
 				       myl->list[i].our_file_size,
 				       new_write_loc_whole_archive_file+myl->list[i].our_tar_header_size,
@@ -878,8 +884,6 @@ parfu_file_fragment_entry_list_t
 		  i,current_rank_bucket);
 	  return NULL;	  
 	} // if(parfu_add_entry...
-	myl->list[i].rank_bucket_index=current_rank_bucket;
-	myl->list[i].location_in_orig_file = 0L;
 
 	if(1){
 	  // final test

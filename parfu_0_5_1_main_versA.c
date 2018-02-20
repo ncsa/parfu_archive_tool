@@ -24,6 +24,8 @@
 #include <parfu_primary.h>
 
 int main(int nargs, char *args[]){
+  int debug=0;
+
   int blocking_size = PARFU_DEFAULT_BLOCKING_FACTOR;
   int bucket_size = PARFU_DEFAULT_RANK_BLOCK_SIZE;
 
@@ -153,10 +155,11 @@ int main(int nargs, char *args[]){
       fprintf(stdout," ***** Filling in relative filenames took %4.1f seconds.\n",
 	      difftime(timer_after,timer_before));
       
-      
-      fprintf(stderr,"unsorted file list: \n");
-      //      parfu_dump_fragment_entry_list(raw_list,stdout);
-      fprintf(stderr,"finishing dumping list.\n");
+      if(debug){
+	fprintf(stderr,"unsorted file list: \n");
+	parfu_dump_fragment_entry_list(raw_list,stdout);
+	fprintf(stderr,"finishing dumping list.\n");
+      }
       
       time(&timer_before);
       parfu_qsort_entry_list(raw_list);
@@ -164,10 +167,12 @@ int main(int nargs, char *args[]){
       fprintf(stderr," sorting directory list took %4.1f seconds.\n",
 	      difftime(timer_after,timer_before));
       
-      fprintf(stderr,"sorted file list: \n");
-      //      parfu_dump_fragment_entry_list(raw_list,stdout);
-      fprintf(stderr,"finishing dumping list.\n");
-      
+      if(debug){
+	fprintf(stderr,"sorted file list: \n");
+	parfu_dump_fragment_entry_list(raw_list,stdout);
+	fprintf(stderr,"finishing dumping list.\n");
+      }
+
       /*
 	time(&timer_before);
 	if((split_list=

@@ -636,6 +636,7 @@ parfu_file_fragment_entry_list_t
 				  char *my_pad_file_filename, 
 				  int *n_rank_buckets, 
 				  int max_files_per_bucket){
+  int debug=0;
   parfu_file_fragment_entry_list_t *outlist=NULL;
 
   int i,j;
@@ -684,7 +685,11 @@ parfu_file_fragment_entry_list_t
   fprintf(stderr,"*** split list: starting main loop. Target: %d iterations\n",
 	  myl->n_entries_full);
   for(i=0;i<myl->n_entries_full;i++){
-
+    if(debug)
+      fprintf(stderr,"HHH loop i=%d sz=%ld     file=%s\n",i,
+	      myl->list[i].our_file_size,
+	      myl->list[i].relative_filename);
+    
     // check for errors in our_tar_header_size
     // then set sum_file_size
     if(myl->list[i].our_tar_header_size <= 0){
@@ -701,7 +706,7 @@ parfu_file_fragment_entry_list_t
     // 
     // sum_file_size is the actual size of the file (zero for special files)
     // PLUS the size of the tar header that will preceed the actual file
-    // in the container file
+    // in the archive file
     // 
     // blocked_sum_file_size is the sum_file_size increased to the next 
     // even multiple of the (tar-defined) block size
@@ -737,11 +742,13 @@ parfu_file_fragment_entry_list_t
       // *current* bucket, given the files that have already been allocated
       // for this bucket.
  
-      // after we account for the current file, this is where the following
-      // one would begin.
+      // If we were to place the file currently under consideration in the current bucket, 
+      // this variable calculates where the file *after that* would begin
       new_write_loc_this_rank = write_loc_this_rank + blocked_sum_file_size;
       
       if( new_write_loc_this_rank <= per_rank_accumulation_size ){
+	if(debug)
+	  fprintf(stderr,"HHH beginning option A\n");
 	// it will fit in the remainder of the current bucket
 	// known as option "A"
 
@@ -775,8 +782,18 @@ parfu_file_fragment_entry_list_t
 	// of the file following this one.
 	write_loc_this_rank = new_write_loc_this_rank;
 	write_loc_whole_archive_file += blocked_sum_file_size;
+	
+	// possible fix 2018feb18 13:38 pm?  CS
+	if(blocked_sum_file_size == per_rank_accumulation_size){
+	  current_rank_bucket++;
+	  write_loc_this_rank = 0L;
+	}
+
       } // if ( new_write_loc_this_rank ......
       else{
+	if(debug)
+	  fprintf(stderr,"HHH beginning option B\n");
+	
 	// it would spill off the current bucket, so we'll set it to 
 	// be at the beginning of the next one
 	// known as "option B"
@@ -793,8 +810,12 @@ parfu_file_fragment_entry_list_t
 
 	// slide the write position to the beginning of the next bucket
 	current_rank_bucket++;
+	// added 2018FEB18 CS
+	write_loc_this_rank=0L;
 	new_write_loc_whole_archive_file = 
 	  ( current_rank_bucket * per_rank_accumulation_size );
+
+
 	myl->list[i].location_in_archive_file = new_write_loc_whole_archive_file;
 	// Deal with the possibility we may have to put a pad after the last 
 	// file to fill up the space between it and the file we're placing
@@ -916,14 +937,25 @@ parfu_file_fragment_entry_list_t
 	
 	// slide write position to the end of the current file
 	//  fixed 2017dec04 (coulnd't have been right, but never used?)	write_loc_this_rank = blocked_sum_file_size;
+
 	write_loc_this_rank += blocked_sum_file_size;
+	
 	write_loc_whole_archive_file = new_write_loc_whole_archive_file;
 	write_loc_whole_archive_file += blocked_sum_file_size;
+
+	// possible fix2 2018feb18 14:54pm?  CS
+
+	if(blocked_sum_file_size == per_rank_accumulation_size){
+	  current_rank_bucket++;
+	  write_loc_this_rank = 0L;
+	}
+
 	
-	//      } // else 
       } // else (if it would spill out of current bucket)
     } // if(blocked_sum_file_size....
     else{
+      if(debug)
+	fprintf(stderr,"HHH beginning option C\n");
       // file plus tar header is bigger than a bucket, so it will 
       // occupy more than one.  We now split the file up so that 
       // it gets processed by more than one rank.
@@ -940,18 +972,38 @@ parfu_file_fragment_entry_list_t
 
       // WHOLE file size, including tar header, padded out to block size.  Bigger than a bucket, 
       // so will be split across multiple buckets (and thus by multiple ranks)
+
+
       data_to_write = myl->list[i].our_file_size;
+
+
       blocked_data_to_write = blocked_sum_file_size;
       // we lay out the file across multiple buckets
 
       // update bucket index to make sure that we're beginning multi-bucket file on a bucket boundary
       old_write_loc_whole_archive_file = write_loc_whole_archive_file;
+
+      { 
+	int check_bucket;
+	check_bucket = write_loc_whole_archive_file / per_rank_accumulation_size;
+	if( write_loc_whole_archive_file % per_rank_accumulation_size )
+	  check_bucket++;
+	current_rank_bucket = check_bucket;
+	write_loc_whole_archive_file = 
+	  ( ((long int)current_rank_bucket) * 
+	    ((long int)(per_rank_accumulation_size)) );	
+	
+      }
+      
+      /*
       if( write_loc_whole_archive_file % per_rank_accumulation_size ){
 	current_rank_bucket++;
 	  write_loc_whole_archive_file = 
 	    ( ((long int)current_rank_bucket) * 
 	      ((long int)(per_rank_accumulation_size)) );	
       }
+      */
+      
 
       //      fprintf(stderr,"  SSS i=%d starting in bucket %ld\n",
       //	      i,current_rank_bucket);
@@ -1111,7 +1163,7 @@ parfu_file_fragment_entry_list_t
 	//	  per_rank_accumulation_size * j;
 	data_to_write -= per_rank_accumulation_size;
 	
-      }
+      } // if(is_uneven_multiple)
     } // else{   (this file + tar header is bigger than a bucket)
   } // for(i=0;
   *n_rank_buckets = current_rank_bucket;

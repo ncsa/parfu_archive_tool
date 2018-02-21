@@ -273,5 +273,6 @@ int main(int nargs, char *args[]){
     break;
   } // switch(mode)
 
+  MPI_Finalize();
   return 0;
 }

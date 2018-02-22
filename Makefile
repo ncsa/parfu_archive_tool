@@ -45,8 +45,6 @@ CXX=mpic++
 CFLAGS := -g -I. -Wall -Wmissing-prototypes -Wstrict-prototypes -O3
 CXXFLAGS := -g -I. -Wall -O3
 
-# CXXFLAGS := ${CFLAGS}
-
 # The TARGETS variable sets what gets built. 
 
 # By default, this Makefile builds the basic proof-of-concept test code. 
@@ -58,7 +56,7 @@ TARGETS := parfu_0_5_1
 # TARGETS := parfu_file_util_test parfu_create_test_1 parfu_all_test_001
 
 #
-# end of site configuration options
+# end of user configuration options
 ######
 
 ###### 

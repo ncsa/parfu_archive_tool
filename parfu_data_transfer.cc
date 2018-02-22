@@ -300,17 +300,19 @@ int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
     }
     
     // dump list for debugging
-    if((dumpfile=fopen("parfu_dump_split_list.txt","w"))==NULL){
-      fprintf(stderr,"Rank ZERO cannot open dump file.  Aborting!\n");
-      exit(111);
+    if(debug){
+      if((dumpfile=fopen("parfu_dump_split_list.txt","w"))==NULL){
+	fprintf(stderr,"Rank ZERO cannot open dump file.  Aborting!\n");
+	exit(111);
+      }
+      size_written=
+	fwrite(split_list_catalog_buffer,sizeof(char),split_list_catalog_buffer_length,dumpfile);
+      if(size_written != split_list_catalog_buffer_length){
+	fprintf(stderr,"WARNING!  Could not write whole dump file!\n");
+      }
+      fclose(dumpfile);
+      dumpfile=NULL;
     }
-    size_written=
-      fwrite(split_list_catalog_buffer,sizeof(char),split_list_catalog_buffer_length,dumpfile);
-    if(size_written != split_list_catalog_buffer_length){
-      fprintf(stderr,"WARNING!  Could not write whole dump file!\n");
-    }
-    fclose(dumpfile);
-    dumpfile=NULL;
 
     if((rank_call_list=
 	parfu_rank_call_list_from_ffel(my_split_list,&rank_call_list_length))

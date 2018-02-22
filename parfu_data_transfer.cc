@@ -648,6 +648,7 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
 		my_rank,
 		myl->list[current_entry].relative_filename);
 	fprintf(stderr,"for reading.  result=%d\n",file_result);
+	parfu_print_MPI_error(stderr,file_result);
 	return 138;
       }
       //      fprintf(stderr,"   ??? rank %5d has opened 

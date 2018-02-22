@@ -31,8 +31,14 @@ export XTPE_LINK_TYPE=dynamic
 # set to MPI compiler
 # on Cray, this will be CC=cc
 # on other systems, this might be CC=mpicc
-CC=cc
-CXX=CC
+
+# uncomment these lines for Cray
+#CC=cc
+#CXX=CC
+
+# uncomment these lines for Wrangler
+CC=mpicc
+CXX=mpic++
 
 # this is assuming the C compiler is a relatively recent gcc variant
 # CFLAGS := -g -I. -Wall -Wmissing-prototypes -Wstrict-prototypes 

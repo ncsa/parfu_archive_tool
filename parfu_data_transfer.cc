@@ -51,6 +51,16 @@
 // set to limit this effect; the downside is that more space is 
 // wasted in the archive file.
 
+extern "C"
+void parfu_print_MPI_error(FILE *target,
+			   int error_number){
+  char MPI_error_msg[MPI_MAX_ERROR_STRING];
+  int return_length;
+  MPI_Error_string(error_number, MPI_error_msg, &return_length);
+  fprintf(target,"MPI error string: >%s<\n",MPI_error_msg);
+  return; 
+}
+
 extern "C" 
 int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
 				       int n_ranks, int my_rank,
@@ -172,6 +182,7 @@ int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
 	    file_result,
 	    my_rank,
 	    archive_file_name);
+    parfu_print_MPI_error(stderr,file_result);
     return 3; 
   }
   if(debug)
@@ -198,6 +209,7 @@ int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
       fprintf(stderr,"parfu_wtar_archive_list_to_singeFP:\n");      
       fprintf(stderr,"rank 0 got %d from MPI_File_write_at_all\n",file_result);
       fprintf(stderr," trying to write catalog tar header at location zero\n");
+      parfu_print_MPI_error(stderr,file_result);
       MPI_Finalize();
       return 169;
     }
@@ -215,6 +227,7 @@ int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
       fprintf(stderr,"rank 0 got %d from MPI_File_write_at_all\n",file_result);
       fprintf(stderr," trying to write catalog of size %ld at location %d\n",
 	      arch_file_catalog_buffer_length,catalog_tar_entry_size);
+      parfu_print_MPI_error(stderr,file_result);
       MPI_Finalize();
       return 160;
     }
@@ -262,6 +275,7 @@ int parfu_wtar_archive_list_to_singeFP(parfu_file_fragment_entry_list_t *myl,
 	fprintf(stderr,"parfu_wtar_archive_list_to_singeFP:\n");      
 	fprintf(stderr,"rank 0 got %d from MPI_File_write_at_all\n",file_result);
 	fprintf(stderr," trying to write tar_header for post-catalog file.\n");
+	parfu_print_MPI_error(stderr,file_result);	
 	MPI_Finalize();
 	return 169;
       }
@@ -539,16 +553,6 @@ int parfu_wtar_archive_allbuckets_singFP(parfu_file_fragment_entry_list_t *myl,
   fprintf(stderr," &&& rank %d exiting all buckets loop at rank iter %d\n",
 	  my_rank,rank_iter);
   return 0;
-}
-
-extern "C"
-void parfu_print_MPI_error(FILE *target,
-			   int error_number){
-  char MPI_error_msg[MPI_MAX_ERROR_STRING];
-  int return_length;
-  MPI_Error_string(error_number, MPI_error_msg, &return_length);
-  fprintf(target,"MPI error string: >%s<\n",MPI_error_msg);
-  return; 
 }
 
 extern "C"
@@ -891,6 +895,7 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
     fprintf(stderr,"archive_file_loc: %ld\n",archive_file_loc);
     fprintf(stderr,"bytes to move: %ld\n",current_write_loc_in_bucket);
     fprintf(stderr,"writing slice %d\n",rank_call_list_index);
+    parfu_print_MPI_error(stderr,file_result);
     MPI_Finalize();
     return 160;
   }
@@ -913,6 +918,7 @@ int parfu_wtar_archive_one_bucket_singFP(parfu_file_fragment_entry_list_t *myl,
 	
 	fprintf(stderr,"rank %d got %d from MPI_File_write_at_all\n",my_rank,file_result);
 	fprintf(stderr,"  writing tar file terminator block.\n");
+	parfu_print_MPI_error(stderr,file_result);	
 	MPI_Finalize();
 	return 160;
 

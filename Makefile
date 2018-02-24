@@ -23,22 +23,40 @@
 ###### site configuration options
 # generally speaking, you may have to tweak stuff in this section to get the 
 # code to build on your machine
-# we call getgrgid which requires a dynamic executable and SEGFAULTs for a
-# statically linked one
+
+# 
+# This is obviously an oversimplifed architecture-select section.  
+# This is mainly so that we can maintain the same Makefile while we're
+# building, developing and testing on different systems.  
+# 
+# If you're just building and running parfu on a single machine, feel free to 
+# set a line like this in the Makefile so that you don't have to mess with 
+# environment values: 
+# ARC="cray"
+# (or whatever)
+# 
+
+ifeq ($(ARC),cray)
+MY_CC=cc
+MY_CXX=CC
 export CRAYPE_LINK_TYPE=dynamic
 export XTPE_LINK_TYPE=dynamic
+endif
 
-# set to MPI compiler
-# on Cray, this will be CC=cc
-# on other systems, this might be CC=mpicc
+ifeq ($(ARC),Wrangler)
+MY_CC=mpicc
+MY_CXX=mpic++
+endif
 
-# uncomment these lines for Cray
-#CC=cc
-#CXX=CC
-
-# uncomment these lines for Wrangler
-CC=mpicc
-CXX=mpic++
+ifeq ($(ARC),)
+default:
+	@echo
+	@echo You must select an architecture with \"ARC=XXX\"
+	@echo Do this by running \"make ARC=XXX\" or else set
+	@echo the ARC variable in your environment.
+	@echo Valid values of ARC are currently \"cray\" and \"Wrangler\"
+	@echo 
+endif	
 
 # this is assuming the C compiler is a relatively recent gcc variant
 # CFLAGS := -g -I. -Wall -Wmissing-prototypes -Wstrict-prototypes 
@@ -46,7 +64,6 @@ CFLAGS := -g -I. -Wall -Wmissing-prototypes -Wstrict-prototypes -O3
 CXXFLAGS := -g -I. -Wall -O3
 
 # The TARGETS variable sets what gets built. 
-
 # By default, this Makefile builds the basic proof-of-concept test code. 
 # TARGETS := parfu_all_test_001 parfu_bench_test_002 parfu_write_test
 TARGETS := parfu_0_5_1 
@@ -77,22 +94,22 @@ parfu: ${PARFU_OBJECT_FILES} ${PARFU_HEADER_FILES}
 	echo "done!"
 
 parfu_file_util_test: parfu_file_util_test.o ${PARFU_OBJECT_FILES} ${PARFU_HEADER_FILES}
-	${CXX} -o $@ ${CFLAGS} parfu_file_util_test.o ${PARFU_OBJECT_FILES}
+	${MY_CXX} -o $@ ${CFLAGS} parfu_file_util_test.o ${PARFU_OBJECT_FILES}
 
 parfu_create_test_1: parfu_create_test_1.o ${PARFU_OBJECT_FILES} ${PARFU_HEADER_FILES}
-	${CXX} -o $@ ${CFLAGS} parfu_create_test_1.o ${PARFU_OBJECT_FILES}
+	${MY_CXX} -o $@ ${CFLAGS} parfu_create_test_1.o ${PARFU_OBJECT_FILES}
 
 parfu_all_test_001: parfu_all_test_001.o ${PARFU_OBJECT_FILES} ${PARFU_HEADER_FILES}
-	${CXX} -o $@ ${CFLAGS} parfu_all_test_001.o ${PARFU_OBJECT_FILES}
+	${MY_CXX} -o $@ ${CFLAGS} parfu_all_test_001.o ${PARFU_OBJECT_FILES}
 
 parfu_bench_test_002: parfu_bench_test_002.o ${PARFU_OBJECT_FILES} ${PARFU_HEADER_FILES}
-	${CXX} -o $@ ${CFLAGS} parfu_bench_test_002.o ${PARFU_OBJECT_FILES}
+	${MY_CXX} -o $@ ${CFLAGS} parfu_bench_test_002.o ${PARFU_OBJECT_FILES}
 
 parfu_write_test: parfu_write_test.o ${PARFU_HEADER_FILES}
-	${CXX} -o $@ ${CFLAGS} parfu_write_test.o ${PARFU_OBJECT_FILES}
+	${MY_CXX} -o $@ ${CFLAGS} parfu_write_test.o ${PARFU_OBJECT_FILES}
 
 parfu_0_5_1: parfu_0_5_1_main_versA.o ${PARFU_OBJECT_FILES} ${PARFU_HEADER_FILES}
-	${CXX} -o $@ ${CFLAGS} parfu_0_5_1_main_versA.o ${PARFU_OBJECT_FILES}	
+	${MY_CXX} -o $@ ${CFLAGS} parfu_0_5_1_main_versA.o ${PARFU_OBJECT_FILES}	
 
 # utility targets
 
@@ -100,9 +117,9 @@ clean:
 	rm -f ${TARGETS} *.o
 
 %.o: %.c ${PARFU_HEADER_FILES}
-	${CC} ${CFLAGS} -c $<
+	${MY_CC} ${CFLAGS} -c $<
 
 %.o: %.cc ${PARFU_HEADER_FILES}
-	${CXX} ${CXXFLAGS} -c $<
+	${MY_CXX} ${CXXFLAGS} -c $<
 
 again: clean default

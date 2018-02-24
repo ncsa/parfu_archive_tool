@@ -19,7 +19,7 @@ If you run parfu with no arguments, it prints an argument list.  You can safely 
 # Command-line examples: 
   To archive a directory:
   
-    parfu\_0\_5\_1 C archive\_path/archive\_file.pfu target_path/directory_to_archive 
+    parfu_0_5_1 C archive_path/archive_file.pfu target_path/directory_to_archive 
     
   (extraction is not availble yet in the 0.5.1 alpha)
     

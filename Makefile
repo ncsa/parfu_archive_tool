@@ -48,6 +48,11 @@ MY_CC=mpicc
 MY_CXX=mpic++
 endif
 
+ifeq ($(ARC),Stampede2)
+MY_CC=mpicc
+MY_CXX=mpicxx
+endif
+
 ifeq ($(ARC),)
 default:
 	@echo

@@ -59,7 +59,8 @@ default:
 	@echo You must select an architecture with \"ARC=XXX\"
 	@echo Do this by running \"make ARC=XXX\" or else set
 	@echo the ARC variable in your environment.
-	@echo Valid values of ARC are currently \"cray\" and \"Wrangler\"
+	@echo Currently valid values of ARC are:
+	@echo \"cray\", \"Stampede2\", and \"Wrangler\".
 	@echo 
 endif	
 

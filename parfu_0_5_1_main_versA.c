@@ -56,6 +56,9 @@ int main(int nargs, char *args[]){
 
   int return_val;
 
+  float elapsed_time_for_list=-1.0;
+  float elapsed_time_to_transfer=-1.0;
+
   //  char *split_list_buffer=NULL;
   //  char *shared_split_list_buffer=NULL;
   //  long int shared_split_list_buffer_length;
@@ -141,7 +144,7 @@ int main(int nargs, char *args[]){
       }
       time(&timer_after);
       fprintf(stdout," ***** Building the directory list took %4.1f seconds.\n",
-	      difftime(timer_after,timer_before));
+	      elapsed_time_for_list=difftime(timer_after,timer_before));
 
       time(&timer_before);
       if((return_val=
@@ -252,9 +255,11 @@ int main(int nargs, char *args[]){
       return 242;
       }
     */
-    if(my_rank==0)
+    MPI_Barrier(MPI_COMM_WORLD);
+    if(my_rank==0){
       fprintf(stderr," [***] about to really move data\n");
-    time(&timer_before);
+      time(&timer_before);
+    }
     if((return_val=
 	parfu_wtar_archive_list_to_singeFP(raw_list,
 					   n_ranks,my_rank,
@@ -267,9 +272,16 @@ int main(int nargs, char *args[]){
       return 243;
     }
     MPI_Barrier(MPI_COMM_WORLD);
-    if(my_rank==0)
+    if(my_rank==0){
       fprintf(stderr,"All ranks finished transferring data!\n");
+      time(&timer_after);
+      elapsed_time_to_transfer=difftime(timer_after,timer_before);
+      fprintf(stderr," Timer summary:\n");
+      fprintf(stderr,"CATALOG_TIME=%f.1\n",elapsed_time_for_list);
+      fprintf(stderr,"TRANSFER_TIME=%f.1\n",elapsed_time_to_transfer);
+    }
     
+
     break;
   } // switch(mode)
 

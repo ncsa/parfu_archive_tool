@@ -277,12 +277,10 @@ int main(int nargs, char *args[]){
       time(&timer_after);
       elapsed_time_to_transfer=difftime(timer_after,timer_before);
       fprintf(stderr," Timer summary:\n");
-      fprintf(stderr,"CATALOG_TIME=%f.1\n",elapsed_time_for_list);
-      fprintf(stderr,"TRANSFER_TIME=%f.1\n",elapsed_time_to_transfer);
+      fprintf(stderr,"CATALOG_TIME=%.1f\n",elapsed_time_for_list);
+      fprintf(stderr,"TRANSFER_TIME=%.1f\n",elapsed_time_to_transfer);
     }
-    
-
-    break;
+    break; // end of "Create" mode section
   } // switch(mode)
 
   MPI_Finalize();

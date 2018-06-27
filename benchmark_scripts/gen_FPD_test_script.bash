@@ -130,6 +130,7 @@ case "$MANAGER" in
 	echo "#SBATCH -t ${RUNTIME}           # Run time (hh:mm:ss)" >> ${SCRIPT_FILE_NAME}
 	echo "#SBATCH --mail-user=$MYEMAIL" >> ${SCRIPT_FILE_NAME}
 	echo "#SBATCH --mail-type=all      # Send email at begin and end of job" >> ${SCRIPT_FILE_NAME}
+	JOB_ID_NAME='${SLURM_JOBID}'
 	;;
     "Moab")
 	echo "#PBS -N ${JOBNAME}" >> $SCRIPT_FILE_NAME
@@ -142,6 +143,7 @@ case "$MANAGER" in
 	echo "" >> $SCRIPT_FILE_NAME
 	echo 'cd $PBS_O_WORKDIR' >> $SCRIPT_FILE_NAME
 	echo "" >> $SCRIPT_FILE_NAME
+	JOB_ID_NAME='${PBS_JOBID}'
 	;; 
 esac
 echo "" >> ${SCRIPT_FILE_NAME}
@@ -154,7 +156,6 @@ echo "" >> ${SCRIPT_FILE_NAME}
 RANKS=$(( (NODES*RANKS_PER_NODE)/RANK_DIVISOR ))
 EXPANDED_RANKS=$(printf '%04d' "$RANKS")
 echo 'RANKS="'$EXPANDED_RANKS'"' >> ${SCRIPT_FILE_NAME}
-JOB_ID_NAME='${SLURM_JOBID}'
 echo "BASEDIR="$DATADIR >> ${SCRIPT_FILE_NAME}
 EXPANDED_STRIPE=$(printf '%04d' "$STRIPE")
 echo 'STRIPE="'$EXPANDED_STRIPE'"' >> ${SCRIPT_FILE_NAME}

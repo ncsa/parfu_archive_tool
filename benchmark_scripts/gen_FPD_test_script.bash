@@ -5,7 +5,7 @@
 
 # user sets up variables here (unless they're parsed via command line)
 NODES=1
-ITERATIONS=3
+ITERATIONS=2
 STRIPE=8
 RANK_DIVISOR=1      # =1 to fill all CPU threads with ranks, =2 for only half of them
 BLOCK=4             # parfu block size in MB (if relevant)
@@ -204,11 +204,9 @@ echo '    echo "starting iteration $ITER ranks $RANKS"' >> ${SCRIPT_FILE_NAME}
 echo '    START=`date +%s`' >> ${SCRIPT_FILE_NAME}
 case ${CODE} in
     "parfu")
-#	echo '    ibrun -n ${RANKS} -o 0 parfu C $BASEDIR/arc_${STRIPE}/prod_'${JOB_ID_NAME}'_${ITER}.pfu $BASEDIR/${DATASET}_data/ &> output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
 	echo '    '$MYMPIRUN_1'${RANKS}'$MYMPIRUN_2' parfu C $BASEDIR/arc_${STRIPE}/prod_'${JOB_ID_NAME}'_${ITER}.pfu $BASEDIR/${DATASET}_data/ &> output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
 	;;
     "tar")
-#	echo '    ibrun -n 1 -o 0 tar czf $BASEDIR/arc_${STRIPE}/prod_'${JOB_ID_NAME}'_${ITER}.tgz $BASEDIR/${DATASET}_data/ > output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
 	echo '    '$MYMPIRUN_1'${RANKS}'$MYMPIRUN_2' tar czf $BASEDIR/arc_${STRIPE}/prod_'${JOB_ID_NAME}'_${ITER}.tgz $BASEDIR/${DATASET}_data/ > output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
 esac
 echo '    END=`date +%s`' >> ${SCRIPT_FILE_NAME}

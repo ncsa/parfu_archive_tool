@@ -67,6 +67,10 @@ default:
 	@echo Currently valid values of ARC are:
 	@echo \"cray\", \"Stampede2\", and \"Wrangler\".
 	@echo 
+	@echo FYI: this build generally assumes gnu-style compilers
+	@echo So for instance, on a Cray system, swap to the 
+	@echo PrgEnv-gnu module before building. 
+	@echo 
 endif	
 
 # this is assuming the C compiler is a relatively recent gcc variant

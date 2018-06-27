@@ -160,8 +160,10 @@ echo "" >> ${SCRIPT_FILE_NAME}
 # STRIPE
 # JOB_ID_VARIABLE
 RANKS=$(( (NODES*RANKS_PER_NODE)/RANK_DIVISOR ))
-EXPANDED_RANKS=$(printf '%04d' "$RANKS")
-echo 'RANKS="'$EXPANDED_RANKS'"' >> ${SCRIPT_FILE_NAME}
+#EXPANDED_RANKS=$(printf '%04d' "$RANKS")
+echo 'RANKS='$RANKS >> ${SCRIPT_FILE_NAME}
+echo "RANKS=${RANKS}" 
+echo 'NODES='$NODES >> ${SCRIPT_FILE_NAME}
 echo "BASEDIR="$DATADIR >> ${SCRIPT_FILE_NAME}
 EXPANDED_STRIPE=$(printf '%04d' "$STRIPE")
 echo 'STRIPE="'$EXPANDED_STRIPE'"' >> ${SCRIPT_FILE_NAME}
@@ -189,7 +191,7 @@ echo "ITER=0" >> ${SCRIPT_FILE_NAME}
 echo "NUM_ITERATIONS="$ITERATIONS >> ${SCRIPT_FILE_NAME}
 #echo 'echo "comparison: >$CODE< >tar<"' >> ${SCRIPT_FILE_NAME}
 echo 'if [ "${CODE}" == "tar" ]; then' >> ${SCRIPT_FILE_NAME}
-echo '   let RANKS="0001"' >> ${SCRIPT_FILE_NAME}
+echo '   let RANKS=1' >> ${SCRIPT_FILE_NAME}
 echo 'fi' >> ${SCRIPT_FILE_NAME}
 echo "" >> ${SCRIPT_FILE_NAME}
 

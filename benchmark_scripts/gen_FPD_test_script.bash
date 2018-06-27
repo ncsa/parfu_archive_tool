@@ -7,6 +7,7 @@ STRIPE=8
 RANK_DIVISOR=1      # =1 to fill all CPU threads with ranks, =2 for only half of them
 BLOCK=4             # parfu block size in MB (if relevant)
 RUNTIME=10:00:00
+MYEMAIL="craigsteffen@gmail.com"
 
 # select the code we're testing here
 #CODE="tar"
@@ -127,7 +128,7 @@ case "$MANAGER" in
 	echo "#SBATCH -N ${NODES}         # number of nodes" >> ${SCRIPT_FILE_NAME}
 	echo "#SBATCH --tasks-per-node=${RANKS_PER_NODE}     #rank slots per node" >> ${SCRIPT_FILE_NAME}
 	echo "#SBATCH -t ${RUNTIME}           # Run time (hh:mm:ss)" >> ${SCRIPT_FILE_NAME}
-	echo "#SBATCH --mail-user=craigsteffen@gmail.com" >> ${SCRIPT_FILE_NAME}
+	echo "#SBATCH --mail-user=$MYEMAIL" >> ${SCRIPT_FILE_NAME}
 	echo "#SBATCH --mail-type=all      # Send email at begin and end of job" >> ${SCRIPT_FILE_NAME}
 	;;
     "Moab")
@@ -137,7 +138,7 @@ case "$MANAGER" in
 	echo '#PBS -e $PBS_JOBID.err' >> $SCRIPT_FILE_NAME
 	echo '#PBS -o $PBS_JOBID.out' >> $SCRIPT_FILE_NAME
 	echo '#PBS -m bea' >> $SCRIPT_FILE_NAME
-	echo '#PBS -M craigsteffen@gmail.com' >> $SCRIPT_FILE_NAME
+	echo "#PBS -M $MYEMAIL" >> $SCRIPT_FILE_NAME
 	echo "" >> $SCRIPT_FILE_NAME
 	echo 'cd $PBS_O_WORKDIR' >> $SCRIPT_FILE_NAME
 	echo "" >> $SCRIPT_FILE_NAME

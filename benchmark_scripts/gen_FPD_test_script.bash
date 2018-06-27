@@ -5,20 +5,20 @@
 
 # user sets up variables here (unless they're parsed via command line)
 NODES=1
-ITERATIONS=2
+ITERATIONS=1
 STRIPE=8
 RANK_DIVISOR=1      # =1 to fill all CPU threads with ranks, =2 for only half of them
 BLOCK=4             # parfu block size in MB (if relevant)
-RUNTIME=2:00:00
+RUNTIME=10:00:00
 MYEMAIL="craigsteffen@gmail.com"
 
 # select the code we're testing here
-#CODE="tar"
+CODE="tar"
 #CODE="tar_gz"
 #CODE="tar_pigz"
 #CODE="mpitar"
 #CODE="ptar"
-CODE="parfu"
+#CODE="parfu"
 #CODE="ptgz"
 
 # select the system we're on.  
@@ -209,7 +209,6 @@ echo '    exit'  >> ${SCRIPT_FILE_NAME}
 echo 'fi' >> ${SCRIPT_FILE_NAME}
 echo "" >> ${SCRIPT_FILE_NAME}
 
-
 # now the data-taking while loop
 echo 'while [ $ITER -lt $NUM_ITERATIONS ]; do ' >> ${SCRIPT_FILE_NAME}
 echo '    echo "starting iteration $ITER ranks $RANKS"' >> ${SCRIPT_FILE_NAME}
@@ -219,7 +218,7 @@ case ${CODE} in
 	echo '    '$MYMPIRUN_1'${RANKS}'$MYMPIRUN_2' parfu C $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.pfu $TARGET_DIR &> output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
 	;;
     "tar")
-	echo '    '$MYMPIRUN_1'${RANKS}'$MYMPIRUN_2' tar czf $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.tgz $TARGET_DIR > output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
+	echo '    '$MYMPIRUN_1' 1 tar cf $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.tar $TARGET_DIR > output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
 esac
 echo '    END=`date +%s`' >> ${SCRIPT_FILE_NAME}
 echo '    ELAP=$(expr $END - $START)' >> ${SCRIPT_FILE_NAME}
@@ -230,3 +229,4 @@ echo "" >> ${SCRIPT_FILE_NAME}
 
 
 # now we set up the loop computation in the target script
+

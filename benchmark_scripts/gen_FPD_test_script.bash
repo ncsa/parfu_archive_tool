@@ -9,7 +9,7 @@ ITERATIONS=2
 STRIPE=8
 RANK_DIVISOR=1      # =1 to fill all CPU threads with ranks, =2 for only half of them
 BLOCK=4             # parfu block size in MB (if relevant)
-RUNTIME=10:00:00
+RUNTIME=2:00:00
 MYEMAIL="craigsteffen@gmail.com"
 
 # select the code we're testing here
@@ -195,6 +195,16 @@ echo "" >> ${SCRIPT_FILE_NAME}
 
 # check for directories
 echo 'mkdir -p output_files' >> ${SCRIPT_FILE_NAME}
+echo 'TARGET_DIR="$BASEDIR/${DATASET}_data/"' >> ${SCRIPT_FILE_NAME}
+echo 'if [ ! -d "${TARGET_DIR}" ]; then' >> ${SCRIPT_FILE_NAME}
+echo '    echo "data target dir ${TARGET_DIR} does not exist!"' >> ${SCRIPT_FILE_NAME}
+echo '    exit'  >> ${SCRIPT_FILE_NAME}
+echo 'fi' >> ${SCRIPT_FILE_NAME}
+echo 'ARCHIVE_DIR="$BASEDIR/arc_${STRIPE}"' >> ${SCRIPT_FILE_NAME}
+echo 'if [ ! -d "${ARCHIVE_DIR}" ]; then' >> ${SCRIPT_FILE_NAME}
+echo '    echo "archive dir ${ARCHIVE_DIR} does not exist!"' >> ${SCRIPT_FILE_NAME}
+echo '    exit'  >> ${SCRIPT_FILE_NAME}
+echo 'fi' >> ${SCRIPT_FILE_NAME}
 echo "" >> ${SCRIPT_FILE_NAME}
 
 
@@ -204,10 +214,10 @@ echo '    echo "starting iteration $ITER ranks $RANKS"' >> ${SCRIPT_FILE_NAME}
 echo '    START=`date +%s`' >> ${SCRIPT_FILE_NAME}
 case ${CODE} in
     "parfu")
-	echo '    '$MYMPIRUN_1'${RANKS}'$MYMPIRUN_2' parfu C $BASEDIR/arc_${STRIPE}/prod_'${JOB_ID_NAME}'_${ITER}.pfu $BASEDIR/${DATASET}_data/ &> output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
+	echo '    '$MYMPIRUN_1'${RANKS}'$MYMPIRUN_2' parfu C $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.pfu $TARGET_DIR &> output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
 	;;
     "tar")
-	echo '    '$MYMPIRUN_1'${RANKS}'$MYMPIRUN_2' tar czf $BASEDIR/arc_${STRIPE}/prod_'${JOB_ID_NAME}'_${ITER}.tgz $BASEDIR/${DATASET}_data/ > output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
+	echo '    '$MYMPIRUN_1'${RANKS}'$MYMPIRUN_2' tar czf $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.tgz $TARGET_DIR > output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
 esac
 echo '    END=`date +%s`' >> ${SCRIPT_FILE_NAME}
 echo '    ELAP=$(expr $END - $START)' >> ${SCRIPT_FILE_NAME}

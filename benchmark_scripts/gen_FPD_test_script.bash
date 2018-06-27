@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#####
+# user configuration options
+
 # user sets up variables here (unless they're parsed via command line)
 NODES=1
 ITERATIONS=3
@@ -32,6 +35,9 @@ SYSTEM="bw_moab"
 DATASET="GW"
 #DATASET="Ar"
 #DATASET="VC"
+
+# end of user configuration options.  
+#######
 
 # find next non-existent run script name
 COUNTER=0
@@ -167,7 +173,8 @@ echo 'MACH_FS="'$FS'"' >> ${SCRIPT_FILE_NAME}
 echo "" >> ${SCRIPT_FILE_NAME}
 
 # set up the data file lines in the target script
-DATA_FILE_NAME=$(printf 'FPD_test_%s_data_%06d.dat' "$SYSTEM" "$COUNTER")
+DATA_FILE_NAME_PREFIX=$(printf 'FPD_test_%s_' "$SYSTEM" )
+DATA_FILE_NAME=$DATA_FILE_NAME_PREFIX"${JOB_ID_NAME}.dat"
 
 echo "TIMING_DATA_FILE=\"${DATA_FILE_NAME}\"" >> ${SCRIPT_FILE_NAME}
 echo "" >> ${SCRIPT_FILE_NAME}

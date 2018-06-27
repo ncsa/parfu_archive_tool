@@ -36,6 +36,11 @@
 # (or whatever)
 # 
 
+ifeq ($(ARC),jyc_slurm)
+MY_CC=~jphillip/openmpi/bin/mpicc
+MY_CXX=~jphillip/openmpi/bin/mpiCC
+endif
+
 ifeq ($(ARC),cray)
 MY_CC=cc
 MY_CXX=CC

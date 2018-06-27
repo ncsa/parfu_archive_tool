@@ -4,8 +4,9 @@
 NODES=1
 ITERATIONS=3
 STRIPE=8
-RANK_DIVISOR=1 # =1 to fill all CPU threads with ranks, =2 for only half of them
-BLOCK=4        # parfu block size in MB (if relevant)
+RANK_DIVISOR=1      # =1 to fill all CPU threads with ranks, =2 for only half of them
+BLOCK=4             # parfu block size in MB (if relevant)
+RUNTIME=10:00:00
 
 # select the code we're testing here
 #CODE="tar"
@@ -21,8 +22,9 @@ CODE="parfu"
 #SYSTEM="wrangler_gpfs"
 #SYSTEM="comet"
 #SYSTEM="stampede2"
-SYSTEM="jyc_slurm"
+#SYSTEM="jyc_slurm"
 #SYSTEM="jyc_moab"
+SYSTEM="bw_moab"
 #SYSTEM="bridges"
 
 # pick the data set we're testing against
@@ -82,6 +84,15 @@ case "$SYSTEM" in
 	MYMPIRUN_2=""
 #	QUEUE_NAME="normal"
 	;;
+    "bw_moab")
+	DATADIR="/scratch/staff/csteffen/FPD_2018"
+	JOBNAME="FPD_BW_Mo"
+	MANAGER="Moab"
+	RANKS_PER_NODE=32
+	FS="lustre"
+	MYMPIRUN_1="aprun -n "
+	MYMPIRUN_2=" -N $(( ${RANKS_PER_NODE}/${RANK_DIVISOR} )) -d $RANK_DIVISOR "	
+	;;
     "jyc_moab")
 	JOB_NAME="FPD_jyc_Moab"
 	RANKS_PER_NODE=32
@@ -90,7 +101,7 @@ case "$SYSTEM" in
 	;;
     "bridges")
 	JOB_NAME="FPD_Br"
-	RANKS_PER_NODE=28   # don't actually know this one yet
+	RANKS_PER_NODE=28 
 	MANAGER="slurm"
 	FS="lustre"
 	;;	
@@ -115,11 +126,22 @@ case "$MANAGER" in
 	fi
 	echo "#SBATCH -N ${NODES}         # number of nodes" >> ${SCRIPT_FILE_NAME}
 	echo "#SBATCH --tasks-per-node=${RANKS_PER_NODE}     #rank slots per node" >> ${SCRIPT_FILE_NAME}
-	echo "#SBATCH -t 12:00:00           # Run time (hh:mm:ss)" >> ${SCRIPT_FILE_NAME}
+	echo "#SBATCH -t ${RUNTIME}           # Run time (hh:mm:ss)" >> ${SCRIPT_FILE_NAME}
 	echo "#SBATCH --mail-user=craigsteffen@gmail.com" >> ${SCRIPT_FILE_NAME}
 	echo "#SBATCH --mail-type=all      # Send email at begin and end of job" >> ${SCRIPT_FILE_NAME}
 	;;
-    "Moab")	
+    "Moab")
+	echo "#PBS -N ${JOBNAME}" >> $SCRIPT_FILE_NAME
+	echo "#PBS -l nodes=${NODES}:ppn=32:xe" >> $SCRIPT_FILE_NAME
+	echo "#PBS -l walltime=${RUNTIME}" >> $SCRIPT_FILE_NAME
+	echo '#PBS -e $PBS_JOBID.err' >> $SCRIPT_FILE_NAME
+	echo '#PBS -o $PBS_JOBID.out' >> $SCRIPT_FILE_NAME
+	echo '#PBS -m bea' >> $SCRIPT_FILE_NAME
+	echo '#PBS -M craigsteffen@gmail.com' >> $SCRIPT_FILE_NAME
+	echo "" >> $SCRIPT_FILE_NAME
+	echo 'cd $PBS_O_WORKDIR' >> $SCRIPT_FILE_NAME
+	echo "" >> $SCRIPT_FILE_NAME
+	;; 
 esac
 echo "" >> ${SCRIPT_FILE_NAME}
 

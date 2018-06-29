@@ -4,24 +4,32 @@
 # user configuration options
 
 # user sets up variables here (unless they're parsed via command line)
-NODES=1
-ITERATIONS=1
+NODES=2
+ITERATIONS=3
 STRIPE=8
-RANK_DIVISOR=1      # =1 to fill all CPU threads with ranks, =2 for only half of them
+RANK_DIVISOR=2      # =1 to fill all CPU threads with ranks, =2 for only half of them
 BLOCK=4             # parfu block size in MB (if relevant)
-RUNTIME=10:00:00
+RUNTIME=2:00:00
 MYEMAIL="craigsteffen@gmail.com"
 
+# pick the data set we're testing against
+# this will be change to iterate through the data sets
+DATASET="GW"
+#DATASET="Ar"
+#DATASET="VC"
+
 # select the code we're testing here
-CODE="tar"
+# this will be changed to iterate through the test codes
+#CODE="tar"
 #CODE="tar_gz"
 #CODE="tar_pigz"
 #CODE="mpitar"
 #CODE="ptar"
-#CODE="parfu"
+CODE="parfu"
 #CODE="ptgz"
 
 # select the system we're on.  
+# typically this is set once per system
 #SYSTEM="wrangler_lustre"
 #SYSTEM="wrangler_gpfs"
 #SYSTEM="comet"
@@ -30,11 +38,6 @@ CODE="tar"
 #SYSTEM="jyc_moab"
 SYSTEM="bw_moab"
 #SYSTEM="bridges"
-
-# pick the data set we're testing against
-DATASET="GW"
-#DATASET="Ar"
-#DATASET="VC"
 
 # end of user configuration options.  
 #######
@@ -229,4 +232,3 @@ echo "" >> ${SCRIPT_FILE_NAME}
 
 
 # now we set up the loop computation in the target script
-

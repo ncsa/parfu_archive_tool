@@ -187,7 +187,7 @@ echo 'DATASET="'${DATASET}'"' >> ${SCRIPT_FILE_NAME}
 echo 'CODE="'${CODE}'"' >> ${SCRIPT_FILE_NAME}
 EXPANDED_BLOCK=$(printf '%04d' "$BLOCK")
 echo 'BLOCK="'$EXPANDED_BLOCK'"' >> ${SCRIPT_FILE_NAME}
-echo 'MACH_FS="'$FS'"' >> ${SCRIPT_FILE_NAME}
+echo 'MACH_FS="'$SYSTEM'_'$FS'"' >> ${SCRIPT_FILE_NAME}
 echo "" >> ${SCRIPT_FILE_NAME}
 
 # set up the data file lines in the target script

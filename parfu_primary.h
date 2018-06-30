@@ -55,7 +55,11 @@
 // probably matches this to network buffer size for I/O.  On 
 // Blue Waters (home system of parfu) 4 MB seems good.
 //#define PARFU_DEFAULT_RANK_BLOCK_SIZE    (2097152)
+
+// 2018 May campaign iteration values
 #define PARFU_DEFAULT_RANK_BLOCK_SIZE    (4194304)
+//#define PARFU_DEFAULT_RANK_BLOCK_SIZE    (16777216)
+//#define PARFU_DEFAULT_RANK_BLOCK_SIZE    (1048576)
 
 #define PARFU_BLOCKING_FILE_NAME    ".parfu_space"
 #define PARFU_CATALOG_FILE_NAME     ".parfu_catalog"

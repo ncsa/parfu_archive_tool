@@ -4,17 +4,17 @@
 # user configuration options
 
 # user sets up variables here (unless they're parsed via command line)
-NODES=2
+NODES=1
 ITERATIONS=3
 STRIPE=8
-RANK_DIVISOR=2      # =1 to fill all CPU threads with ranks, =2 for only half of them
+RANK_DIVISOR=1      # =1 to fill all CPU threads with ranks, =2 for only half of them
 BLOCK=4             # parfu block size in MB (if relevant)
 RUNTIME=2:00:00
 MYEMAIL="craigsteffen@gmail.com"
 
 # pick the data set we're testing against
 # this will be change to iterate through the data sets
-DATASET="GW"
+#DATASET="GW"
 #DATASET="Ar"
 #DATASET="VC"
 
@@ -25,7 +25,7 @@ DATASET="GW"
 #CODE="tar_pigz"
 #CODE="mpitar"
 #CODE="ptar"
-CODE="parfu"
+#CODE="parfu"
 #CODE="ptgz"
 
 # select the system we're on.  
@@ -36,8 +36,21 @@ CODE="parfu"
 #SYSTEM="stampede2"
 #SYSTEM="jyc_slurm"
 #SYSTEM="jyc_moab"
-SYSTEM="bw_moab"
+#SYSTEM="bw_moab"
 #SYSTEM="bridges"
+
+if [ ! "$SYSTEM" ]; then
+    echo ; echo "You must set a valid SYSTEM!  (Edit the script, uncomment one option.)" ; echo
+    exit
+fi    
+if [ ! "$DATASET" ]; then
+    echo ; echo "You must set a valid DATASET!  (Edit the script, uncomment one option.)" ; echo
+    exit
+fi    
+if [ ! "$CODE" ]; then
+    echo ; echo "You must set a valid CODE!  (Edit the script, uncomment one option.)" ; echo
+    exit
+fi    
 
 # end of user configuration options.  
 #######

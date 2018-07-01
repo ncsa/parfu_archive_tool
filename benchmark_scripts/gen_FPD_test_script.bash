@@ -72,20 +72,27 @@ case "$SYSTEM" in
 	FS="lustre"
 	MANAGER="slurm"
 	RANKS_PER_NODE=24
-	DATADIR=${DATA}
+	DATADIR='${DATA}'
+	MYMPIRUN_1="ibrun -n "
+	MYMPIRUN_2=" -o 0"
 	;;
     "wrangler_hpfs")
 	JOB_NAME="FPD_wr_HP"
 	FS="hpfs"
 	MANAGER="slurm"
 	RANKS_PER_NODE=24
+	DATADIR='${FLASH}/FP_data'
+	MYMPIRUN_1="ibrun -n "
+	MYMPIRUN_2=" -o 0"
 	;;
     "comet")
 	JOB_NAME="FPD_comet"
 	MANAGER="slurm"
 	RANKS_PER_NODE=24
 	FS="lustre"
-	DATADIR=${SCRATCH}
+	DATADIR='${SCRATCH}'
+	MYMPIRUN_1="ibrun -n "
+	MYMPIRUN_2=" -o 0"
 	;;
     "stampede2")
 	JOB_NAME="FPD_st2"
@@ -102,7 +109,7 @@ case "$SYSTEM" in
 	MANAGER="slurm"
 	RANKS_PER_NODE=32
 	FS="lustre"
-	DATADIR="/scratch/staff/csteffen/FPD"
+	DATADIR='/scratch/staff/csteffen/FPD'
 	MYMPIRUN_1="~jphillip/openmpi/bin/mpirun -n "
 	MYMPIRUN_2=""
 #	QUEUE_NAME="normal"
@@ -121,12 +128,18 @@ case "$SYSTEM" in
 	RANKS_PER_NODE=32
 	MANAGER="moab"
 	FS="lustre"
+	MYMPIRUN_1="aprun -n "
+	MYMPIRUN_2=" -N $(( ${RANKS_PER_NODE}/${RANK_DIVISOR} )) -d $RANK_DIVISOR "	
+	DATADIR="/scratch/staff/csteffen/FPD"
 	;;
     "bridges")
 	JOB_NAME="FPD_Br"
 	RANKS_PER_NODE=28 
 	MANAGER="slurm"
 	FS="lustre"
+	MYMPIRUN_1="ibrun -n "
+	MYMPIRUN_2=" -o 0"
+	DATADIR='${SCRATCH}/FP_data'
 	;;	
 esac
 
@@ -235,6 +248,10 @@ case ${CODE} in
 	;;
     "tar")
 	echo '    '$MYMPIRUN_1' 1 tar cf $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.tar $TARGET_DIR > output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
+	;;
+    "ptgz")
+	echo '    '$MYMPIRUN_1'$RANKS'$MYMPIRUN_2' ptgz -c -d $TARGET_DIR prod_'${JOB_ID_NAME}'_${ITER} &> output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
+	;;
 esac
 echo '    END=`date +%s`' >> ${SCRIPT_FILE_NAME}
 echo '    ELAP=$(expr $END - $START)' >> ${SCRIPT_FILE_NAME}
@@ -242,6 +259,5 @@ echo '    echo "${CODE} ${BLOCK}    ${MACH_FS}  ${DATASET}    ${STRIPE}    ${NOD
 echo '    let ITER=ITER+1' >> ${SCRIPT_FILE_NAME}
 echo 'done' >> ${SCRIPT_FILE_NAME}
 echo "" >> ${SCRIPT_FILE_NAME}
-
 
 # now we set up the loop computation in the target script

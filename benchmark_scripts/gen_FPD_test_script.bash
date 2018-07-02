@@ -4,7 +4,7 @@
 # user configuration options
 
 # user sets up variables here (unless they're parsed via command line)
-NODES=1
+NODES=2
 ITERATIONS=3
 STRIPE=8
 RANK_DIVISOR=1      # =1 to fill all CPU threads with ranks, =2 for only half of them
@@ -25,12 +25,12 @@ MYEMAIL="craigsteffen@gmail.com"
 #CODE="tar_pigz"
 #CODE="mpitar"
 #CODE="ptar"
-#CODE="parfu"
+CODE="parfu"
 #CODE="ptgz"
 
 # select the system we're on.  
 # typically this is set once per system
-#SYSTEM="wrangler_lustre"
+SYSTEM="wrangler_lustre"
 #SYSTEM="wrangler_gpfs"
 #SYSTEM="comet"
 #SYSTEM="stampede2"
@@ -62,7 +62,7 @@ while [[ -e $SCRIPT_FILE_NAME ]]; do
     let COUNTER=COUNTER+1
     SCRIPT_FILE_NAME=$(printf 'FPD_test_%s_%06d.bash' "$SYSTEM" "$COUNTER")
 done
-echo "script file name=>${SCRIPT_FILE_NAME}<"
+echo "script file name= >>> ${SCRIPT_FILE_NAME} <<<"
 touch $SCRIPT_FILE_NAME
 
 # populate intermediate variables according to what system we're on
@@ -75,6 +75,7 @@ case "$SYSTEM" in
 	DATADIR='${DATA}'
 	MYMPIRUN_1="ibrun -n "
 	MYMPIRUN_2=" -o 0"
+	QUEUE_NAME="normal"
 	;;
     "wrangler_hpfs")
 	JOB_NAME="FPD_wr_HP"
@@ -84,6 +85,7 @@ case "$SYSTEM" in
 	DATADIR='${FLASH}/FP_data'
 	MYMPIRUN_1="ibrun -n "
 	MYMPIRUN_2=" -o 0"
+	QUEUE_NAME="normal"
 	;;
     "comet")
 	JOB_NAME="FPD_comet"

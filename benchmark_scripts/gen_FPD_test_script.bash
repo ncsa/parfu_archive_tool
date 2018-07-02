@@ -25,12 +25,12 @@ MYEMAIL="craigsteffen@gmail.com"
 #CODE="tar_pigz"
 #CODE="mpitar"
 #CODE="ptar"
-CODE="parfu"
+#CODE="parfu"
 #CODE="ptgz"
 
 # select the system we're on.  
 # typically this is set once per system
-SYSTEM="wrangler_lustre"
+#SYSTEM="wrangler_lustre"
 #SYSTEM="wrangler_gpfs"
 #SYSTEM="comet"
 #SYSTEM="stampede2"

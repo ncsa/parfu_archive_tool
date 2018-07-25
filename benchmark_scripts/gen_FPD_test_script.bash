@@ -10,13 +10,14 @@ STRIPE=8
 RANK_DIVISOR=1      # =1 to fill all CPU threads with ranks, =2 for only half of them
 BLOCK=4             # parfu block size in MB (if relevant)
 RUNTIME=2:00:00
-MYEMAIL="craigsteffen@gmail.com"
+MYEMAIL=""
+ENABLE_EMAIL_NOTIFICATIONS="1"
 
 # pick the data set we're testing against
 # this will be change to iterate through the data sets
 #DATASET="GW"
 #DATASET="Ar"
-DATASET="VC"
+#DATASET="VC"
 
 # select the code we're testing here
 # this will be changed to iterate through the test codes
@@ -25,13 +26,13 @@ DATASET="VC"
 #CODE="tar_pigz"
 #CODE="mpitar"
 #CODE="ptar"
-CODE="parfu"
+#CODE="parfu"
 #CODE="ptgz"
 
 # select the system we're on.  
 # typically this is set once per system
 #SYSTEM="wrangler_LL"
-SYSTEM="wrangler_LG"
+#SYSTEM="wrangler_LG"
 #SYSTEM="comet"
 #SYSTEM="stampede2"
 #SYSTEM="jyc_slurm"
@@ -51,6 +52,17 @@ if [ ! "$CODE" ]; then
     echo ; echo "You must set a valid CODE!  (Edit the script, uncomment one option.)" ; echo
     exit
 fi    
+if [ ! "$MYEMAIL" ]; then
+    if [ "$ENABLE_EMAIL_NOTIFICATIONS" ]; then
+	echo
+	echo "Email notifications enabled but email address empty.  Either comment out the line that"
+	echo "defines ENABLE_EMAIL_NOTIFICATIONS or fill in a value for MYEMAIL."
+	echo
+	exit
+    fi
+fi
+
+
 
 # end of user configuration options.  
 #######
@@ -151,6 +163,10 @@ case "$SYSTEM" in
 	DATADIR='${SCRATCH}/FP_data'
 	ARCDIR='${SCRATCH}/FP_data'
 	;;	
+    *)
+	echo 'The $SYSTEM variable not set to a valid value.  Exiting without generating a script.'
+	exit;
+	;;
 esac
 
 #####
@@ -173,8 +189,10 @@ case "$MANAGER" in
 	echo "#SBATCH -N ${NODES}         # number of nodes" >> ${SCRIPT_FILE_NAME}
 	echo "#SBATCH --tasks-per-node=${RANKS_PER_NODE}     #rank slots per node" >> ${SCRIPT_FILE_NAME}
 	echo "#SBATCH -t ${RUNTIME}           # Run time (hh:mm:ss)" >> ${SCRIPT_FILE_NAME}
-	echo "#SBATCH --mail-user=$MYEMAIL" >> ${SCRIPT_FILE_NAME}
-	echo "#SBATCH --mail-type=all      # Send email at begin and end of job" >> ${SCRIPT_FILE_NAME}
+	if [ $ENABLE_EMAIL_NOTIFICATIONS ]; then
+	    echo "#SBATCH --mail-user=$MYEMAIL" >> ${SCRIPT_FILE_NAME}
+	    echo "#SBATCH --mail-type=all      # Send email at begin and end of job" >> ${SCRIPT_FILE_NAME}
+	fi
 	JOB_ID_NAME='${SLURM_JOBID}'
 	;;
     "Moab")
@@ -183,8 +201,10 @@ case "$MANAGER" in
 	echo "#PBS -l walltime=${RUNTIME}" >> $SCRIPT_FILE_NAME
 	echo '#PBS -e $PBS_JOBID.err' >> $SCRIPT_FILE_NAME
 	echo '#PBS -o $PBS_JOBID.out' >> $SCRIPT_FILE_NAME
-	echo '#PBS -m bea' >> $SCRIPT_FILE_NAME
-	echo "#PBS -M $MYEMAIL" >> $SCRIPT_FILE_NAME
+	if [ $ENABLE_EMAIL_NOTIFICATIONS ]; then
+	    echo '#PBS -m bea' >> $SCRIPT_FILE_NAME
+	    echo "#PBS -M $MYEMAIL" >> $SCRIPT_FILE_NAME
+	fi
 	echo "" >> $SCRIPT_FILE_NAME
 	echo 'cd $PBS_O_WORKDIR' >> $SCRIPT_FILE_NAME
 	echo "" >> $SCRIPT_FILE_NAME

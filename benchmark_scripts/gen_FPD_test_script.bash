@@ -146,7 +146,7 @@ case "$SYSTEM" in
     "jyc_moab")
 	JOB_NAME="FPD_jyc_Moab"
 	RANKS_PER_NODE=32
-	MANAGER="moab"
+	MANAGER="Moab"
 	FS="lustre"
 	MYMPIRUN_1="aprun -n "
 	MYMPIRUN_2=" -N $(( ${RANKS_PER_NODE}/${RANK_DIVISOR} )) -d $RANK_DIVISOR "	
@@ -210,6 +210,10 @@ case "$MANAGER" in
 	echo "" >> $SCRIPT_FILE_NAME
 	JOB_ID_NAME='${PBS_JOBID}'
 	;; 
+    *)
+	echo 'ERROR! $MANAGER='$MANAGER' which is not valid.  Aborting script generation.'
+	exit;
+	;;
 esac
 echo "" >> ${SCRIPT_FILE_NAME}
 

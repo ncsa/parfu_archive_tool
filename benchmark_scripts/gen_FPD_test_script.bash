@@ -10,12 +10,12 @@ STRIPE=8
 RANK_DIVISOR=1      # =1 to fill all CPU threads with ranks, =2 for only half of them
 BLOCK=4             # parfu block size in MB (if relevant)
 RUNTIME=2:00:00
-MYEMAIL=""
+MYEMAIL="kkendig2@illinois.edu"
 ENABLE_EMAIL_NOTIFICATIONS="1"
 
 # pick the data set we're testing against
 # this will be change to iterate through the data sets
-#DATASET="GW"
+DATASET="GW"
 #DATASET="Ar"
 #DATASET="VC"
 
@@ -27,7 +27,7 @@ ENABLE_EMAIL_NOTIFICATIONS="1"
 #CODE="mpitar"
 #CODE="ptar"
 #CODE="parfu"
-#CODE="ptgz"
+CODE="ptgz"
 
 # select the system we're on.  
 # typically this is set once per system
@@ -39,6 +39,7 @@ ENABLE_EMAIL_NOTIFICATIONS="1"
 #SYSTEM="jyc_moab"
 #SYSTEM="bw_moab"
 #SYSTEM="bridges"
+SYSTEM="iforge"
 
 if [ ! "$SYSTEM" ]; then
     echo ; echo "You must set a valid SYSTEM!  (Edit the script, uncomment one option.)" ; echo
@@ -162,7 +163,17 @@ case "$SYSTEM" in
 	MYMPIRUN_2=" -o 0"
 	DATADIR='${SCRATCH}/FP_data'
 	ARCDIR='${SCRATCH}/FP_data'
-	;;	
+	;;
+    "iforge")
+	JOB_NAME="FPD_iF"
+	RANKS_PER_NODE=40 #based on cores??
+	MANAGER="pbs"
+	FS="gpfs"	#or is it lustre?
+	MYMPIRUN_1="mpirun -np " #don't think I need full path because loaded in module
+	MYMPIRUN_2=""
+	DATADIR="/projects/bioinformatics/ParFuTesting/TestData"
+	ARCDIR="/projects/bioinformatics/ParFuTesting/Archive"
+	;;
     *)
 	echo 'The $SYSTEM variable not set to a valid value.  Exiting without generating a script.'
 	exit;
@@ -196,7 +207,7 @@ case "$MANAGER" in
 	JOB_ID_NAME='${SLURM_JOBID}'
 	;;
     "Moab")
-	echo "#PBS -N ${JOBNAME}" >> $SCRIPT_FILE_NAME
+	echo "#PBS -N ${JOB_NAME}" >> $SCRIPT_FILE_NAME
 	echo "#PBS -l nodes=${NODES}:ppn=32:xe" >> $SCRIPT_FILE_NAME
 	echo "#PBS -l walltime=${RUNTIME}" >> $SCRIPT_FILE_NAME
 	echo '#PBS -e $PBS_JOBID.err' >> $SCRIPT_FILE_NAME
@@ -209,6 +220,23 @@ case "$MANAGER" in
 	echo 'cd $PBS_O_WORKDIR' >> $SCRIPT_FILE_NAME
 	echo "" >> $SCRIPT_FILE_NAME
 	JOB_ID_NAME='${PBS_JOBID}'
+	;;
+    "pbs")
+	echo "#PBS -N ${JOB_NAME}" >> $SCRIPT_FILE_NAME
+        echo "#PBS -l nodes=${NODES}:ppn=40" >> $SCRIPT_FILE_NAME
+        echo "#PBS -l walltime=${RUNTIME}" >> $SCRIPT_FILE_NAME
+	echo "#PBS -A " >> $SCRIPT_FILE_NAME
+	echo "#PBS -q " >> $SCRIPT_FILE_NAME
+        echo '#PBS -e $PBS_JOBID.err' >> $SCRIPT_FILE_NAME
+        echo '#PBS -o $PBS_JOBID.out' >> $SCRIPT_FILE_NAME
+        if [ $ENABLE_EMAIL_NOTIFICATIONS ]; then
+            echo '#PBS -m bea' >> $SCRIPT_FILE_NAME
+            echo "#PBS -M $MYEMAIL" >> $SCRIPT_FILE_NAME
+        fi
+        echo "" >> $SCRIPT_FILE_NAME
+        echo 'cd $PBS_O_WORKDIR' >> $SCRIPT_FILE_NAME
+        echo "" >> $SCRIPT_FILE_NAME
+        JOB_ID_NAME='${PBS_JOBID}'
 	;; 
     *)
 	echo 'ERROR! $MANAGER='$MANAGER' which is not valid.  Aborting script generation.'

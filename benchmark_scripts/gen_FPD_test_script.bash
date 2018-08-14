@@ -22,42 +22,42 @@ fi
 
 # pick the data set we're testing against
 # this will be change to iterate through the data sets
-#DATASET="GW"
-#DATASET="Ar"
-#DATASET="VC"
+#FPD_DATASET="GW"
+#FPD_DATASET="Ar"
+#FPD_DATASET="VC"
 
 # select the code we're testing here
 # this will be changed to iterate through the test codes
-#CODE="tar"
-#CODE="tar_gz"
-#CODE="tar_pigz"
-#CODE="mpitar"
-#CODE="ptar"
-#CODE="parfu"
-#CODE="ptgz"
+#FPD_CODE="tar"
+#FPD_CODE="tar_gz"
+#FPD_CODE="tar_pigz"
+#FPD_CODE="mpitar"
+#FPD_CODE="ptar"
+#FPD_CODE="parfu"
+#FPD_CODE="ptgz"
 
 # select the system we're on.  
 # typically this is set once per system
-#SYSTEM="wrangler_LL"
-#SYSTEM="wrangler_LG"
-#SYSTEM="comet"
-#SYSTEM="stampede2"
-#SYSTEM="jyc_slurm"
-#SYSTEM="jyc_moab"
-#SYSTEM="bw_moab"
-#SYSTEM="bridges"
-#SYSTEM="iforge"
+#FPD_SYSTEM="wrangler_LL"
+#FPD_SYSTEM="wrangler_LG"
+#FPD_SYSTEM="comet"
+#FPD_SYSTEM="stampede2"
+#FPD_SYSTEM="jyc_slurm"
+#FPD_SYSTEM="jyc_moab"
+#FPD_SYSTEM="bw_moab"
+#FPD_SYSTEM="bridges"
+#FPD_SYSTEM="iforge"
 
-if [ ! "$SYSTEM" ]; then
-    echo ; echo "You must set a valid SYSTEM!  (Edit the script, uncomment one option.)" ; echo
+if [ ! "$FPD_SYSTEM" ]; then
+    echo ; echo "You must set a valid FPD_SYSTEM!  (Edit the script, or set an env var.)" ; echo
     exit
 fi    
-if [ ! "$DATASET" ]; then
-    echo ; echo "You must set a valid DATASET!  (Edit the script, uncomment one option.)" ; echo
+if [ ! "$FPD_DATASET" ]; then
+    echo ; echo "You must set a valid FPD_DATASET!  (Edit the script, or set an env var.)" ; echo
     exit
 fi    
-if [ ! "$CODE" ]; then
-    echo ; echo "You must set a valid CODE!  (Edit the script, uncomment one option.)" ; echo
+if [ ! "$FPD_CODE" ]; then
+    echo ; echo "You must set a valid FPD_CODE!  (Edit the script, or set an env var.)" ; echo
     exit
 fi    
 if [ ! "$MYEMAIL" ]; then
@@ -70,23 +70,34 @@ if [ ! "$MYEMAIL" ]; then
     fi
 fi
 
-
+case "$FPD_CODE" in
+    "GW")
+	;;
+    "Ar")
+	;;
+    "BC")
+	;;
+    *)
+	echo 'FPD_CODE='$FPD_CODE', which is not a valid code name! Exiting.'
+	exit;
+	;;
+esac
 
 # end of user configuration options.  
 #######
 
 # find next non-existent run script name
 COUNTER=0
-SCRIPT_FILE_NAME=$(printf 'FPD_test_%s_%06d.bash' "$SYSTEM" "$COUNTER")
+SCRIPT_FILE_NAME=$(printf 'FPD_test_%s_%06d.bash' "$FPD_SYSTEM" "$COUNTER")
 while [[ -e $SCRIPT_FILE_NAME ]]; do
     let COUNTER=COUNTER+1
-    SCRIPT_FILE_NAME=$(printf 'FPD_test_%s_%06d.bash' "$SYSTEM" "$COUNTER")
+    SCRIPT_FILE_NAME=$(printf 'FPD_test_%s_%06d.bash' "$FPD_SYSTEM" "$COUNTER")
 done
 echo "script file name= >>> ${SCRIPT_FILE_NAME} <<<"
 touch $SCRIPT_FILE_NAME
 
 # populate intermediate variables according to what system we're on
-case "$SYSTEM" in
+case "$FPD_SYSTEM" in
     "wrangler_LL")
 	JOB_NAME="FPD_wr_LL"
 	FS="lustre"
@@ -182,7 +193,7 @@ case "$SYSTEM" in
 	ARCDIR="/projects/bioinformatics/ParFuTesting/Archive"
 	;;
     *)
-	echo 'The $SYSTEM variable not set to a valid value.  Exiting without generating a script.'
+	echo 'The $FPD_SYSTEM variable not set to a valid value.  Exiting without generating a script.'
 	exit;
 	;;
 esac
@@ -274,21 +285,21 @@ echo "BASE_ARC_DIR="$ARCDIR >> ${SCRIPT_FILE_NAME}
 echo "BASE_TGT_DIR="$DATADIR >> ${SCRIPT_FILE_NAME}
 EXPANDED_STRIPE=$(printf '%04d' "$STRIPE")
 echo 'STRIPE="'$EXPANDED_STRIPE'"' >> ${SCRIPT_FILE_NAME}
-echo 'DATASET="'${DATASET}'"' >> ${SCRIPT_FILE_NAME}
-echo 'CODE="'${CODE}'"' >> ${SCRIPT_FILE_NAME}
+echo 'FPD_DATASET="'${FPD_DATASET}'"' >> ${SCRIPT_FILE_NAME}
+echo 'FPD_CODE="'${FPD_CODE}'"' >> ${SCRIPT_FILE_NAME}
 EXPANDED_BLOCK=$(printf '%04d' "$BLOCK")
 echo 'BLOCK="'$EXPANDED_BLOCK'"' >> ${SCRIPT_FILE_NAME}
-echo 'MACH_FS="'$SYSTEM'_'$FS'"' >> ${SCRIPT_FILE_NAME}
+echo 'MACH_FS="'$FPD_SYSTEM'_'$FS'"' >> ${SCRIPT_FILE_NAME}
 echo "" >> ${SCRIPT_FILE_NAME}
 
 # set up the data file lines in the target script
-DATA_FILE_NAME_PREFIX=$(printf 'FPD_test_%s_' "$SYSTEM" )
+DATA_FILE_NAME_PREFIX=$(printf 'FPD_test_%s_' "$FPD_SYSTEM" )
 DATA_FILE_NAME=$DATA_FILE_NAME_PREFIX"${JOB_ID_NAME}.dat"
 
 echo "TIMING_DATA_FILE=\"${DATA_FILE_NAME}\"" >> ${SCRIPT_FILE_NAME}
 echo "" >> ${SCRIPT_FILE_NAME}
 echo $'echo \"starting production running\"' >> ${SCRIPT_FILE_NAME}
-echo $'echo \'${CODE} ${BLOCK}    ${MACH_FS}  ${DATASET}    ${STRIPE}    ${NODES} ${RANKS}    ${ITER} ${ELAP}\' >> ${TIMING_DATA_FILE}' >> ${SCRIPT_FILE_NAME} # 
+echo $'echo \'${FPD_CODE} ${BLOCK}    ${MACH_FS}  ${FPD_DATASET}    ${STRIPE}    ${NODES} ${RANKS}    ${ITER} ${ELAP}\' >> ${TIMING_DATA_FILE}' >> ${SCRIPT_FILE_NAME} # 
 
 #' (this line is to get the emacs bash parser to play ball.  It does nothing)
 
@@ -296,15 +307,15 @@ echo "" >> ${SCRIPT_FILE_NAME}
 
 echo "ITER=0" >> ${SCRIPT_FILE_NAME}
 echo "NUM_ITERATIONS="$ITERATIONS >> ${SCRIPT_FILE_NAME}
-#echo 'echo "comparison: >$CODE< >tar<"' >> ${SCRIPT_FILE_NAME}
-echo 'if [ "${CODE}" == "tar" ]; then' >> ${SCRIPT_FILE_NAME}
+#echo 'echo "comparison: >$FPD_CODE< >tar<"' >> ${SCRIPT_FILE_NAME}
+echo 'if [ "${FPD_CODE}" == "tar" ]; then' >> ${SCRIPT_FILE_NAME}
 echo '   let RANKS=1' >> ${SCRIPT_FILE_NAME}
 echo 'fi' >> ${SCRIPT_FILE_NAME}
 echo "" >> ${SCRIPT_FILE_NAME}
 
 # check for directories
 echo 'mkdir -p output_files' >> ${SCRIPT_FILE_NAME}
-echo 'TARGET_DIR="$BASE_TGT_DIR/${DATASET}_data/"' >> ${SCRIPT_FILE_NAME}
+echo 'TARGET_DIR="$BASE_TGT_DIR/${FPD_DATASET}_data/"' >> ${SCRIPT_FILE_NAME}
 echo 'if [ ! -d "${TARGET_DIR}" ]; then' >> ${SCRIPT_FILE_NAME}
 echo '    echo "data target dir ${TARGET_DIR} does not exist!"' >> ${SCRIPT_FILE_NAME}
 echo '    exit'  >> ${SCRIPT_FILE_NAME}
@@ -320,7 +331,7 @@ echo "" >> ${SCRIPT_FILE_NAME}
 echo 'while [ $ITER -lt $NUM_ITERATIONS ]; do ' >> ${SCRIPT_FILE_NAME}
 echo '    echo "starting iteration $ITER ranks $RANKS"' >> ${SCRIPT_FILE_NAME}
 echo '    START=`date +%s`' >> ${SCRIPT_FILE_NAME}
-case ${CODE} in
+case ${FPD_CODE} in
     "parfu")
       	echo '    '$MYMPIRUN_1'${RANKS}'$MYMPIRUN_2' parfu C $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.pfu $TARGET_DIR &> output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
 	;;
@@ -333,7 +344,7 @@ case ${CODE} in
 esac
 echo '    END=`date +%s`' >> ${SCRIPT_FILE_NAME}
 echo '    ELAP=$(expr $END - $START)' >> ${SCRIPT_FILE_NAME}
-echo '    echo "${CODE} ${BLOCK}    ${MACH_FS}  ${DATASET}    ${STRIPE}    ${NODES} ${RANKS}    ${ITER} ${ELAP}" >> ${TIMING_DATA_FILE}' >> ${SCRIPT_FILE_NAME}
+echo '    echo "${FPD_CODE} ${BLOCK}    ${MACH_FS}  ${FPD_DATASET}    ${STRIPE}    ${NODES} ${RANKS}    ${ITER} ${ELAP}" >> ${TIMING_DATA_FILE}' >> ${SCRIPT_FILE_NAME}
 echo '    let ITER=ITER+1' >> ${SCRIPT_FILE_NAME}
 echo 'done' >> ${SCRIPT_FILE_NAME}
 echo "" >> ${SCRIPT_FILE_NAME}

@@ -61,7 +61,7 @@ if [ ! "$CODE" ]; then
     exit
 fi    
 if [ ! "$MYEMAIL" ]; then
-    if [ "$ENABLE_EMAIL_NOTIFICATIONS" ]; then
+    if [ "$ENABLE_EMAIL_NOTIFICATIONS" -eq "yes" ]; then
 	echo
 	echo "Email notifications enabled but email address empty.  Either"
 	echo "set ENABLE_EMAIL_NOTIFICATIONS to \"to\" or fill in a value for MYEMAIL."

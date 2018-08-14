@@ -13,7 +13,7 @@ RUNTIME=2:00:00
 CHARGE_ACCOUNT=""
 
 
-if [ ! "$MYEMAIL" ]; THEN 
+if [ ! "$MYEMAIL" ]; then
     MYEMAIL=""
 fi
 if [ ! "$ENABLE_EMAIL_NOTIFICATIONS" ]; then

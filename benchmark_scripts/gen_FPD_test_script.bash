@@ -10,8 +10,13 @@ STRIPE=8
 RANK_DIVISOR=1      # =1 to fill all CPU threads with ranks, =2 for only half of them
 BLOCK=4             # parfu block size in MB (if relevant)
 RUNTIME=2:00:00
-MYEMAIL="kkendig2@illinois.edu"
-ENABLE_EMAIL_NOTIFICATIONS="1"
+
+if [ ! "$MYEMAIL" ]; THEN 
+    MYEMAIL=""
+fi
+if [ ! "$ENABLE_EMAIL_NOTIFICATIONS" ]; then
+    ENABLE_EMAIL_NOTIFICATIONS="yes"
+fi    
 
 # pick the data set we're testing against
 # this will be change to iterate through the data sets
@@ -56,8 +61,8 @@ fi
 if [ ! "$MYEMAIL" ]; then
     if [ "$ENABLE_EMAIL_NOTIFICATIONS" ]; then
 	echo
-	echo "Email notifications enabled but email address empty.  Either comment out the line that"
-	echo "defines ENABLE_EMAIL_NOTIFICATIONS or fill in a value for MYEMAIL."
+	echo "Email notifications enabled but email address empty.  Either"
+	echo "set ENABLE_EMAIL_NOTIFICATIONS to \"to\" or fill in a value for MYEMAIL."
 	echo
 	exit
     fi

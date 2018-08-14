@@ -10,6 +10,8 @@ STRIPE=8
 RANK_DIVISOR=1      # =1 to fill all CPU threads with ranks, =2 for only half of them
 BLOCK=4             # parfu block size in MB (if relevant)
 RUNTIME=2:00:00
+CHARGE_ACCOUNT=""
+
 
 if [ ! "$MYEMAIL" ]; THEN 
     MYEMAIL=""
@@ -199,6 +201,9 @@ case "$MANAGER" in
 	echo "#SBATCH -J ${JOB_NAME}      # Job name" >> ${SCRIPT_FILE_NAME}
 	echo "#SBATCH -o bnch.o%j         # Name of stdout output file" >> ${SCRIPT_FILE_NAME}
 	echo "#SBATCH -e bnch.e%j         # Name of stderr error file" >> ${SCRIPT_FILE_NAME}
+	if [ "$CHARGE_ACCOUNT" ]; then
+	    echo "#SBATCH -A $CHARGE_ACCOUNT" >> $SCRIPT_FILE_NAME
+	fi
 	if [ $QUEUE_NAME ]; then
 	    echo "#SBATCH -p ${QUEUE_NAME}    # Queue (partition) name" >> ${SCRIPT_FILE_NAME}
 	fi
@@ -215,6 +220,9 @@ case "$MANAGER" in
 	echo "#PBS -N ${JOB_NAME}" >> $SCRIPT_FILE_NAME
 	echo "#PBS -l nodes=${NODES}:ppn=32:xe" >> $SCRIPT_FILE_NAME
 	echo "#PBS -l walltime=${RUNTIME}" >> $SCRIPT_FILE_NAME
+	if [ "$CHARGE_ACCOUNT" ]; then
+	    echo "#PBS -A $CHARGE_ACCOUNT" >> $SCRIPT_FILE_NAME
+	fi
 	echo '#PBS -e $PBS_JOBID.err' >> $SCRIPT_FILE_NAME
 	echo '#PBS -o $PBS_JOBID.out' >> $SCRIPT_FILE_NAME
 	if [ $ENABLE_EMAIL_NOTIFICATIONS ]; then
@@ -230,7 +238,9 @@ case "$MANAGER" in
 	echo "#PBS -N ${JOB_NAME}" >> $SCRIPT_FILE_NAME
         echo "#PBS -l nodes=${NODES}:ppn=40" >> $SCRIPT_FILE_NAME
         echo "#PBS -l walltime=${RUNTIME}" >> $SCRIPT_FILE_NAME
-	echo "#PBS -A " >> $SCRIPT_FILE_NAME
+	if [ "$CHARGE_ACCOUNT" ]; then
+	    echo "#PBS -A $CHARGE_ACCOUNT" >> $SCRIPT_FILE_NAME
+	fi
 	echo "#PBS -q " >> $SCRIPT_FILE_NAME
         echo '#PBS -e $PBS_JOBID.err' >> $SCRIPT_FILE_NAME
         echo '#PBS -o $PBS_JOBID.out' >> $SCRIPT_FILE_NAME

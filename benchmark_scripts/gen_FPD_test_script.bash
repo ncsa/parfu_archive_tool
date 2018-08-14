@@ -22,7 +22,7 @@ fi
 
 # pick the data set we're testing against
 # this will be change to iterate through the data sets
-DATASET="GW"
+#DATASET="GW"
 #DATASET="Ar"
 #DATASET="VC"
 
@@ -34,7 +34,7 @@ DATASET="GW"
 #CODE="mpitar"
 #CODE="ptar"
 #CODE="parfu"
-CODE="ptgz"
+#CODE="ptgz"
 
 # select the system we're on.  
 # typically this is set once per system
@@ -46,7 +46,7 @@ CODE="ptgz"
 #SYSTEM="jyc_moab"
 #SYSTEM="bw_moab"
 #SYSTEM="bridges"
-SYSTEM="iforge"
+#SYSTEM="iforge"
 
 if [ ! "$SYSTEM" ]; then
     echo ; echo "You must set a valid SYSTEM!  (Edit the script, uncomment one option.)" ; echo
@@ -61,10 +61,10 @@ if [ ! "$CODE" ]; then
     exit
 fi    
 if [ ! "$MYEMAIL" ]; then
-    if [ "$ENABLE_EMAIL_NOTIFICATIONS" -eq "yes" ]; then
+    if [ "$ENABLE_EMAIL_NOTIFICATIONS" == "yes" ]; then
 	echo
-	echo "Email notifications enabled but email address empty.  Either"
-	echo "set ENABLE_EMAIL_NOTIFICATIONS to \"to\" or fill in a value for MYEMAIL."
+	echo "Email notifications enabled (set to \"yes\") but email address empty.  Either"
+	echo "set ENABLE_EMAIL_NOTIFICATIONS to \"no\" or fill in or export a value for MYEMAIL."
 	echo
 	exit
     fi

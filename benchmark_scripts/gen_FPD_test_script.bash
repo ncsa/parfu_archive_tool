@@ -71,6 +71,19 @@ if [ ! "$MYEMAIL" ]; then
 fi
 
 case "$FPD_CODE" in
+    "parfu")
+	;;
+    "ptgz")
+	;;
+    "tar")
+	;;
+    *)
+	echo 'FPD_CODE='$FPD_CODE', which is not a valid code name! Exiting.'
+	exit;
+	;;
+esac
+
+case "$FPD_DATASET" in
     "GW")
 	;;
     "Ar")
@@ -78,7 +91,7 @@ case "$FPD_CODE" in
     "BC")
 	;;
     *)
-	echo 'FPD_CODE='$FPD_CODE', which is not a valid code name! Exiting.'
+	echo 'FPD_DATASET='$FPD_DATASET'!  Dataset must be "GW", "Ar", or "VC".'
 	exit;
 	;;
 esac

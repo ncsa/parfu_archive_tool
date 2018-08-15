@@ -168,7 +168,7 @@ case "$FPD_SYSTEM" in
     "bw_moab")
 	DATADIR="/scratch/staff/csteffen/FPD_2018"
 	ARCDIR="/scratch/staff/csteffen/FPD_2018"
-	JOBNAME="FPD_BW_Mo"
+	JOB_NAME="FPD_BW_Mo"
 	MANAGER="Moab"
 	RANKS_PER_NODE=32
 	FS="lustre"

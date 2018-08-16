@@ -219,12 +219,14 @@ case "$FPD_SYSTEM" in
     "iforge")
 	JOB_NAME="FPD_iF"
 	BASE_SYSTEM_NAME="iforge"
+	QUEUE="skylake"
+	PSN="aaa"
 	MANAGER="pbs"
 	DATA_FS="gpfs"
 	ARC_FS="gpfs"
-	RANKS_PER_NODE=40 #based on cores??
-	MYMPIRUN_1="mpirun -np " #don't think I need full path because loaded in module
-	MYMPIRUN_2=""
+	RANKS_PER_NODE=40 
+	MYMPIRUN_1="mpirun_rsh -ssh -np " 
+	MYMPIRUN_2=" -N $(( ${RANKS_PER_NODE}/${RANK_DIVISOR} )) --cpus-per-proc $RANK_DIVISOR"
 	DATADIR="/projects/bioinformatics/ParFuTesting/TestData"
 	ARCDIR="/projects/bioinformatics/ParFuTesting/Archive"
 	;;
@@ -303,10 +305,8 @@ case "$MANAGER" in
 	echo "#PBS -N ${JOB_NAME}" >> $SCRIPT_FILE_NAME
         echo "#PBS -l nodes=${NODES}:ppn=40" >> $SCRIPT_FILE_NAME
         echo "#PBS -l walltime=${RUNTIME}" >> $SCRIPT_FILE_NAME
-	if [ "$CHARGE_ACCOUNT" ]; then
-	    echo "#PBS -A $CHARGE_ACCOUNT" >> $SCRIPT_FILE_NAME
-	fi
-	echo "#PBS -q " >> $SCRIPT_FILE_NAME
+	echo "#PBS -A ${PSN}" >> $SCRIPT_FILE_NAME
+	echo "#PBS -q ${QUEUE}" >> $SCRIPT_FILE_NAME
         echo '#PBS -e $PBS_JOBID.err' >> $SCRIPT_FILE_NAME
         echo '#PBS -o $PBS_JOBID.out' >> $SCRIPT_FILE_NAME
         if [ $ENABLE_EMAIL_NOTIFICATIONS ]; then
@@ -316,6 +316,14 @@ case "$MANAGER" in
         echo "" >> $SCRIPT_FILE_NAME
         echo 'cd $PBS_O_WORKDIR' >> $SCRIPT_FILE_NAME
         echo "" >> $SCRIPT_FILE_NAME
+	case ${FPD_CODE} in
+             "parfu")
+       		 echo 'module load /usr/local/apps/bioapps/modules/parfu/parfu' >> ${SCRIPT_FILE_NAME}
+       		 ;;
+             "ptgz")
+       		 echo 'module load /usr/local/apps/bioapps/modules/ptgz/ptgz' >> ${SCRIPT_FILE_NAME}
+       		 ;;
+	esac
         JOB_ID_NAME='${PBS_JOBID}'
 	;; 
     *)

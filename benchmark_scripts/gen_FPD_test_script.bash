@@ -113,8 +113,11 @@ touch $SCRIPT_FILE_NAME
 case "$FPD_SYSTEM" in
     "wrangler_LL")
 	JOB_NAME="FPD_wr_LL"
-	FS="lustre"
+	BASE_SYSTEM_NAME="wrangler"
 	MANAGER="slurm"
+	DATA_FS="lstr"
+	ARC_FS="lstr"
+	JOB_NAME="FPD_wr_LL"
 	RANKS_PER_NODE=24
 	DATADIR='${DATA}'
 	ARCDIR='${DATA}'
@@ -123,9 +126,12 @@ case "$FPD_SYSTEM" in
 	QUEUE_NAME="normal"
 	;;
     "wrangler_LG")
-	JOB_NAME="FPD_wr_LG"
-	FS="LG"
+	JOB_NAME="FPD_wr_LG"	
+	BASE_SYSTEM_NAME="wrangler"
 	MANAGER="slurm"
+	DATA_FS="lstr"
+	ARC_FS="gpfs"
+	JOB_NAME="FPD_wr_LG"
 	RANKS_PER_NODE=24
 	DATADIR='${DATA}'
 	ARCDIR='${FLASH}/FP_data'
@@ -135,19 +141,25 @@ case "$FPD_SYSTEM" in
 	;;
     "comet")
 	JOB_NAME="FPD_comet"
+	BASE_SYSTEM_NAME="comet"
 	MANAGER="slurm"
+	DATA_FS="lstr"
+	ARC_FS="lstr"
+	JOB_NAME="FPD_comet"
 	RANKS_PER_NODE=24
-	FS="lustre"
 	DATADIR='${SCRATCH}'
 	ARCDIR='${SCRATCH}'       
 	MYMPIRUN_1="ibrun -n "
 	MYMPIRUN_2=" -o 0"
 	;;
     "stampede2")
-	JOB_NAME="FPD_st2"
+	JOB_NAME="FPD_st2"	
+	BASE_SYSTEM_NAME="stampede2"
+	MANAGER="slurm"
+	DATA_FS="lstr"
+	ARC_FS="lstr"
 	RANKS_PER_NODE=64
 	MANAGER="slurm"
-	FS="lustre"
 	QUEUE_NAME="normal"
 	DATADIR='${SCRATCH}'
 	ARCDIR='${SCRATCH}'
@@ -156,9 +168,11 @@ case "$FPD_SYSTEM" in
 	;;
     "jyc_slurm")
 	JOB_NAME="FPD_jyc_SL"
+	BASE_SYSTEM_NAME="jyc"
 	MANAGER="slurm"
+	DATA_FS="lstr"
+	ARC_FS="lstr"
 	RANKS_PER_NODE=32
-	FS="lustre"
 	DATADIR='/scratch/staff/csteffen/FPD'
 	ARCDIR='/scratch/staff/csteffen/FPD'
 	MYMPIRUN_1="~jphillip/openmpi/bin/mpirun -n "
@@ -166,20 +180,25 @@ case "$FPD_SYSTEM" in
 #	QUEUE_NAME="normal"
 	;;
     "bw_moab")
+	JOB_NAME="FPD_BW_Mo"
+	BASE_SYSTEM_NAME="bw"
+	MANAGER="Moab"
+	DATA_FS="lstr"
+	ARC_FS="lstr"
 	DATADIR="/scratch/staff/csteffen/FPD_2018"
 	ARCDIR="/scratch/staff/csteffen/FPD_2018"
-	JOB_NAME="FPD_BW_Mo"
-	MANAGER="Moab"
 	RANKS_PER_NODE=32
-	FS="lustre"
 	MYMPIRUN_1="aprun -n "
 	MYMPIRUN_2=" -N $(( ${RANKS_PER_NODE}/${RANK_DIVISOR} )) -d $RANK_DIVISOR "	
 	;;
     "jyc_moab")
 	JOB_NAME="FPD_jyc_Moab"
+	BASE_SYSTEM_NAME="jyc"
+	MANAGER="Moab"
+	DATA_FS="lstr"
+	ARC_FS="lstr"
 	RANKS_PER_NODE=32
 	MANAGER="Moab"
-	FS="lustre"
 	MYMPIRUN_1="aprun -n "
 	MYMPIRUN_2=" -N $(( ${RANKS_PER_NODE}/${RANK_DIVISOR} )) -d $RANK_DIVISOR "	
 	DATADIR="/scratch/staff/csteffen/FPD"
@@ -187,9 +206,11 @@ case "$FPD_SYSTEM" in
 	;;
     "bridges")
 	JOB_NAME="FPD_Br"
-	RANKS_PER_NODE=28 
+	BASE_SYSTEM_NAME="bridges"
 	MANAGER="slurm"
-	FS="lustre"
+	DATA_FS="lstr"
+	ARC_FS="lstr"
+	RANKS_PER_NODE=28 
 	MYMPIRUN_1="ibrun -n "
 	MYMPIRUN_2=" -o 0"
 	DATADIR='${SCRATCH}/FP_data'
@@ -197,9 +218,11 @@ case "$FPD_SYSTEM" in
 	;;
     "iforge")
 	JOB_NAME="FPD_iF"
-	RANKS_PER_NODE=40 #based on cores??
+	BASE_SYSTEM_NAME="iforge"
 	MANAGER="pbs"
-	FS="gpfs"	#or is it lustre?
+	DATA_FS="gpfs"
+	ARC_FS="gpfs"
+	RANKS_PER_NODE=40 #based on cores??
 	MYMPIRUN_1="mpirun -np " #don't think I need full path because loaded in module
 	MYMPIRUN_2=""
 	DATADIR="/projects/bioinformatics/ParFuTesting/TestData"
@@ -207,7 +230,25 @@ case "$FPD_SYSTEM" in
 	;;
     *)
 	echo 'The $FPD_SYSTEM variable not set to a valid value.  Exiting without generating a script.'
-	exit;
+	exit
+	;;
+esac
+
+if [ ! "$BASE_SYSTEM_NAME" ];then 
+    echo "finished with FPD_SYSTEM case, but BASE_SYSTEM_NAME not set!!!  Aborting."
+    exit
+fi
+
+case "$MANAGER" in
+    "pbs")
+	;;
+    "Moab")
+	;;
+    "slurm")
+	;;
+    *)
+	echo "MANAGER="$MANAGER", which is not valid!"
+	exit
 	;;
 esac
 
@@ -302,7 +343,11 @@ echo 'FPD_DATASET="'${FPD_DATASET}'"' >> ${SCRIPT_FILE_NAME}
 echo 'FPD_CODE="'${FPD_CODE}'"' >> ${SCRIPT_FILE_NAME}
 EXPANDED_BLOCK=$(printf '%04d' "$BLOCK")
 echo 'BLOCK="'$EXPANDED_BLOCK'"' >> ${SCRIPT_FILE_NAME}
-echo 'MACH_FS="'$FPD_SYSTEM'_'$FS'"' >> ${SCRIPT_FILE_NAME}
+
+# standardized system name 2018 AUG 16 by Craig
+#echo 'MACH_FS="'$FPD_SYSTEM'_'$FS'"' >> ${SCRIPT_FILE_NAME}
+echo 'MACH_FS="'$BASE_SYSTEM_NAME'_'$MANAGER'_T'$DATA_FS'_A'$ARC_FS'"' >> ${SCRIPT_FILE_NAME}
+
 echo "" >> ${SCRIPT_FILE_NAME}
 
 # set up the data file lines in the target script

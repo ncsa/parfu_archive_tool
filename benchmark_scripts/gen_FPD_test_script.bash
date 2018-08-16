@@ -88,7 +88,7 @@ case "$FPD_DATASET" in
 	;;
     "Ar")
 	;;
-    "BC")
+    "VC")
 	;;
     *)
 	echo 'FPD_DATASET='$FPD_DATASET'!  Dataset must be "GW", "Ar", or "VC".'

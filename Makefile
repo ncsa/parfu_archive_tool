@@ -44,8 +44,10 @@ endif
 ifeq ($(ARC),cray)
 MY_CC=cc
 MY_CXX=CC
-export CRAYPE_LINK_TYPE=dynamic
-export XTPE_LINK_TYPE=dynamic
+#export CRAYPE_LINK_TYPE=dynamic
+#export XTPE_LINK_TYPE=dynamic
+export CRAYPE_LINK_TYPE=static
+export XTPE_LINK_TYPE=static
 endif
 
 ifeq ($(ARC),Wrangler)
@@ -75,8 +77,8 @@ endif
 
 # this is assuming the C compiler is a relatively recent gcc variant
 # CFLAGS := -g -I. -Wall -Wmissing-prototypes -Wstrict-prototypes 
-CFLAGS := -g -I. -Wall -Wmissing-prototypes -Wstrict-prototypes -O3
-CXXFLAGS := -g -I. -Wall -O3
+CFLAGS := -g -I. -Wall -Wmissing-prototypes -Wstrict-prototypes -O3 -static 
+CXXFLAGS := -g -I. -Wall -O3 -static 
 
 # The TARGETS variable sets what gets built. 
 # By default, this Makefile builds the basic proof-of-concept test code. 

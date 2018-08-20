@@ -77,8 +77,10 @@ endif
 
 # this is assuming the C compiler is a relatively recent gcc variant
 # CFLAGS := -g -I. -Wall -Wmissing-prototypes -Wstrict-prototypes 
-CFLAGS := -g -I. -Wall -Wmissing-prototypes -Wstrict-prototypes -O3 -static 
-CXXFLAGS := -g -I. -Wall -O3 -static 
+#CFLAGS := -g -I. -Wall -Wmissing-prototypes -Wstrict-prototypes -O3 -static 
+#CXXFLAGS := -g -I. -Wall -O3 -static 
+CFLAGS := -g -I. -Wall -Wmissing-prototypes -Wstrict-prototypes -O3 
+CXXFLAGS := -g -I. -Wall -O3 
 
 # The TARGETS variable sets what gets built. 
 # By default, this Makefile builds the basic proof-of-concept test code. 

@@ -225,8 +225,8 @@ case "$FPD_SYSTEM" in
 	DATA_FS="gpfs"
 	ARC_FS="gpfs"
 	RANKS_PER_NODE=40 
-	MYMPIRUN_1="mpirun_rsh -ssh -np " 
-	MYMPIRUN_2=" -N $(( ${RANKS_PER_NODE}/${RANK_DIVISOR} )) --cpus-per-proc $RANK_DIVISOR"
+	MYMPIRUN_1="mpirun --rsh=ssh -np " 
+	MYMPIRUN_2=" -ppn $(( ${RANKS_PER_NODE}/${RANK_DIVISOR} ))" # can't find equivalent for --cpus-per-proc $RANK_DIVISOR but may not need it
 	DATADIR="/projects/bioinformatics/ParFuTesting/TestData"
 	ARCDIR="/projects/bioinformatics/ParFuTesting/Archive"
 	;;

@@ -4,7 +4,9 @@
 # user configuration options
 
 # user sets up variables here (unless they're parsed via command line)
-NODES=1
+if [[ ! $NODES ]]; then
+    NODES=1
+fi
 ITERATIONS=3
 STRIPE=8
 RANK_DIVISOR=1      # =1 to fill all CPU threads with ranks, =2 for only half of them
@@ -38,7 +40,7 @@ fi
 
 # select the system we're on.  
 # typically this is set once per system
-#FPD_SYSTEM="wrangler_LL"
+FPD_SYSTEM="wrangler_LL"
 #FPD_SYSTEM="wrangler_LG"
 #FPD_SYSTEM="comet"
 #FPD_SYSTEM="stampede2"

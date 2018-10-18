@@ -4,14 +4,24 @@
 # user configuration options
 
 # user sets up variables here (unless they're parsed via command line)
-if [[ ! $NODES ]]; then
-    NODES=1
+if [[ ! $FPD_NODES ]]; then
+    FPD_NODES=1
 fi
-ITERATIONS=3
-STRIPE=8
-RANK_DIVISOR=1      # =1 to fill all CPU threads with ranks, =2 for only half of them
-BLOCK=4             # parfu block size in MB (if relevant)
-RUNTIME=2:00:00
+if [[ ! $FPD_ITERATIONS ]]; then
+    FPD_ITERATIONS=3
+fi
+if [[ ! $FPD_STRIPE ]]; then
+    FPD_STRIPE=8
+fi
+if [[ ! $FPD_RANK_DIVISOR ]]; then
+    FPD_RANK_DIVISOR=1      # =1 to fill all CPU cores with ranks, =2 for only half of them
+fi
+if [[ ! $FPD_BLOCK ]]; then
+    FPD_BLOCK=4             # parfu block size in MB (if relevant)
+fi
+if [[ ! $FPD_RUNTIME ]]; then
+    FPD_RUNTIME=2:00:00
+fi
 CHARGE_ACCOUNT=""
 
 
@@ -191,7 +201,7 @@ case "$FPD_SYSTEM" in
 	ARCDIR="/scratch/staff/csteffen/FPD_2018"
 	RANKS_PER_NODE=32
 	MYMPIRUN_1="aprun -n "
-	MYMPIRUN_2=" -N $(( ${RANKS_PER_NODE}/${RANK_DIVISOR} )) -d $RANK_DIVISOR "	
+	MYMPIRUN_2=" -N $(( ${RANKS_PER_NODE}/${FPD_RANK_DIVISOR} )) -d $FPD_RANK_DIVISOR "	
 	;;
     "jyc_moab")
 	JOB_NAME="FPD_jyc_Moab"
@@ -202,7 +212,7 @@ case "$FPD_SYSTEM" in
 	RANKS_PER_NODE=32
 	MANAGER="Moab"
 	MYMPIRUN_1="aprun -n "
-	MYMPIRUN_2=" -N $(( ${RANKS_PER_NODE}/${RANK_DIVISOR} )) -d $RANK_DIVISOR "	
+	MYMPIRUN_2=" -N $(( ${RANKS_PER_NODE}/${FPD_RANK_DIVISOR} )) -d $FPD_RANK_DIVISOR "	
 	DATADIR="/scratch/staff/csteffen/FPD"
 	ARCDIR="/scratch/staff/csteffen/FPD"
 	;;
@@ -274,9 +284,9 @@ case "$MANAGER" in
 	if [ $QUEUE_NAME ]; then
 	    echo "#SBATCH -p ${QUEUE_NAME}    # Queue (partition) name" >> ${SCRIPT_FILE_NAME}
 	fi
-	echo "#SBATCH -N ${NODES}         # number of nodes" >> ${SCRIPT_FILE_NAME}
+	echo "#SBATCH -N ${FPD_NODES}         # number of nodes" >> ${SCRIPT_FILE_NAME}
 	echo "#SBATCH --tasks-per-node=${RANKS_PER_NODE}     #rank slots per node" >> ${SCRIPT_FILE_NAME}
-	echo "#SBATCH -t ${RUNTIME}           # Run time (hh:mm:ss)" >> ${SCRIPT_FILE_NAME}
+	echo "#SBATCH -t ${FPD_RUNTIME}           # Run time (hh:mm:ss)" >> ${SCRIPT_FILE_NAME}
 	if [ $ENABLE_EMAIL_NOTIFICATIONS ]; then
 	    echo "#SBATCH --mail-user=$MYEMAIL" >> ${SCRIPT_FILE_NAME}
 	    echo "#SBATCH --mail-type=all      # Send email at begin and end of job" >> ${SCRIPT_FILE_NAME}
@@ -285,8 +295,8 @@ case "$MANAGER" in
 	;;
     "Moab")
 	echo "#PBS -N ${JOB_NAME}" >> $SCRIPT_FILE_NAME
-	echo "#PBS -l nodes=${NODES}:ppn=32:xe" >> $SCRIPT_FILE_NAME
-	echo "#PBS -l walltime=${RUNTIME}" >> $SCRIPT_FILE_NAME
+	echo "#PBS -l nodes=${FPD_NODES}:ppn=32:xe" >> $SCRIPT_FILE_NAME
+	echo "#PBS -l walltime=${FPD_RUNTIME}" >> $SCRIPT_FILE_NAME
 	if [ "$CHARGE_ACCOUNT" ]; then
 	    echo "#PBS -A $CHARGE_ACCOUNT" >> $SCRIPT_FILE_NAME
 	fi
@@ -303,8 +313,8 @@ case "$MANAGER" in
 	;;
     "pbs")
 	echo "#PBS -N ${JOB_NAME}" >> $SCRIPT_FILE_NAME
-        echo "#PBS -l nodes=${NODES}:ppn=40" >> $SCRIPT_FILE_NAME
-        echo "#PBS -l walltime=${RUNTIME}" >> $SCRIPT_FILE_NAME
+        echo "#PBS -l nodes=${FPD_NODES}:ppn=40" >> $SCRIPT_FILE_NAME
+        echo "#PBS -l walltime=${FPD_RUNTIME}" >> $SCRIPT_FILE_NAME
 	if [ "$CHARGE_ACCOUNT" ]; then
 	    echo "#PBS -A $CHARGE_ACCOUNT" >> $SCRIPT_FILE_NAME
 	fi
@@ -330,20 +340,20 @@ echo "" >> ${SCRIPT_FILE_NAME}
 # variables used for configuration
 # RANKS
 # BASE_ARC_DIR
-# STRIPE
+# FPD_STRIPE
 # JOB_ID_VARIABLE
-RANKS=$(( (NODES*RANKS_PER_NODE)/RANK_DIVISOR ))
+RANKS=$(( (FPD_NODES*RANKS_PER_NODE)/FPD_RANK_DIVISOR ))
 #EXPANDED_RANKS=$(printf '%04d' "$RANKS")
 echo 'RANKS='$RANKS >> ${SCRIPT_FILE_NAME}
 echo "RANKS=${RANKS}" 
-echo 'NODES='$NODES >> ${SCRIPT_FILE_NAME}
+echo 'NODES='$FPD_NODES >> ${SCRIPT_FILE_NAME}
 echo "BASE_ARC_DIR="$ARCDIR >> ${SCRIPT_FILE_NAME}
 echo "BASE_TGT_DIR="$DATADIR >> ${SCRIPT_FILE_NAME}
-EXPANDED_STRIPE=$(printf '%04d' "$STRIPE")
+EXPANDED_STRIPE=$(printf '%04d' "$FPD_STRIPE")
 echo 'STRIPE="'$EXPANDED_STRIPE'"' >> ${SCRIPT_FILE_NAME}
 echo 'FPD_DATASET="'${FPD_DATASET}'"' >> ${SCRIPT_FILE_NAME}
 echo 'FPD_CODE="'${FPD_CODE}'"' >> ${SCRIPT_FILE_NAME}
-EXPANDED_BLOCK=$(printf '%04d' "$BLOCK")
+EXPANDED_BLOCK=$(printf '%04d' "$FPD_BLOCK")
 echo 'BLOCK="'$EXPANDED_BLOCK'"' >> ${SCRIPT_FILE_NAME}
 
 # standardized system name 2018 AUG 16 by Craig
@@ -359,14 +369,14 @@ DATA_FILE_NAME=$DATA_FILE_NAME_PREFIX"${JOB_ID_NAME}.dat"
 echo "TIMING_DATA_FILE=\"${DATA_FILE_NAME}\"" >> ${SCRIPT_FILE_NAME}
 echo "" >> ${SCRIPT_FILE_NAME}
 echo $'echo \"starting production running\"' >> ${SCRIPT_FILE_NAME}
-echo $'echo \'${FPD_CODE} ${BLOCK}    ${MACH_FS}  ${FPD_DATASET}    ${STRIPE}    ${NODES} ${RANKS}    ${ITER} ${ELAP}\' >> ${TIMING_DATA_FILE}' >> ${SCRIPT_FILE_NAME} # 
+echo $'echo \'${FPD_CODE} ${FPD_BLOCK}    ${MACH_FS}  ${FPD_DATASET}    ${FPD_STRIPE}    ${FPD_NODES} ${RANKS}    ${ITER} ${ELAP}\' >> ${TIMING_DATA_FILE}' >> ${SCRIPT_FILE_NAME} # 
 
 #' (this line is to get the emacs bash parser to play ball.  It does nothing)
 
 echo "" >> ${SCRIPT_FILE_NAME}
 
 echo "ITER=0" >> ${SCRIPT_FILE_NAME}
-echo "NUM_ITERATIONS="$ITERATIONS >> ${SCRIPT_FILE_NAME}
+echo "NUM_ITERATIONS="$FPD_ITERATIONS >> ${SCRIPT_FILE_NAME}
 #echo 'echo "comparison: >$FPD_CODE< >tar<"' >> ${SCRIPT_FILE_NAME}
 echo 'if [ "${FPD_CODE}" == "tar" ]; then' >> ${SCRIPT_FILE_NAME}
 echo '   let RANKS=1' >> ${SCRIPT_FILE_NAME}
@@ -404,7 +414,7 @@ case ${FPD_CODE} in
 esac
 echo '    END=`date +%s`' >> ${SCRIPT_FILE_NAME}
 echo '    ELAP=$(expr $END - $START)' >> ${SCRIPT_FILE_NAME}
-echo '    echo "${FPD_CODE} ${BLOCK}    ${MACH_FS}  ${FPD_DATASET}    ${STRIPE}    ${NODES} ${RANKS}    ${ITER} ${ELAP}" >> ${TIMING_DATA_FILE}' >> ${SCRIPT_FILE_NAME}
+echo '    echo "${FPD_CODE} ${FPD_BLOCK}    ${MACH_FS}  ${FPD_DATASET}    ${FPD_STRIPE}    ${FPD_NODES} ${RANKS}    ${ITER} ${ELAP}" >> ${TIMING_DATA_FILE}' >> ${SCRIPT_FILE_NAME}
 echo '    let ITER=ITER+1' >> ${SCRIPT_FILE_NAME}
 echo 'done' >> ${SCRIPT_FILE_NAME}
 echo "" >> ${SCRIPT_FILE_NAME}

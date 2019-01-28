@@ -73,6 +73,8 @@ if [ ! "$MYEMAIL" ]; then
 fi
 
 case "$FPD_CODE" in
+    "mpitar")
+	;;
     "parfu")
 	;;
     "ptgz")
@@ -392,6 +394,9 @@ echo 'while [ $ITER -lt $NUM_ITERATIONS ]; do ' >> ${SCRIPT_FILE_NAME}
 echo '    echo "starting iteration $ITER ranks $RANKS"' >> ${SCRIPT_FILE_NAME}
 echo '    START=`date +%s`' >> ${SCRIPT_FILE_NAME}
 case ${FPD_CODE} in
+    "mpitar")
+      	echo '    '$MYMPIRUN_1'${RANKS}'$MYMPIRUN_2' mpitar -f $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.tar -c $TARGET_DIR &> output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
+	;;
     "parfu")
       	echo '    '$MYMPIRUN_1'${RANKS}'$MYMPIRUN_2' parfu C $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.pfu $TARGET_DIR &> output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
 	;;

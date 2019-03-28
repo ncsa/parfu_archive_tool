@@ -233,7 +233,7 @@ case "$FPD_SYSTEM" in
     "iforge")
 	JOB_NAME="FPD_iF"
 	BASE_SYSTEM_NAME="iforge"
-	QUEUE="skylake"
+	QUEUE_NAME="skylake"
 	PSN="aaa"
 	MANAGER="pbs"
 	DATA_FS="gpfs"
@@ -304,6 +304,9 @@ case "$MANAGER" in
 	if [ "$CHARGE_ACCOUNT" ]; then
 	    echo "#PBS -A $CHARGE_ACCOUNT" >> $SCRIPT_FILE_NAME
 	fi
+	if [ $QUEUE_NAME ]; then
+  	  echo "#PBS -q ${QUEUE_NAME}" >> $SCRIPT_FILE_NAME
+        fi
 	echo '#PBS -e $PBS_JOBID.err' >> $SCRIPT_FILE_NAME
 	echo '#PBS -o $PBS_JOBID.out' >> $SCRIPT_FILE_NAME
 	if [ $ENABLE_EMAIL_NOTIFICATIONS ]; then
@@ -322,7 +325,9 @@ case "$MANAGER" in
 	if [ "$CHARGE_ACCOUNT" ]; then
 	    echo "#PBS -A $CHARGE_ACCOUNT" >> $SCRIPT_FILE_NAME
 	fi
-	echo "#PBS -q ${QUEUE_NAME}" >> $SCRIPT_FILE_NAME
+	if [ $QUEUE_NAME ]; then
+  	  echo "#PBS -q ${QUEUE_NAME}" >> $SCRIPT_FILE_NAME
+        fi
         echo '#PBS -e $PBS_JOBID.err' >> $SCRIPT_FILE_NAME
         echo '#PBS -o $PBS_JOBID.out' >> $SCRIPT_FILE_NAME
         if [ $ENABLE_EMAIL_NOTIFICATIONS ]; then
@@ -332,6 +337,7 @@ case "$MANAGER" in
         echo "" >> $SCRIPT_FILE_NAME
         echo 'cd $PBS_O_WORKDIR' >> $SCRIPT_FILE_NAME
         echo "" >> $SCRIPT_FILE_NAME
+# (craig:) I gather you have modules for parfu and ptgz on iForge?  Nice!  
 	case ${FPD_CODE} in
              "parfu")
        		 echo 'module load /usr/local/apps/bioapps/modules/parfu/parfu' >> ${SCRIPT_FILE_NAME}

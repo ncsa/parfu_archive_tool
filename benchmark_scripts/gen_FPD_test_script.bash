@@ -351,8 +351,8 @@ echo "BASE_ARC_DIR="$ARCDIR >> ${SCRIPT_FILE_NAME}
 echo "BASE_TGT_DIR="$DATADIR >> ${SCRIPT_FILE_NAME}
 EXPANDED_STRIPE=$(printf '%04d' "$FPD_STRIPE")
 echo 'STRIPE="'$EXPANDED_STRIPE'"' >> ${SCRIPT_FILE_NAME}
-echo 'FPD_DATASET="'${FPD_DATASET}'"' >> ${SCRIPT_FILE_NAME}
-echo 'FPD_CODE="'${FPD_CODE}'"' >> ${SCRIPT_FILE_NAME}
+echo 'DATASET="'${FPD_DATASET}'"' >> ${SCRIPT_FILE_NAME}
+echo 'CODE="'${FPD_CODE}'"' >> ${SCRIPT_FILE_NAME}
 EXPANDED_BLOCK=$(printf '%04d' "$FPD_BLOCK")
 echo 'BLOCK="'$EXPANDED_BLOCK'"' >> ${SCRIPT_FILE_NAME}
 
@@ -369,7 +369,7 @@ DATA_FILE_NAME=$DATA_FILE_NAME_PREFIX"${JOB_ID_NAME}.dat"
 echo "TIMING_DATA_FILE=\"${DATA_FILE_NAME}\"" >> ${SCRIPT_FILE_NAME}
 echo "" >> ${SCRIPT_FILE_NAME}
 echo $'echo \"starting production running\"' >> ${SCRIPT_FILE_NAME}
-echo $'echo \'${FPD_CODE} ${FPD_BLOCK}    ${MACH_FS}  ${FPD_DATASET}    ${FPD_STRIPE}    ${FPD_NODES} ${RANKS}    ${ITER} ${ELAP}\' >> ${TIMING_DATA_FILE}' >> ${SCRIPT_FILE_NAME} # 
+echo $'echo \'${CODE} ${BLOCK}    ${MACH_FS}  ${DATASET}    ${STRIPE}    ${NODES} ${RANKS}    ${ITER} ${ELAP}\' >> ${TIMING_DATA_FILE}' >> ${SCRIPT_FILE_NAME} # 
 
 #' (this line is to get the emacs bash parser to play ball.  It does nothing)
 
@@ -378,14 +378,14 @@ echo "" >> ${SCRIPT_FILE_NAME}
 echo "ITER=0" >> ${SCRIPT_FILE_NAME}
 echo "NUM_ITERATIONS="$FPD_ITERATIONS >> ${SCRIPT_FILE_NAME}
 #echo 'echo "comparison: >$FPD_CODE< >tar<"' >> ${SCRIPT_FILE_NAME}
-echo 'if [ "${FPD_CODE}" == "tar" ]; then' >> ${SCRIPT_FILE_NAME}
+echo 'if [ "${CODE}" == "tar" ]; then' >> ${SCRIPT_FILE_NAME}
 echo '   let RANKS=1' >> ${SCRIPT_FILE_NAME}
 echo 'fi' >> ${SCRIPT_FILE_NAME}
 echo "" >> ${SCRIPT_FILE_NAME}
 
 # check for directories
 echo 'mkdir -p output_files' >> ${SCRIPT_FILE_NAME}
-echo 'TARGET_DIR="$BASE_TGT_DIR/${FPD_DATASET}_data/"' >> ${SCRIPT_FILE_NAME}
+echo 'TARGET_DIR="$BASE_TGT_DIR/${DATASET}_data/"' >> ${SCRIPT_FILE_NAME}
 echo 'if [ ! -d "${TARGET_DIR}" ]; then' >> ${SCRIPT_FILE_NAME}
 echo '    echo "data target dir ${TARGET_DIR} does not exist!"' >> ${SCRIPT_FILE_NAME}
 echo '    exit'  >> ${SCRIPT_FILE_NAME}
@@ -414,7 +414,7 @@ case ${FPD_CODE} in
 esac
 echo '    END=`date +%s`' >> ${SCRIPT_FILE_NAME}
 echo '    ELAP=$(expr $END - $START)' >> ${SCRIPT_FILE_NAME}
-echo '    echo "${FPD_CODE} ${FPD_BLOCK}    ${MACH_FS}  ${FPD_DATASET}    ${FPD_STRIPE}    ${FPD_NODES} ${RANKS}    ${ITER} ${ELAP}" >> ${TIMING_DATA_FILE}' >> ${SCRIPT_FILE_NAME}
+echo '    echo "${CODE} ${BLOCK}    ${MACH_FS}  ${DATASET}    ${STRIPE}    ${NODES} ${RANKS}    ${ITER} ${ELAP}" >> ${TIMING_DATA_FILE}' >> ${SCRIPT_FILE_NAME}
 echo '    let ITER=ITER+1' >> ${SCRIPT_FILE_NAME}
 echo 'done' >> ${SCRIPT_FILE_NAME}
 echo "" >> ${SCRIPT_FILE_NAME}

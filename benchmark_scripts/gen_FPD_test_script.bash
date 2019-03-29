@@ -47,6 +47,7 @@ fi
 #FPD_CODE="ptar"
 #FPD_CODE="parfu"
 #FPD_CODE="ptgz"
+#FPD_CODE="pigz"
 
 # select the system we're on.  
 # typically this is set once per system
@@ -90,6 +91,8 @@ case "$FPD_CODE" in
     "ptgz")
 	;;
     "tar")
+	;;
+    "pigz")
 	;;
     *)
 	echo 'FPD_CODE='$FPD_CODE', which is not a valid code name! Exiting.'
@@ -432,6 +435,8 @@ case ${FPD_CODE} in
     "ptgz")
 	echo '    '$MYMPIRUN_1'$RANKS'$MYMPIRUN_2' ptgz -c -d $TARGET_DIR prod_'${JOB_ID_NAME}'_${ITER} &> output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
 	;;
+    "pigz")
+	echo '    '$MYMPIRUN_1' $RANKS '$MYMPIRUN_2' pigz $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER} *.gz* $TARGET_DIR prod_'${JOB_ID_NAME}'_${ITER} &> output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
 esac
 echo '    END=`date +%s`' >> ${SCRIPT_FILE_NAME}
 echo '    ELAP=$(expr $END - $START)' >> ${SCRIPT_FILE_NAME}

@@ -421,7 +421,7 @@ echo "" >> ${SCRIPT_FILE_NAME}
 # now the data-taking while loop
 echo 'while [ $ITER -lt $NUM_ITERATIONS ]; do ' >> ${SCRIPT_FILE_NAME}
 echo '    echo "starting iteration $ITER ranks $RANKS"' >> ${SCRIPT_FILE_NAME}
-echo '    GOOD_RESULT=1' >> ${SCRIPT_FILE_NAME}
+#echo '    GOOD_RESULT=1' >> ${SCRIPT_FILE_NAME}
 echo '    START=`date +%s`' >> ${SCRIPT_FILE_NAME}
 case ${FPD_CODE} in
     "mpitar")
@@ -443,15 +443,22 @@ case ${FPD_CODE} in
 esac
 
 echo '    END=`date +%s`' >> ${SCRIPT_FILE_NAME}
-echo '    if [ "${CODE}" == "ptgz" ]; then' >> ${SCRIPT_FILE_NAME}
-echo '        if [[ ! `grep "Closing" output_files/out_'${JOB_ID_NAME}'_${ITER}.out` ]]; then' >> ${SCRIPT_FILE_NAME}
-echo '            GOOD_RESULT=0' >> ${SCRIPT_FILE_NAME}
-echo '        fi' >> ${SCRIPT_FILE_NAME}
-echo '    fi' >> ${SCRIPT_FILE_NAME}
+#echo '    if [ "${CODE}" == "ptgz" ]; then' >> ${SCRIPT_FILE_NAME}
+#echo '        if [[ ! `grep "Closing" output_files/out_'${JOB_ID_NAME}'_${ITER}.out` ]]; then' >> ${SCRIPT_FILE_NAME}
+#echo '            GOOD_RESULT=0' >> ${SCRIPT_FILE_NAME}
+#echo '        fi' >> ${SCRIPT_FILE_NAME}
+#echo '    fi' >> ${SCRIPT_FILE_NAME}
 echo '    ELAP=$(expr $END - $START)' >> ${SCRIPT_FILE_NAME}
-echo '    if [[ ! ${GOOD_RESULT} ]]; then' >> ${SCRIPT_FILE_NAME}
-echo '        ELAP="XXX"${ELAP}' >> ${SCRIPT_FILE_NAME}
-echo '    fi' >> ${SCRIPT_FILE_NAME}
+
+
+if [ ${FPD_CODE} == "ptgz" ]; then
+#    echo '    if [[ ! ${GOOD_RESULT} ]]; then' >> ${SCRIPT_FILE_NAME}
+    echo '    if [[ ! `grep "Closing" output_files/out_'${JOB_ID_NAME}'_${ITER}.out` ]]; then' >> ${SCRIPT_FILE_NAME}
+    echo '        ELAP="XXX"${ELAP}' >> ${SCRIPT_FILE_NAME}
+    echo '    fi' >> ${SCRIPT_FILE_NAME}
+fi
+
+
 #echo '    if [[ ${GOOD_RESULT} ]]; then' >> ${SCRIPT_FILE_NAME}
 echo '    echo "${CODE} ${BLOCK}    ${MACH_FS}  ${DATASET}    ${STRIPE}    ${NODES} ${RANKS}    ${ITER} ${ELAP}" >> ${TIMING_DATA_FILE}' >> ${SCRIPT_FILE_NAME}
 #echo '    else ' >> ${SCRIPT_FILE_NAME}

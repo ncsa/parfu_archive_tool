@@ -51,7 +51,7 @@ fi
 
 # select the system we're on.  
 # typically this is set once per system
-FPD_SYSTEM="wrangler_LL"
+#FPD_SYSTEM="wrangler_LL"
 #FPD_SYSTEM="wrangler_LG"
 #FPD_SYSTEM="comet"
 #FPD_SYSTEM="stampede2"

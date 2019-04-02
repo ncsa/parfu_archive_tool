@@ -92,6 +92,8 @@ case "$FPD_CODE" in
 	;;
     "tar")
 	;;
+    "tar_gz")
+	;;
     "pigz")
 	;;
     *)
@@ -402,6 +404,9 @@ echo "NUM_ITERATIONS="$FPD_ITERATIONS >> ${SCRIPT_FILE_NAME}
 echo 'if [ "${CODE}" == "tar" ]; then' >> ${SCRIPT_FILE_NAME}
 echo '   let RANKS=1' >> ${SCRIPT_FILE_NAME}
 echo 'fi' >> ${SCRIPT_FILE_NAME}
+echo 'if [ "${CODE}" == "tar_gz" ]; then' >> ${SCRIPT_FILE_NAME}
+echo '   let RANKS=1' >> ${SCRIPT_FILE_NAME}
+echo 'fi' >> ${SCRIPT_FILE_NAME}
 echo "" >> ${SCRIPT_FILE_NAME}
 
 # check for directories
@@ -432,6 +437,9 @@ case ${FPD_CODE} in
 	;;
     "tar")
  	echo '    '$MYMPIRUN_1' 1 tar cf $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.tar $TARGET_DIR > output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
+	;;
+    "tar_gz")
+ 	echo '    '$MYMPIRUN_1' 1 tar czf $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.tgz $TARGET_DIR > output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
 	;;
     "ptgz")
 	echo '    '$MYMPIRUN_1'$RANKS'$MYMPIRUN_2' ptgz -c -d $TARGET_DIR prod_'${JOB_ID_NAME}'_${ITER} &> output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}

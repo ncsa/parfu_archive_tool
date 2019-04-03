@@ -141,7 +141,7 @@ case "$FPD_SYSTEM" in
 	DATADIR='${DATA}'
 	ARCDIR='${DATA}'
 	MYMPIRUN_1="ibrun -n "
-	MYMPIRUN_2=" -o 0"
+	MYMPIRUN_2=" -o 0 "
 	QUEUE_NAME="normal"
 	;;
     "wrangler_LG")
@@ -155,7 +155,7 @@ case "$FPD_SYSTEM" in
 	DATADIR='${DATA}'
 	ARCDIR='${FLASH}/FP_data'
 	MYMPIRUN_1="ibrun -n "
-	MYMPIRUN_2=" -o 0"
+	MYMPIRUN_2=" -o 0 "
 	QUEUE_NAME="normal"
 	;;
     "comet")
@@ -169,7 +169,7 @@ case "$FPD_SYSTEM" in
 	DATADIR='${SCRATCH}'
 	ARCDIR='${SCRATCH}'       
 	MYMPIRUN_1="ibrun -n "
-	MYMPIRUN_2=" -o 0"
+	MYMPIRUN_2=" -o 0 "
 	;;
     "stampede2")
 	JOB_NAME="FPD_st2"	
@@ -183,7 +183,7 @@ case "$FPD_SYSTEM" in
 	DATADIR='${SCRATCH}'
 	ARCDIR='${SCRATCH}'
 	MYMPIRUN_1="ibrun -n "
-	MYMPIRUN_2=" -o 0"
+	MYMPIRUN_2=" -o 0 "
 	;;
     "jyc_slurm")
 	JOB_NAME="FPD_jyc_SL"
@@ -231,7 +231,7 @@ case "$FPD_SYSTEM" in
 	ARC_FS="lstr"
 	RANKS_PER_NODE=28 
 	MYMPIRUN_1="ibrun -n "
-	MYMPIRUN_2=" -o 0"
+	MYMPIRUN_2=" -o 0 "
 	DATADIR='${SCRATCH}/FP_data'
 	ARCDIR='${SCRATCH}/FP_data'
 	;;
@@ -245,7 +245,7 @@ case "$FPD_SYSTEM" in
 	ARC_FS="gpfs"
 	RANKS_PER_NODE=40 
 	MYMPIRUN_1="mpirun --rsh=ssh -np " 
-	MYMPIRUN_2=" -ppn $(( ${RANKS_PER_NODE}/${RANK_DIVISOR} ))" # can't find equivalent for --cpus-per-proc $RANK_DIVISOR but may not need it
+	MYMPIRUN_2=" -ppn $(( ${RANKS_PER_NODE}/${RANK_DIVISOR} )) " # can't find equivalent for --cpus-per-proc $RANK_DIVISOR but may not need it
 	DATADIR="/projects/bioinformatics/ParFuTesting/TestData"
 	ARCDIR="/projects/bioinformatics/ParFuTesting/Archive"
 	;;
@@ -436,10 +436,10 @@ case ${FPD_CODE} in
       	echo '    '$MYMPIRUN_1'${RANKS}'$MYMPIRUN_2' parfu C $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.pfu $TARGET_DIR &> output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
 	;;
     "tar")
- 	echo '    '$MYMPIRUN_1' 1 tar cf $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.tar $TARGET_DIR > output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
+ 	echo '    '$MYMPIRUN_1'${RANKS}'$MYMPIRUN_2' tar cf $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.tar $TARGET_DIR > output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
 	;;
     "tar_gz")
- 	echo '    '$MYMPIRUN_1' 1 tar czf $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.tgz $TARGET_DIR > output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
+ 	echo '    '$MYMPIRUN_1'${RANKS}'$MYMPIRUN_2' tar czf $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.tgz $TARGET_DIR > output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
 	;;
     "ptgz")
 	echo '    '$MYMPIRUN_1'$RANKS'$MYMPIRUN_2' ptgz -c -d $TARGET_DIR prod_'${JOB_ID_NAME}'_${ITER} &> output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}

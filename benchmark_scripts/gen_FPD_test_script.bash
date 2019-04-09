@@ -360,7 +360,7 @@ case "$MANAGER" in
 		 echo 'module load /usr/local/apps/bioapps/modules/mpitar/mpitar' >> ${SCRIPT_FILE_NAME}
                  ;;
 	     "pigz")
-		 echo '/usr/local/apps/bioapps/modules/pigz/pigz-2.4' >> ${SCRIPT_FILE_NAME}
+		 echo 'module load /usr/local/apps/bioapps/modules/pigz/pigz-2.4' >> ${SCRIPT_FILE_NAME}
 		 ;;
 	esac
         JOB_ID_NAME='${PBS_JOBID}'

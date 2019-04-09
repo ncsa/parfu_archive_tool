@@ -22,7 +22,7 @@ fi
 if [[ ! $FPD_RUNTIME ]]; then
     FPD_RUNTIME=2:00:00
 fi
-CHARGE_ACCOUNT=""
+CHARGE_ACCOUNT="aaa"
 
 
 if [ ! "$MYEMAIL" ]; then
@@ -47,7 +47,7 @@ fi
 #FPD_CODE="ptar"
 #FPD_CODE="parfu"
 #FPD_CODE="ptgz"
-#FPD_CODE="pigz"
+FPD_CODE="pigz"
 
 # select the system we're on.  
 # typically this is set once per system
@@ -59,7 +59,7 @@ fi
 #FPD_SYSTEM="jyc_moab"
 #FPD_SYSTEM="bw_moab"
 #FPD_SYSTEM="bridges"
-#FPD_SYSTEM="iforge"
+FPD_SYSTEM="iforge"
 
 if [ ! "$FPD_SYSTEM" ]; then
     echo ; echo "You must set a valid FPD_SYSTEM!  (Edit the script, or set an env var.)" ; echo
@@ -245,7 +245,7 @@ case "$FPD_SYSTEM" in
 	ARC_FS="gpfs"
 	RANKS_PER_NODE=40 
 	MYMPIRUN_1="mpirun --rsh=ssh -np " 
-	MYMPIRUN_2=" -ppn $(( ${RANKS_PER_NODE}/${RANK_DIVISOR} )) " # can't find equivalent for --cpus-per-proc $RANK_DIVISOR but may not need it
+	MYMPIRUN_2=" -ppn $(( ${RANKS_PER_NODE}/${FPD_RANK_DIVISOR} )) " # can't find equivalent for --cpus-per-proc $RANK_DIVISOR but may not need it
 	DATADIR="/projects/bioinformatics/ParFuTesting/TestData"
 	ARCDIR="/projects/bioinformatics/ParFuTesting/Archive"
 	;;
@@ -350,7 +350,7 @@ case "$MANAGER" in
              "ptgz")
        		 echo 'module load /usr/local/apps/bioapps/modules/ptgz/ptgz' >> ${SCRIPT_FILE_NAME}
        		 ;;
-	     "tar"|"tar-gz"|"pigz")
+	     "tar"|"tar-gz")
 		 echo 'module unload /usr/local/modules/Modules/apps/intel/12.0.4' >> ${SCRIPT_FILE_NAME}
 		 echo 'module unload /usr/local/modules/Modules/apps/mvapich2-1.7rcl-intel-12.0.4' >> ${SCRIPT_FILE_NAME}
 		 echo 'module load /usr/local/modules/Modules/apps/intel/15.0.u3' >> ${SCRIPT_FILE_NAME}
@@ -359,6 +359,9 @@ case "$MANAGER" in
 	     "mpitar")
 		 echo 'module load /usr/local/apps/bioapps/modules/mpitar/mpitar' >> ${SCRIPT_FILE_NAME}
                  ;;
+	     "pigz")
+		 echo '/usr/local/apps/bioapps/modules/pigz/pigz-2.4' >> ${SCRIPT_FILE_NAME}
+		 ;;
 	esac
         JOB_ID_NAME='${PBS_JOBID}'
 	;; 

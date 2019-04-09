@@ -350,6 +350,15 @@ case "$MANAGER" in
              "ptgz")
        		 echo 'module load /usr/local/apps/bioapps/modules/ptgz/ptgz' >> ${SCRIPT_FILE_NAME}
        		 ;;
+	     "tar"|"tar-gz"|"pigz")
+		 echo 'module unload /usr/local/modules/Modules/apps/intel/12.0.4' >> ${SCRIPT_FILE_NAME}
+		 echo 'module unload /usr/local/modules/Modules/apps/mvapich2-1.7rcl-intel-12.0.4' >> ${SCRIPT_FILE_NAME}
+		 echo 'module load /usr/local/modules/Modules/apps/intel/15.0.u3' >> ${SCRIPT_FILE_NAME}
+		 echo 'module load /usr/local/modules/Modules/apps/intel/impi-5.0.3' >> ${SCRIPT_FILE_NAME}
+		 ;;
+	     "mpitar")
+		 echo 'module load /usr/local/apps/bioapps/modules/mpitar/mpitar' >> ${SCRIPT_FILE_NAME}
+                 ;;
 	esac
         JOB_ID_NAME='${PBS_JOBID}'
 	;; 

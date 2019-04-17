@@ -47,7 +47,7 @@ fi
 #FPD_CODE="ptar"
 #FPD_CODE="parfu"
 #FPD_CODE="ptgz"
-FPD_CODE="pigz"
+#FPD_CODE="pigz"
 
 # select the system we're on.  
 # typically this is set once per system
@@ -59,7 +59,7 @@ FPD_CODE="pigz"
 #FPD_SYSTEM="jyc_moab"
 #FPD_SYSTEM="bw_moab"
 #FPD_SYSTEM="bridges"
-FPD_SYSTEM="iforge"
+#FPD_SYSTEM="iforge"
 
 if [ ! "$FPD_SYSTEM" ]; then
     echo ; echo "You must set a valid FPD_SYSTEM!  (Edit the script, or set an env var.)" ; echo

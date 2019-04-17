@@ -22,8 +22,6 @@ fi
 if [[ ! $FPD_RUNTIME ]]; then
     FPD_RUNTIME=2:00:00
 fi
-CHARGE_ACCOUNT="aaa"
-
 
 if [ ! "$MYEMAIL" ]; then
     MYEMAIL=""

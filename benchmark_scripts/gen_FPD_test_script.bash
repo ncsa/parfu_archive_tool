@@ -476,6 +476,12 @@ if [ ${FPD_CODE} == "ptgz" ]; then
     echo '    fi' >> ${SCRIPT_FILE_NAME}
 fi
 
+if [ ${FPD_CODE} == "parfu" ]; then
+#    echo '    if [[ ! ${GOOD_RESULT} ]]; then' >> ${SCRIPT_FILE_NAME}
+    echo '    if [[ ! `grep "finished transferring" output_files/out_'${JOB_ID_NAME}'_${ITER}.out` ]]; then' >> ${SCRIPT_FILE_NAME}
+    echo '        ELAP="XXX"${ELAP}' >> ${SCRIPT_FILE_NAME}
+    echo '    fi' >> ${SCRIPT_FILE_NAME}
+fi
 
 #echo '    if [[ ${GOOD_RESULT} ]]; then' >> ${SCRIPT_FILE_NAME}
 echo '    echo "${CODE} ${BLOCK}    ${MACH_FS}  ${DATASET}    ${STRIPE}    ${NODES} ${RANKS}    ${ITER} ${ELAP}" >> ${TIMING_DATA_FILE}' >> ${SCRIPT_FILE_NAME}

@@ -44,10 +44,10 @@ endif
 ifeq ($(ARC),cray)
 MY_CC=cc
 MY_CXX=CC
-#export CRAYPE_LINK_TYPE=dynamic
-#export XTPE_LINK_TYPE=dynamic
-export CRAYPE_LINK_TYPE=static
-export XTPE_LINK_TYPE=static
+export CRAYPE_LINK_TYPE=dynamic
+export XTPE_LINK_TYPE=dynamic
+#export CRAYPE_LINK_TYPE=static
+#export XTPE_LINK_TYPE=static
 endif
 
 ifeq ($(ARC),Wrangler)

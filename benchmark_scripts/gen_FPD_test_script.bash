@@ -113,6 +113,13 @@ case "$FPD_DATASET" in
 	;;
 esac
 
+if [ ! "$FPD_SINGLE_RANK_NODE" ]; then
+    echo ; echo "You must set a valid FPD_SINGLE_RANK_NODE!  (Edit the script, or set an env var.)" ; echo
+    exit
+fi    
+
+
+
 # end of user configuration options.  
 #######
 
@@ -129,13 +136,16 @@ touch $SCRIPT_FILE_NAME
 # populate intermediate variables according to what system we're on
 case "$FPD_SYSTEM" in
     "wrangler_LL")
+	RANKS_PER_NODE=24
+	if [ "$FPD_SINGLE_RANK_NODE" == "yes" ]; then
+	    FPD_RANK_DIVISOR=$RANKS_PER_NODE	    	    
+	fi
 	JOB_NAME="FPD_wr_LL"
 	BASE_SYSTEM_NAME="wrangler"
 	MANAGER="slurm"
 	DATA_FS="lstr"
 	ARC_FS="lstr"
 	JOB_NAME="FPD_wr_LL"
-	RANKS_PER_NODE=24
 	DATADIR='${DATA}'
 	ARCDIR='${DATA}'
 	MYMPIRUN_1="ibrun -n "
@@ -143,13 +153,16 @@ case "$FPD_SYSTEM" in
 	QUEUE_NAME="normal"
 	;;
     "wrangler_LG")
+	RANKS_PER_NODE=24
+	if [ "$FPD_SINGLE_RANK_NODE" == "yes" ]; then
+	    FPD_RANK_DIVISOR=$RANKS_PER_NODE	    	    
+	fi
 	JOB_NAME="FPD_wr_LG"	
 	BASE_SYSTEM_NAME="wrangler"
 	MANAGER="slurm"
 	DATA_FS="lstr"
 	ARC_FS="gpfs"
 	JOB_NAME="FPD_wr_LG"
-	RANKS_PER_NODE=24
 	DATADIR='${DATA}'
 	ARCDIR='${FLASH}/FP_data'
 	MYMPIRUN_1="ibrun -n "
@@ -157,25 +170,31 @@ case "$FPD_SYSTEM" in
 	QUEUE_NAME="normal"
 	;;
     "comet")
+	RANKS_PER_NODE=24
+	if [ "$FPD_SINGLE_RANK_NODE" == "yes" ]; then
+	    FPD_RANK_DIVISOR=$RANKS_PER_NODE	    	    
+	fi
 	JOB_NAME="FPD_comet"
 	BASE_SYSTEM_NAME="comet"
 	MANAGER="slurm"
 	DATA_FS="lstr"
 	ARC_FS="lstr"
 	JOB_NAME="FPD_comet"
-	RANKS_PER_NODE=24
 	DATADIR='${SCRATCH}'
 	ARCDIR='${SCRATCH}'       
 	MYMPIRUN_1="ibrun -n "
 	MYMPIRUN_2=" -o 0 "
 	;;
     "stampede2")
+	RANKS_PER_NODE=64
+	if [ "$FPD_SINGLE_RANK_NODE" == "yes" ]; then
+	    FPD_RANK_DIVISOR=$RANKS_PER_NODE	    	    
+	fi
 	JOB_NAME="FPD_st2"	
 	BASE_SYSTEM_NAME="stampede2"
 	MANAGER="slurm"
 	DATA_FS="lstr"
 	ARC_FS="lstr"
-	RANKS_PER_NODE=64
 	MANAGER="slurm"
 	QUEUE_NAME="normal"
 	DATADIR='${SCRATCH}'
@@ -184,12 +203,15 @@ case "$FPD_SYSTEM" in
 	MYMPIRUN_2=" -o 0 "
 	;;
     "jyc_slurm")
+	RANKS_PER_NODE=32
+	if [ "$FPD_SINGLE_RANK_NODE" == "yes" ]; then
+	    FPD_RANK_DIVISOR=$RANKS_PER_NODE	    	    
+	fi
 	JOB_NAME="FPD_jyc_SL"
 	BASE_SYSTEM_NAME="jyc"
 	MANAGER="slurm"
 	DATA_FS="lstr"
 	ARC_FS="lstr"
-	RANKS_PER_NODE=32
 	DATADIR='/scratch/staff/csteffen/FPD'
 	ARCDIR='/scratch/staff/csteffen/FPD'
 	MYMPIRUN_1="~jphillip/openmpi/bin/mpirun -n "
@@ -197,6 +219,10 @@ case "$FPD_SYSTEM" in
 #	QUEUE_NAME="normal"
 	;;
     "bw_moab")
+	RANKS_PER_NODE=32
+	if [ "$FPD_SINGLE_RANK_NODE" == "yes" ]; then
+	    FPD_RANK_DIVISOR=$RANKS_PER_NODE	    	    
+	fi
 	JOB_NAME="FPD_BW_Mo"
 	BASE_SYSTEM_NAME="bw"
 	MANAGER="Moab"
@@ -204,17 +230,19 @@ case "$FPD_SYSTEM" in
 	ARC_FS="lstr"
 	DATADIR="/scratch/staff/csteffen/FPD_2018"
 	ARCDIR="/scratch/staff/csteffen/FPD_2018"
-	RANKS_PER_NODE=32
 	MYMPIRUN_1="aprun -n "
 	MYMPIRUN_2=" -N $(( ${RANKS_PER_NODE}/${FPD_RANK_DIVISOR} )) -d $FPD_RANK_DIVISOR "	
 	;;
     "jyc_moab")
+	RANKS_PER_NODE=32
+	if [ "$FPD_SINGLE_RANK_NODE" == "yes" ]; then
+	    FPD_RANK_DIVISOR=$RANKS_PER_NODE	    	    
+	fi
 	JOB_NAME="FPD_jyc_Moab"
 	BASE_SYSTEM_NAME="jyc"
 	MANAGER="Moab"
 	DATA_FS="lstr"
 	ARC_FS="lstr"
-	RANKS_PER_NODE=32
 	MANAGER="Moab"
 	MYMPIRUN_1="aprun -n "
 	MYMPIRUN_2=" -N $(( ${RANKS_PER_NODE}/${FPD_RANK_DIVISOR} )) -d $FPD_RANK_DIVISOR "	
@@ -222,18 +250,25 @@ case "$FPD_SYSTEM" in
 	ARCDIR="/scratch/staff/csteffen/FPD"
 	;;
     "bridges")
+	RANKS_PER_NODE=28 
+	if [ "$FPD_SINGLE_RANK_NODE" == "yes" ]; then
+	    FPD_RANK_DIVISOR=$RANKS_PER_NODE	    	    
+	fi
 	JOB_NAME="FPD_Br"
 	BASE_SYSTEM_NAME="bridges"
 	MANAGER="slurm"
 	DATA_FS="lstr"
 	ARC_FS="lstr"
-	RANKS_PER_NODE=28 
 	MYMPIRUN_1="ibrun -n "
 	MYMPIRUN_2=" -o 0 "
 	DATADIR='${SCRATCH}/FP_data'
 	ARCDIR='${SCRATCH}/FP_data'
 	;;
     "iforge")
+	RANKS_PER_NODE=40 
+	if [ "$FPD_SINGLE_RANK_NODE" == "yes" ]; then
+	    FPD_RANK_DIVISOR=$RANKS_PER_NODE	    	    
+	fi
 	JOB_NAME="FPD_iF"
 	BASE_SYSTEM_NAME="iforge"
 	QUEUE_NAME="skylake"
@@ -241,7 +276,6 @@ case "$FPD_SYSTEM" in
 	MANAGER="pbs"
 	DATA_FS="gpfs"
 	ARC_FS="gpfs"
-	RANKS_PER_NODE=40 
 	MYMPIRUN_1="mpirun --rsh=ssh -np " 
 	MYMPIRUN_2=" -ppn $(( ${RANKS_PER_NODE}/${FPD_RANK_DIVISOR} )) " # can't find equivalent for --cpus-per-proc $RANK_DIVISOR but may not need it
 	DATADIR="/projects/bioinformatics/ParFuTesting/TestData"
@@ -376,6 +410,7 @@ echo "" >> ${SCRIPT_FILE_NAME}
 # FPD_STRIPE
 # JOB_ID_VARIABLE
 RANKS=$(( (FPD_NODES*RANKS_PER_NODE)/FPD_RANK_DIVISOR ))
+FPD_THREADS=$FPD_RANK_DIVISOR
 #EXPANDED_RANKS=$(printf '%04d' "$RANKS")
 echo 'RANKS='$RANKS >> ${SCRIPT_FILE_NAME}
 echo "RANKS=${RANKS}" 
@@ -449,14 +484,17 @@ case ${FPD_CODE} in
  	echo '    '$MYMPIRUN_1'${RANKS}'$MYMPIRUN_2' tar cf $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.tar $TARGET_DIR > output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
 	;;
     "tar_gz")
- 	echo '    '$MYMPIRUN_1'${RANKS}'$MYMPIRUN_2' tar czf $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.tgz $TARGET_DIR > output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
+# 	echo '    '$MYMPIRUN_1'${RANKS}'$MYMPIRUN_2' tar czf $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.tgz $TARGET_DIR > output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
+ 	echo '    '$MYMPIRUN_1'${RANKS}'$MYMPIRUN_2' tar cf - $TARGET_DIR 2> output_files/targz_tar_'${JOB_ID_NAME}'_${ITER}.err | gzip --fast - > $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.tgz 2> output_files/targz_gz_'${JOB_ID_NAME}'_${ITER}.err' >> ${SCRIPT_FILE_NAME}
 	;;
     "ptgz")
 	echo '    '$MYMPIRUN_1'$RANKS'$MYMPIRUN_2' ptgz -c -d $TARGET_DIR prod_'${JOB_ID_NAME}'_${ITER} &> output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
 	;;
     "pigz")
 #	echo '    '$MYMPIRUN_1' $RANKS '$MYMPIRUN_2' pigz $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.gz $TARGET_DIR prod_'${JOB_ID_NAME}'_${ITER} &> output_files/out_'${JOB_ID_NAME}'_${ITER}.out 2>&1' >> ${SCRIPT_FILE_NAME}
-	echo '    '$MYMPIRUN_1' $RANKS '$MYMPIRUN_2' pigz -K -r --stdout $TARGET_DIR > $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.zip 2> output_files/out_'${JOB_ID_NAME}'_${ITER}.err ' >> ${SCRIPT_FILE_NAME}
+#	echo '    '$MYMPIRUN_1' $RANKS '$MYMPIRUN_2' pigz -K -r --stdout $TARGET_DIR > $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.zip 2> output_files/out_'${JOB_ID_NAME}'_${ITER}.err ' >> ${SCRIPT_FILE_NAME}
+#	echo '    '$MYMPIRUN_1' $RANKS '$MYMPIRUN_2' tar -cf - $TARGET_DIR 2> output_files/pigz_pigz_'${JOB_ID_NAME}'_${ITER}.err | pigz --fast -p '$FPD_THREADS' > $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.tgz 2> output_files/pigz_tar_'${JOB_ID_NAME}'_${ITER}.err' >> ${SCRIPT_FILE_NAME}
+	echo '    '$MYMPIRUN_1' $RANKS '$MYMPIRUN_2' tar -cf - $TARGET_DIR 2> output_files/pigz_tar_'${JOB_ID_NAME}'_${ITER}.err | pigz --fast -p '$FPD_THREADS' > $ARCHIVE_DIR/prod_'${JOB_ID_NAME}'_${ITER}.tgz 2> output_files/pigz_pigz_'${JOB_ID_NAME}'_${ITER}.err' >> ${SCRIPT_FILE_NAME}
 	;;
 esac
 

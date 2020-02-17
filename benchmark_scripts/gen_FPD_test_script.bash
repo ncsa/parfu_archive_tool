@@ -468,6 +468,14 @@ echo '    exit'  >> ${SCRIPT_FILE_NAME}
 echo 'fi' >> ${SCRIPT_FILE_NAME}
 echo "" >> ${SCRIPT_FILE_NAME}
 
+# fix for non-MPI clusters; that is, when the job script runs ON the compute node
+# and mpirun or its equivalent isn't the right way to run a code.
+if [ $FPD_NO_MPI ] ; then
+    unset MYMPIRUN_1
+    unset MYMPIRUN_2
+    echo 'unset RANKS' >> ${SCRIPT_FILE_NAME}
+fi
+
 # now the data-taking while loop
 echo 'while [ $ITER -lt $NUM_ITERATIONS ]; do ' >> ${SCRIPT_FILE_NAME}
 echo '    echo "starting iteration $ITER ranks $RANKS"' >> ${SCRIPT_FILE_NAME}

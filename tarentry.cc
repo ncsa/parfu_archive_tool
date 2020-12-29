@@ -243,8 +243,14 @@ void tarentry::make_ustar_header_block(ustar_hdr &hdr, const int xtype,
   memset(&hdr, 0, BLOCKSIZE);
   if(S_ISLNK(statbuf.st_mode))
   {
-    strncpy(hdr.linkname, ln, sizeof(hdr.linkname));
-    hdr.linkname[statbuf.st_size] = '\0';
+    // this is functionally identical to what strncpy alreday does but avoids
+    // warnings from over-eager compilers about possible string truncation (given
+    // that I am using strncpy exactly as designed this is just sad).
+    if(strlen(ln) <= sizeof(hdr.linkname)) {
+      strncpy(hdr.linkname, ln, sizeof(hdr.linkname));
+    } else {
+      memcpy(hdr.linkname, ln, sizeof(hdr.linkname));
+    }
   }
   else
   {
@@ -277,8 +283,8 @@ void tarentry::make_ustar_header_block(ustar_hdr &hdr, const int xtype,
     assert(0);
 
   // link name already set
-  strncpy(hdr.magic, TMAGIC, sizeof(hdr.magic));
-  strncpy(hdr.version, TVERSION, sizeof(hdr.version));
+  memcpy(hdr.magic, TMAGIC, sizeof(hdr.magic));
+  memcpy(hdr.version, TVERSION, sizeof(hdr.version));
   if(!xtype) {
     snprintf(hdr.uname, sizeof(hdr.uname), "%s", pwd->pw_name);
     snprintf(hdr.gname, sizeof(hdr.gname), "%s", grp->gr_name);
@@ -287,7 +293,14 @@ void tarentry::make_ustar_header_block(ustar_hdr &hdr, const int xtype,
     snprintf(hdr.devminor, sizeof(hdr.devminor), "%0*o",
              (int)sizeof(hdr.devminor)-1, 0);
   }
-  strncpy(hdr.name, filename, sizeof(hdr.name));
+  // this is functionally identical to what strncpy alreday does but avoids
+  // warnings from over-eager compilers about possible string truncation (given
+  // that I am using strncpy exactly as designed this is just sad).
+  if(strlen(filename) <= sizeof(hdr.name)) {
+    strncpy(hdr.name, filename, sizeof(hdr.name));
+  } else {
+    memcpy(hdr.name, filename, sizeof(hdr.name));
+  }
 
   unsigned long int checksum = 0;
   for(size_t j = 0 ; j < sizeof(hdr) ; j++)

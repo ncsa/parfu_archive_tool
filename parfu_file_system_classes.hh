@@ -28,10 +28,20 @@
 #ifndef PARFU_FILE_SYSTEM_CLASSES_HH_
 #define PARFU_FILE_SYSTEM_CLASSES_HH_
 
-class Parfu_file_info
+using namespace std;
+
+class Parfu_subfile;
+
+
+class Parfu_file
 { 
 public:
   
+  string absolute_path(){
+    return base_path+"/"+relative_full_path;
+  }
+
+private:
   // base_path here will typically be the location that parfu was pointed to 
   // to archive.  So the absolute path of this file will typically be:
   // <base_path> / <relative_full_path>
@@ -45,11 +55,16 @@ public:
   string relative_full_path;
   string base_path;
   
-  string absolute_path(){
-    return base_path."/".relative_full_path;
-  }
-  
+  // every file is made up of one or more subfiles
+  // here's a list of them
+  int n_subfiles;
+  Parfu_subfile *subfiles=NULL;
+};
 
+class Parfu_subfile 
+{
+public: 
+  Parfu_file *parent_file;
 };
 
 #endif // #ifndef PARFU_FILE_SYSTEM_CLASSES_HH_

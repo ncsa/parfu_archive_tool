@@ -85,7 +85,7 @@ CXXFLAGS := -g -I. -Wall -O3
 # The TARGETS variable sets what gets built. 
 # By default, this Makefile builds the basic proof-of-concept test code. 
 # TARGETS := parfu_all_test_001 parfu_bench_test_002 parfu_write_test
-TARGETS := parfu_0_5_1 
+TARGETS := parfu_0_5_1 parfu_0_6_test
 
 # Using TARGETS line would also build two utilty test codes, which are
 # probably only interesting for historical or internal testing reasons.
@@ -106,6 +106,7 @@ PARFU_HEADER_FILES := parfu_primary.h tarentry.hh
 PARFU_OBJECT_FILES := parfu_file_list_utils.o parfu_buffer_utils.o parfu_data_transfer.o tarentry.o
 
 default: ${TARGETS}
+test: parfu_0_6_test
 
 # executables
 
@@ -129,6 +130,9 @@ parfu_write_test: parfu_write_test.o ${PARFU_HEADER_FILES}
 
 parfu_0_5_1: parfu_0_5_1_main_versA.o ${PARFU_OBJECT_FILES} ${PARFU_HEADER_FILES}
 	${MY_CXX} -o $@ ${CFLAGS} parfu_0_5_1_main_versA.o ${PARFU_OBJECT_FILES}	
+
+parfu_0_6_test: parfu_main_0_6_test.o ${PARFU_OBJECT_FILES} ${PARFU_HEADER_FILES}
+	${MY_CXX} -o $@ ${CFLAGS} parfu_main_0_6_test.o ${PARFU_OBJECT_FILES}
 
 # utility targets
 

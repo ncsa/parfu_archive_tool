@@ -34,6 +34,7 @@
 #include <vector>
 
 #include "tarentry.hh"
+#include "parfu_file_system_classes.hh"
 
 using namespace std;
 
@@ -51,11 +52,11 @@ using namespace std;
 // container_file: contains all the informationa about a container file
 //      file pointers, state, etc.  
 //      contains list of objects who will reside in the container file 
-//         when written to disk.  So a list of submfiles and/or container slices
+//         when written to disk.  So a list of subfiles and/or container slices
 //      actually probably contains a list of container slides, maybe instead of the above
 // container_slice: nicely-sized chunk of container file. written to container file by 
 //     one rank
 // node_boss: contains a work order for the boss rank of a node to process
-// node_worker: contains list that a thread on a node should process
+// node_worker: contains list that a thread on a node should process.  
 
 #endif  // #ifndef PARFU_MAIN_HH_

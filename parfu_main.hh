@@ -22,8 +22,8 @@
 //  
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef PARFU_MASTER_HH_
-#define PARFU_MASTER_HH_
+#ifndef PARFU_MAIN_HH_
+#define PARFU_MAIN_HH_
 
 #include <cstdio>
 #include <sys/types.h>
@@ -55,7 +55,7 @@ using namespace std;
 //      actually probably contains a list of container slides, maybe instead of the above
 // container_slice: nicely-sized chunk of container file. written to container file by 
 //     one rank
-// node_boss: contains a work order for the master rank of a node to process
+// node_boss: contains a work order for the boss rank of a node to process
 // node_worker: contains list that a thread on a node should process
 
-#endif  // #ifndef PARFU_MASTER_HH_
+#endif  // #ifndef PARFU_MAIN_HH_

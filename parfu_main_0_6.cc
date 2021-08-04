@@ -22,7 +22,7 @@
 //  
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "parfu_master.hh"
+#include "parfu_main.hh"
 
 int main(){
   cout << "parfu test build\n";

@@ -23,7 +23,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#include "parfu_master.hh"
+#include "parfu_main.hh"
 
 #ifndef PARFU_FILE_SYSTEM_CLASSES_HH_
 #define PARFU_FILE_SYSTEM_CLASSES_HH_

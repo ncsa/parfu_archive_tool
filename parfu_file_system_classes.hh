@@ -34,10 +34,10 @@ using namespace std;
 // 
 // Classes that store file information.  
 // 
-// a Parfu_file generally refers to an actual file on disk
+// a Parfu_target_file generally refers to an actual file on disk
 //
 // a Parfu_file_slice refers to a region of a file (possibly all of it).  
-//   Each Parfu_file will have one or more slices.  The slices are
+//   Each Parfu_target_file will have one or more slices.  The slices are
 //   sized for the convenience of storing or extraction.  Slices
 //   have no meaning for a stored parfu container.  Files within
 //   the parfu container are contiguous, just as on disk and just
@@ -46,8 +46,9 @@ using namespace std;
 //   by different ranks.  
 
 class Parfu_file_slice;
+class Parfu_container_file;
 
-class Parfu_file
+class Parfu_target_file
 { 
 public:  
   string absolute_path(){
@@ -56,8 +57,6 @@ public:
   int file_type(){
     return file_type_value;
   }
-  
-
 private:
   // base_path here will typically be the location that parfu was pointed to 
   // to archive.  So the absolute path of this file will typically be:
@@ -75,6 +74,7 @@ private:
   // every file is made up of one or more subfiles
   // here's a list of them
   list <Parfu_file_slice> slices;
+  
 
   long int file_size;
   int file_type_value=PARFU_INVALID_FILE_TYPE;
@@ -83,7 +83,7 @@ private:
 class Parfu_file_slice 
 {
 public: 
-  Parfu_file *parent_file;
+  Parfu_target_file *parent_file;
 private:
   long int slice_size;
   long int slice_offset_in_file=PARFU_INVALID_OFFSET;
@@ -110,8 +110,15 @@ private:
   // Time stamp when the directory was last searched for contents (spi
   time_t last_time_spidered;
   vector <Parfu_directory*> subdirectories;
-  vector <Parfu_file*> subfiles;
+  vector <Parfu_target_file*> subfiles;
 };
+
+//////////////////////////////////
+//
+// Classes pertaining to container files
+// 
+// Parfu_container_file contains the file pointers and metadata 
+// info for one container file.  
 
 class Parfu_container_file
 {
@@ -128,6 +135,23 @@ private:
   string full_path;
   bool file_is_open=false;
   MPI_File *container_file_ptr=NULL;
+  MPI_Comm my_communicator;
+};
+
+/////////////////////////////////////////////////////////
+//
+// Parfu_container_file_collection is basically a vector
+// of container files if we implement the feature where
+// a "create" operation can write to more than one 
+// container file for performance reasons.  Each of
+// the container files in the vector will keep track
+// of one of the constituent container files.  
+
+class Parfu_container_file_collection
+{
+public:
+private:
+  vector <Parfu_container_file*> containers;
 };
 
 #endif // #ifndef PARFU_FILE_SYSTEM_CLASSES_HH_

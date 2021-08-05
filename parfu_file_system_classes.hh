@@ -74,7 +74,7 @@ private:
   
   // every file is made up of one or more subfiles
   // here's a list of them
-  vector <Parfu_file_slice> slices;
+  list <Parfu_file_slice> slices;
 
   long int file_size;
   int file_type_value=PARFU_INVALID_FILE_TYPE;
@@ -93,6 +93,24 @@ private:
 
 /////////////////////////////////
 // 
-// C
+// Classes pertaining to information about directories
+// 
+class Parfu_directory
+{
+public:
+private:
+  // directory path should not end with "/" unless it is the root directory
+  string directory_path;
+  // "spider" here is a verb to search down a directory tree from a starting
+  // point to list all of the subdirectories and contents.  
+  // spidered is false if directory_path has a value but a list has not been 
+  // created.  If the directory listing has been completed, 
+  // then spidered is true.  
+  bool spidered=false;
+  // Time stamp when the directory was last searched for contents (spi
+  time_t last_time_spidered;
+  vector <Parfu_directory*> subdirectories;
+  vector <Parfu_file*> subfiles;
+};
 
 #endif // #ifndef PARFU_FILE_SYSTEM_CLASSES_HH_

@@ -32,6 +32,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <list>
 
 #define PARFU_INVALID_OFFSET (-1L)
 
@@ -49,6 +50,7 @@ using namespace std;
 // classes to define for new structure of parfu
 // Parfu_file: (contains information about target file file on disk)
 //       (also contains a list of one or more file slices)
+//       parfu files have a type, a "real" file or a "pad" file.  
 // Parfu_file_slice: specifies location of subfile within file, and also within container
 // pad_file: subclass of subfile; specifies location of padding file within container
 // dir: contains information about a directory

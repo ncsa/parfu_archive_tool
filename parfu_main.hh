@@ -35,6 +35,11 @@
 
 #define PARFU_INVALID_OFFSET (-1L)
 
+#define PARFU_INVALID_FILE_TYPE (-1)
+#define PARFU_FILE_TYPE_REAL     (0)
+#define PARFU_FILE_TYPE_PAD      (1)
+
+
 #include "tarentry.hh"
 #include "parfu_file_system_classes.hh"
 
@@ -42,9 +47,9 @@
 using namespace std;
 
 // classes to define for new structure of parfu
-// file: (contains information about target file file on disk)
-//       (also contains a list of one or more subfiles)
-// subfile: specifies location of subfile within file, and also within container
+// Parfu_file: (contains information about target file file on disk)
+//       (also contains a list of one or more file slices)
+// Parfu_file_slice: specifies location of subfile within file, and also within container
 // pad_file: subclass of subfile; specifies location of padding file within container
 // dir: contains information about a directory
 //      whether the directory has been spidered

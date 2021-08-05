@@ -30,19 +30,33 @@
 
 using namespace std;
 
-// a Parfu_file generally refers to an actual file on disk
-// a Parfu_file_slice refers to a region of a file (possibly all of it)
+////////////
 // 
+// Classes that store file information.  
+// 
+// a Parfu_file generally refers to an actual file on disk
+//
+// a Parfu_file_slice refers to a region of a file (possibly all of it).  
+//   Each Parfu_file will have one or more slices.  The slices are
+//   sized for the convenience of storing or extraction.  Slices
+//   have no meaning for a stored parfu container.  Files within
+//   the parfu container are contiguous, just as on disk and just
+//   as within a tar file.  However, if a file consists of more
+//   than one slice, the slices will be typically read or written 
+//   by different ranks.  
 
 class Parfu_file_slice;
 
 class Parfu_file
 { 
-public:
-  
+public:  
   string absolute_path(){
     return base_path+"/"+relative_full_path;
   }
+  int file_type(){
+    return file_type_value;
+  }
+  
 
 private:
   // base_path here will typically be the location that parfu was pointed to 
@@ -60,11 +74,10 @@ private:
   
   // every file is made up of one or more subfiles
   // here's a list of them
-  int n_subfiles;
-  Parfu_file_slice *slices=NULL;
+  vector <Parfu_file_slice> slices;
 
   long int file_size;
-  
+  int file_type_value=PARFU_INVALID_FILE_TYPE;
 };
 
 class Parfu_file_slice 
@@ -76,5 +89,10 @@ private:
   long int slice_offset_in_file=PARFU_INVALID_OFFSET;
   long int slice_offset_in_container=PARFU_INVALID_OFFSET;
 };
+
+
+/////////////////////////////////
+// 
+// C
 
 #endif // #ifndef PARFU_FILE_SYSTEM_CLASSES_HH_

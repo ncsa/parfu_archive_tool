@@ -30,8 +30,11 @@
 
 using namespace std;
 
-class Parfu_subfile;
+// a Parfu_file generally refers to an actual file on disk
+// a Parfu_file_slice refers to a region of a file (possibly all of it)
+// 
 
+class Parfu_file_slice;
 
 class Parfu_file
 { 
@@ -58,13 +61,20 @@ private:
   // every file is made up of one or more subfiles
   // here's a list of them
   int n_subfiles;
-  Parfu_subfile *subfiles=NULL;
+  Parfu_file_slice *slices=NULL;
+
+  long int file_size;
+  
 };
 
-class Parfu_subfile 
+class Parfu_file_slice 
 {
 public: 
   Parfu_file *parent_file;
+private:
+  long int slice_size;
+  long int slice_offset_in_file=PARFU_INVALID_OFFSET;
+  long int slice_offset_in_container=PARFU_INVALID_OFFSET;
 };
 
 #endif // #ifndef PARFU_FILE_SYSTEM_CLASSES_HH_

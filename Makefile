@@ -100,7 +100,7 @@ TARGETS := parfu_0_5_1 parfu_0_6_test
 # it as a bug.  
 
 # header and utility function definitions
-PARFU_HEADER_FILES := parfu_primary.h tarentry.hh
+PARFU_HEADER_FILES := parfu_primary.h tarentry.hh parfu_main.hh parfu_file_system_classes.hh
 
 #PARFU_OBJECT_FILES := parfu_file_list_utils.o parfu_buffer_utils.o parfu_data_transfer.o parfu_behavior_control.o tarentry.o
 PARFU_OBJECT_FILES := parfu_file_list_utils.o parfu_buffer_utils.o parfu_data_transfer.o tarentry.o

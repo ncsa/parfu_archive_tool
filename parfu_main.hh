@@ -33,8 +33,11 @@
 #include <string>
 #include <vector>
 
+#define PARFU_INVALID_OFFSET (-1L)
+
 #include "tarentry.hh"
 #include "parfu_file_system_classes.hh"
+
 
 using namespace std;
 

@@ -51,11 +51,20 @@ class Parfu_container_file;
 class Parfu_target_file
 { 
 public:  
+  Parfu_target_file(string in_base_path, string in_relative_path,
+		   int in_file_type){
+    relative_full_path=in_relative_path;
+    base_path=in_base_path;
+    file_type_value=in_file_type;
+  }
   string absolute_path(){
     return base_path+"/"+relative_full_path;
   }
   int file_type(){
     return file_type_value;
+  }
+  bool are_slices_populated(void){
+    return true;
   }
 private:
   // base_path here will typically be the location that parfu was pointed to 
@@ -74,7 +83,7 @@ private:
   // every file is made up of one or more subfiles
   // here's a list of them
   list <Parfu_file_slice> slices;
-  
+  Parfu_container_file *parent_container=NULL;
 
   long int file_size;
   int file_type_value=PARFU_INVALID_FILE_TYPE;

@@ -113,4 +113,21 @@ private:
   vector <Parfu_file*> subfiles;
 };
 
+class Parfu_container_file
+{
+public:
+  int MPI_File_open_write_new(MPI_Comm my_comm,MPI_Info my_info){
+    int return_val;
+    return_val=MPI_File_open(my_comm,full_path.c_str(),
+			     MPI_MODE_WRONLY | MPI_MODE_CREATE,
+			     my_info,container_file_ptr);
+    file_is_open=true;
+    return return_val;
+  }
+private:
+  string full_path;
+  bool file_is_open=false;
+  MPI_File *container_file_ptr=NULL;
+};
+
 #endif // #ifndef PARFU_FILE_SYSTEM_CLASSES_HH_

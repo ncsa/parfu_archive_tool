@@ -51,11 +51,19 @@ class Parfu_container_file;
 class Parfu_target_file
 { 
 public:  
+  // constructor
   Parfu_target_file(string in_base_path, string in_relative_path,
 		   int in_file_type){
     relative_full_path=in_relative_path;
     base_path=in_base_path;
     file_type_value=in_file_type;
+  }
+  // copy constructor
+  Parfu_target_file(const Parfu_target_file &in_file){
+    file_size = in_file.file_size;
+    relative_full_path = in_file.relative_full_path;
+    base_path = in_file.base_path;
+    slices = in_file.slices;
   }
   string absolute_path(){
     return base_path+"/"+relative_full_path;
@@ -132,6 +140,23 @@ private:
 class Parfu_container_file
 {
 public:
+  Parfu_container_file(string in_filename){
+    full_path = in_filename;
+  }
+  // copy constructor
+  Parfu_container_file(const Parfu_container_file &in_filename){
+
+  }
+  // destructor
+  ~Parfu_container_file(void){
+    
+  }
+  // assignment operator
+  Parfu_container_file& operator=(const Parfu_container_file &in_c_file){
+    //    new Parfu_container_file new_CF(in_c_file.full_path);
+    full_path = in_c_file.full_path;
+    return *this;
+  }
   int MPI_File_open_write_new(MPI_Comm my_comm,MPI_Info my_info){
     int return_val;
     return_val=MPI_File_open(my_comm,full_path.c_str(),

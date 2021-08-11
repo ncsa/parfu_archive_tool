@@ -140,36 +140,55 @@ private:
 class Parfu_container_file
 {
 public:
+  // everyday-use constructor
   Parfu_container_file(string in_filename){
+    this->constructor_stuff();
     full_path = in_filename;
+    my_communicator = 0;
   }
   // copy constructor
-  Parfu_container_file(const Parfu_container_file &in_filename){
-
+  Parfu_container_file(const Parfu_container_file &in_container){
+    this->constructor_stuff();
+    *container_file_ptr = *(in_container.container_file_ptr);
   }
   // destructor
   ~Parfu_container_file(void){
-    
+    if((*container_file_ptr)!=NULL){
+      cout << "Parful_container_file destructor called with open file!!!\n";
+    }
+    *container_file_ptr=NULL;
+    delete container_file_ptr;
   }
   // assignment operator
   Parfu_container_file& operator=(const Parfu_container_file &in_c_file){
     //    new Parfu_container_file new_CF(in_c_file.full_path);
     full_path = in_c_file.full_path;
+    *container_file_ptr = *(in_c_file.container_file_ptr);
     return *this;
   }
   int MPI_File_open_write_new(MPI_Comm my_comm,MPI_Info my_info){
     int return_val;
     return_val=MPI_File_open(my_comm,full_path.c_str(),
 			     MPI_MODE_WRONLY | MPI_MODE_CREATE,
-			     my_info,container_file_ptr);
+			     my_info,(*(container_file_ptr)) );
     file_is_open=true;
     return return_val;
   }
 private:
   string full_path;
   bool file_is_open=false;
-  MPI_File *container_file_ptr=NULL;
+  // needs to be a double pointer so that we can *new*
+  // the pointer itself so it doesn't go out of scope
+  // when we pass it to MPI_File_open().
+  MPI_File **container_file_ptr=NULL;
   MPI_Comm my_communicator;
+  void constructor_stuff(void){
+    // allocate and set up stuff
+    if(container_file_ptr==NULL){
+      container_file_ptr = new MPI_File*;
+      *container_file_ptr = NULL;
+    }
+  }
 };
 
 /////////////////////////////////////////////////////////
@@ -184,6 +203,18 @@ private:
 class Parfu_container_file_collection
 {
 public:
+  // constructor
+  Parfu_container_file_collection(void){
+    
+  }
+  // copy constructor
+  Parfu_container_file_collection(const Parfu_container_file_collection &in_collec){
+    for( unsigned int i=0; i < in_collec.containers.size() ; i++ ){
+      containers[i] = in_collec.containers[i];
+    }
+  }
+  // destructor
+  // assignment operator
 private:
   vector <Parfu_container_file*> containers;
 };

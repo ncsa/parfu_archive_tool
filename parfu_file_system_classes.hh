@@ -203,9 +203,13 @@ private:
 class Parfu_container_file_collection
 {
 public:
+  void add_file(string filename){
+    Parfu_container_file *new_file;
+    new_file = new Parfu_container_file(filename);
+    containers.push_back(new_file);
+  }
   // constructor
   Parfu_container_file_collection(void){
-    
   }
   // copy constructor
   Parfu_container_file_collection(const Parfu_container_file_collection &in_collec){
@@ -213,7 +217,16 @@ public:
       containers[i] = in_collec.containers[i];
     }
   }
+  // assignment operator
+  Parfu_container_file_collection& operator=(const Parfu_container_file_collection &in_collec){
+    for( unsigned int i=0; i < in_collec.containers.size() ; i++ ){
+      containers[i] = in_collec.containers[i];
+    }    
+    return *this;
+  }
   // destructor
+  ~Parfu_container_file_collection(void){
+  }
   // assignment operator
 private:
   vector <Parfu_container_file*> containers;

@@ -35,11 +35,22 @@
 #include <vector>
 #include <list>
 
-#define PARFU_INVALID_OFFSET (-1L)
+#define PARFU_OFFSET_INVALID        (-1L)
 
-#define PARFU_INVALID_FILE_TYPE (-1)
-#define PARFU_FILE_TYPE_REAL     (0)
-#define PARFU_FILE_TYPE_PAD      (1)
+#define PARFU_FILE_TYPE_INVALID      (-1)
+#define PARFU_FILE_TYPE_REAL          (0)
+#define PARFU_FILE_TYPE_PAD           (1)
+
+#define PARFU_FILE_SIZE_EMPTY              (0L)
+// These legacy values should not be used in new .pfu files.  
+// These are to catch values from old-format parfu files. 
+#define PARFU_FILE_SIZE_LEGACY_INVALID           (-1L)  
+#define PARFU_FILE_SIZE_LEGACY_SYMLINK           (-2L)
+#define PARFU_FILE_SIZE_LEGACY_DIR               (-3L)
+// These values to be used with new .pfu files
+#define PARFU_FILE_SIZE_INVALID                 (-10L)
+#define PARFU_FILE_SIZE_SYMLINK                 (-11L)
+#define PARFU_FILE_SIZE_DIR                     (-12L)
 
 
 #include "tarentry.hh"

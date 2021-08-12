@@ -30,11 +30,42 @@
 
 using namespace std;
 
+////////////////////
+//
+// In thinking about files from parfu's point of view, we
+// need to create a very important distinction.  The general
+// operation of parfu is like unix tar, in that you're taking 
+// a bunch of files (and directories and symlinks and stuff) 
+// from a directory on disk and then putting them into an
+// archive file.  (In the case of unix tar, this is generally
+// the archive file or the "tarfile".  
+// 
+// So we need to keep track of two kinds of "file"s.  First
+// are the "target" files, which are all the files that we need
+// to read from disk and store.  Target files are considered
+// completely opaque.  They are strings of bytes that parfu is
+// responsible for correctly representing but not modifying.  
+// 
+// The "container" file (parfu's name for it) or the "archive"
+// file (tar's name for it) is the file (or files) in which 
+// all the data is stored.  Parfu spends a lot of its time
+// writing data into the container file or reading data out
+// of the container file.  When a "create mode" parfu is run, 
+// the target directory on disk is the input, and the final 
+// container file is the product.  When an "extract mode" 
+// parfu is run, the input is a container file, and the 
+// product is a populated directory where the target files
+// have been extracted into.  
+//
+////////////////////
+
 ////////////
 // 
-// Classes that store file information.  
+// Classes for target file information
 // 
-// a Parfu_target_file generally refers to an actual file on disk
+// a Parfu_target_file generally refers to an actual target file on disk
+// that either needs to be extracted (extract mode) or brought into the 
+// container (create mode).  
 //
 // a Parfu_file_slice refers to a region of a file (possibly all of it).  
 //   Each Parfu_target_file will have one or more slices.  The slices are
@@ -44,10 +75,14 @@ using namespace std;
 //   as within a tar file.  However, if a file consists of more
 //   than one slice, the slices will be typically read or written 
 //   by different ranks.  
+// 
+
 
 class Parfu_file_slice;
 class Parfu_container_file;
 
+////////////////
+// 
 class Parfu_target_file
 { 
 public:  
@@ -64,6 +99,14 @@ public:
     relative_full_path = in_file.relative_full_path;
     base_path = in_file.base_path;
     slices = in_file.slices;
+  }
+  // assignemnt operator
+  Parfu_target_file& operator=(const Parfu_target_file &in_targ_file){
+    return *this;
+  }
+  // destructor
+  ~Parfu_target_file(void){
+
   }
   string absolute_path(){
     return base_path+"/"+relative_full_path;
@@ -94,17 +137,26 @@ private:
   Parfu_container_file *parent_container=NULL;
 
   long int file_size;
-  int file_type_value=PARFU_INVALID_FILE_TYPE;
+  int file_type_value=PARFU_FILE_TYPE_INVALID;
 };
 
+/////////////////////////
+//
 class Parfu_file_slice 
 {
 public: 
+  // constructor
+  Parfu_file_slice(){
+    
+  }
+  // copy constructor
+  // assignment operator
+  // destructor
   Parfu_target_file *parent_file;
 private:
-  long int slice_size;
-  long int slice_offset_in_file=PARFU_INVALID_OFFSET;
-  long int slice_offset_in_container=PARFU_INVALID_OFFSET;
+  long int slice_size = PARFU_FILE_SIZE_INVALID;;
+  long int slice_offset_in_file=PARFU_OFFSET_INVALID;
+  long int slice_offset_in_container=PARFU_OFFSET_INVALID;
 };
 
 
@@ -115,6 +167,33 @@ private:
 class Parfu_directory
 {
 public:
+  // main constructor
+  Parfu_directory(string directory_path){
+    
+  }
+  // copy constructor
+  Parfu_directory(const Parfu_directory &in_dir){
+    for( unsigned int i=0 ; i < in_dir.subdirectories.size() ; i++ ){
+      subdirectories[i] = in_dir.subdirectories[i];
+    }
+    for( unsigned int i=0 ; i < in_dir.subfiles.size() ; i++ ){
+      subfiles[i] = in_dir.subfiles[i];
+    }
+  }
+  // assignment operator
+  Parfu_directory& operator=(const Parfu_directory &in_dir){
+    for( unsigned int i=0 ; i < in_dir.subdirectories.size() ; i++ ){
+      subdirectories[i] = in_dir.subdirectories[i];
+    }
+    for( unsigned int i=0 ; i < in_dir.subfiles.size() ; i++ ){
+      subfiles[i] = in_dir.subfiles[i];
+    }    
+    return *this;
+  }
+  // destructor
+  ~Parfu_directory(void){
+  }
+  
 private:
   // directory path should not end with "/" unless it is the root directory
   string directory_path;

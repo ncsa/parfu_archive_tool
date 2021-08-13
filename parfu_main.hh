@@ -52,6 +52,8 @@
 #define PARFU_FILE_SIZE_SYMLINK                 (-11L)
 #define PARFU_FILE_SIZE_DIR                     (-12L)
 
+#define PARFU_SPIDER_DIRECTORY_RETURN_ERROR             (-1L)
+
 
 #include "tarentry.hh"
 #include "parfu_file_system_classes.hh"

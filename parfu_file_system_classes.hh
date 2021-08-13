@@ -101,7 +101,11 @@ public:
     slices = in_file.slices;
   }
   // assignemnt operator
-  Parfu_target_file& operator=(const Parfu_target_file &in_targ_file){
+  Parfu_target_file& operator=(const Parfu_target_file &in_file){
+    file_size = in_file.file_size;
+    relative_full_path = in_file.relative_full_path;
+    base_path = in_file.base_path;
+    slices = in_file.slices;    
     return *this;
   }
   // destructor
@@ -146,12 +150,35 @@ class Parfu_file_slice
 {
 public: 
   // constructor
-  Parfu_file_slice(){
-    
+  Parfu_file_slice(void){
+  }
+  Parfu_file_slice(long int in_size){
+    slice_size=in_size;
+  }
+  Parfu_file_slice(long int in_size,
+		   long int in_offset_in_file,
+		   long int in_offset_in_container){
+    slice_size = in_size;
+    slice_offset_in_file = in_offset_in_file;
+    slice_offset_in_container = in_offset_in_container;
   }
   // copy constructor
+  Parfu_file_slice(const Parfu_file_slice &in_slice){
+    slice_size = in_slice.slice_size;
+    slice_offset_in_file = in_slice.slice_offset_in_file;
+    slice_offset_in_container = in_slice.slice_offset_in_container;
+  }
   // assignment operator
+  Parfu_file_slice& operator=(const Parfu_file_slice &in_slice){
+    slice_size = in_slice.slice_size;
+    slice_offset_in_file = in_slice.slice_offset_in_file;
+    slice_offset_in_container = in_slice.slice_offset_in_container;    
+    return *this;
+  }
   // destructor
+  ~Parfu_file_slice(void){
+
+  }
   Parfu_target_file *parent_file;
 private:
   long int slice_size = PARFU_FILE_SIZE_INVALID;;
@@ -164,12 +191,30 @@ private:
 // 
 // Classes pertaining to information about directories
 // 
+
+///////////////
+//
 class Parfu_directory
 {
 public:
   // main constructor
   Parfu_directory(string directory_path){
+  }
+  bool is_directory_spidered(void){
+    return spidered;
+  }
+  long int spider_directory(void){
+    // This is a big fuction, used when creating an 
+    // archive.  
+    // Returns the total number of entries found
+    // (This function should be in a position to 
+    // send MPI messages to other ranks, so that
+    // they can cooperate in spidering the file 
+    // system.)
+
+    long int total_entries_found=0;
     
+    return total_entries_found;
   }
   // copy constructor
   Parfu_directory(const Parfu_directory &in_dir){
@@ -192,8 +237,7 @@ public:
   }
   // destructor
   ~Parfu_directory(void){
-  }
-  
+  }  
 private:
   // directory path should not end with "/" unless it is the root directory
   string directory_path;
@@ -216,6 +260,8 @@ private:
 // Parfu_container_file contains the file pointers and metadata 
 // info for one container file.  
 
+//////////////////////////
+//
 class Parfu_container_file
 {
 public:
@@ -229,6 +275,9 @@ public:
   Parfu_container_file(const Parfu_container_file &in_container){
     this->constructor_stuff();
     *container_file_ptr = *(in_container.container_file_ptr);
+    full_path = in_container.full_path;
+    file_is_open = in_container.file_is_open;
+    my_communicator = in_container.my_communicator;
   }
   // destructor
   ~Parfu_container_file(void){
@@ -240,9 +289,10 @@ public:
   }
   // assignment operator
   Parfu_container_file& operator=(const Parfu_container_file &in_c_file){
-    //    new Parfu_container_file new_CF(in_c_file.full_path);
     full_path = in_c_file.full_path;
+    file_is_open = in_c_file.file_is_open;
     *container_file_ptr = *(in_c_file.container_file_ptr);
+    my_communicator = in_c_file.my_communicator;
     return *this;
   }
   int MPI_File_open_write_new(MPI_Comm my_comm,MPI_Info my_info){
@@ -270,8 +320,6 @@ private:
   }
 };
 
-/////////////////////////////////////////////////////////
-//
 // Parfu_container_file_collection is basically a vector
 // of container files if we implement the feature where
 // a "create" operation can write to more than one 
@@ -279,6 +327,8 @@ private:
 // the container files in the vector will keep track
 // of one of the constituent container files.  
 
+/////////////////////////////////////
+//
 class Parfu_container_file_collection
 {
 public:

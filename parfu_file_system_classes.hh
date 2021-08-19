@@ -95,22 +95,25 @@ public:
   }
   // copy constructor
   Parfu_target_file(const Parfu_target_file &in_file){
-    file_size = in_file.file_size;
     relative_full_path = in_file.relative_full_path;
     base_path = in_file.base_path;
     slices = in_file.slices;
+    parent_container = in_file.parent_container; 
+    file_size = in_file.file_size;
+    file_type_value = in_file.file_type_value;
   }
   // assignemnt operator
   Parfu_target_file& operator=(const Parfu_target_file &in_file){
-    file_size = in_file.file_size;
     relative_full_path = in_file.relative_full_path;
     base_path = in_file.base_path;
+    slices = in_file.slices;
+    parent_container = in_file.parent_container; 
+    file_size = in_file.file_size;
     slices = in_file.slices;    
     return *this;
   }
   // destructor
   ~Parfu_target_file(void){
-
   }
   string absolute_path(){
     return base_path+"/"+relative_full_path;
@@ -177,7 +180,7 @@ public:
   }
   // destructor
   ~Parfu_file_slice(void){
-
+    
   }
   Parfu_target_file *parent_file;
 private:
@@ -218,6 +221,8 @@ public:
   }
   // copy constructor
   Parfu_directory(const Parfu_directory &in_dir){
+    directory_path = in_dir.directory_path;
+    spidered = in_dir.spidered;
     for( unsigned int i=0 ; i < in_dir.subdirectories.size() ; i++ ){
       subdirectories[i] = in_dir.subdirectories[i];
     }
@@ -227,6 +232,8 @@ public:
   }
   // assignment operator
   Parfu_directory& operator=(const Parfu_directory &in_dir){
+    directory_path = in_dir.directory_path;
+    spidered = in_dir.spidered;
     for( unsigned int i=0 ; i < in_dir.subdirectories.size() ; i++ ){
       subdirectories[i] = in_dir.subdirectories[i];
     }
@@ -240,15 +247,15 @@ public:
   }  
 private:
   // directory path should not end with "/" unless it is the root directory
-  string directory_path;
+  string directory_path="";
   // "spider" here is a verb to search down a directory tree from a starting
   // point to list all of the subdirectories and contents.  
   // spidered is false if directory_path has a value but a list has not been 
   // created.  If the directory listing has been completed, 
   // then spidered is true.  
   bool spidered=false;
-  // Time stamp when the directory was last searched for contents (spi
-  time_t last_time_spidered;
+  // Time stamp when the directory was last searched for contents (spidered)
+  time_t last_time_spidered=PARFU_DEFAULT_LAST_TIME_SPIDERED;
   vector <Parfu_directory*> subdirectories;
   vector <Parfu_target_file*> subfiles;
 };
@@ -274,10 +281,19 @@ public:
   // copy constructor
   Parfu_container_file(const Parfu_container_file &in_container){
     this->constructor_stuff();
-    *container_file_ptr = *(in_container.container_file_ptr);
     full_path = in_container.full_path;
     file_is_open = in_container.file_is_open;
+    *container_file_ptr = *(in_container.container_file_ptr);
     my_communicator = in_container.my_communicator;
+  }
+  // assignment operator
+  Parfu_container_file& operator=(const Parfu_container_file &in_c_file){
+    this->constructor_stuff();
+    full_path = in_c_file.full_path;
+    file_is_open = in_c_file.file_is_open;
+    *container_file_ptr = *(in_c_file.container_file_ptr);
+    my_communicator = in_c_file.my_communicator;
+    return *this;
   }
   // destructor
   ~Parfu_container_file(void){
@@ -286,14 +302,6 @@ public:
     }
     *container_file_ptr=NULL;
     delete container_file_ptr;
-  }
-  // assignment operator
-  Parfu_container_file& operator=(const Parfu_container_file &in_c_file){
-    full_path = in_c_file.full_path;
-    file_is_open = in_c_file.file_is_open;
-    *container_file_ptr = *(in_c_file.container_file_ptr);
-    my_communicator = in_c_file.my_communicator;
-    return *this;
   }
   int MPI_File_open_write_new(MPI_Comm my_comm,MPI_Info my_info){
     int return_val;
@@ -332,11 +340,6 @@ private:
 class Parfu_container_file_collection
 {
 public:
-  void add_file(string filename){
-    Parfu_container_file *new_file;
-    new_file = new Parfu_container_file(filename);
-    containers.push_back(new_file);
-  }
   // constructor
   Parfu_container_file_collection(void){
   }
@@ -356,7 +359,11 @@ public:
   // destructor
   ~Parfu_container_file_collection(void){
   }
-  // assignment operator
+  void add_file(string filename){
+    Parfu_container_file *new_file;
+    new_file = new Parfu_container_file(filename);
+    containers.push_back(new_file);
+  }
 private:
   vector <Parfu_container_file*> containers;
 };

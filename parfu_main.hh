@@ -37,6 +37,8 @@
 
 #define PARFU_OFFSET_INVALID        (-1L)
 
+#define PARFU_DEFAULT_LAST_TIME_SPIDERED          (0)
+
 #define PARFU_FILE_TYPE_INVALID      (-1)
 #define PARFU_FILE_TYPE_REAL          (0)
 #define PARFU_FILE_TYPE_PAD           (1)

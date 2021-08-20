@@ -203,6 +203,36 @@ private:
   long int slice_offset_in_container=PARFU_OFFSET_INVALID;
 };
 
+///////////////
+//
+class Parfu_slice_collection
+{
+public:
+  //constructor
+  Parfu_slice_collection(void){
+  }
+  // copy constructor
+  Parfu_slice_collection(const Parfu_slice_collection &in_collec){
+    for( unsigned int i=0; i<in_collec.slices.size() ; i++ ){
+      slices[i] = in_collec.slices[i];
+    }
+  }
+  // assignment operator
+  Parfu_slice_collection& operator=(const Parfu_slice_collection &in_collec){
+    for( unsigned int i=0; i<in_collec.slices.size() ; i++ ){
+      slices[i] = in_collec.slices[i];
+    }
+    return *this;
+  }
+  // destructor
+  ~Parfu_slice_collection(void){
+  }
+  void add_slice(Parfu_file_slice* new_slice_ptr){
+    slices.push_back(new_slice_ptr);
+  }
+private:
+  vector <Parfu_file_slice*> slices;
+};
 
 /////////////////////////////////
 // 

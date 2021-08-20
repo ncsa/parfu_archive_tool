@@ -38,7 +38,7 @@ using namespace std;
 // a bunch of files (and directories and symlinks and stuff) 
 // from a directory on disk and then putting them into an
 // archive file.  (In the case of unix tar, this is generally
-// the archive file or the "tarfile".  
+// the archive file or the "tarfile".)
 // 
 // So we need to keep track of two kinds of "file"s.  First
 // are the "target" files, which are all the files that we need
@@ -51,9 +51,10 @@ using namespace std;
 // all the data is stored.  Parfu spends a lot of its time
 // writing data into the container file or reading data out
 // of the container file.  When a "create mode" parfu is run, 
-// the target directory on disk is the input, and the final 
-// container file is the product.  When an "extract mode" 
-// parfu is run, the input is a container file, and the 
+// the target directory on disk containing the target files 
+// are the input, and the final container file is the product.  
+// When an "extract mode" parfu is run, an existing 
+// container file is the input, and the 
 // product is a populated directory where the target files
 // have been extracted into.  
 //
@@ -67,7 +68,7 @@ using namespace std;
 // that either needs to be extracted (extract mode) or brought into the 
 // container (create mode).  
 //
-// a Parfu_file_slice refers to a region of a file (possibly all of it).  
+// a Parfu_file_slice refers to a region of a target file (possibly all of it).  
 //   Each Parfu_target_file will have one or more slices.  The slices are
 //   sized for the convenience of storing or extraction.  Slices
 //   have no meaning for a stored parfu container.  Files within
@@ -76,7 +77,6 @@ using namespace std;
 //   than one slice, the slices will be typically read or written 
 //   by different ranks.  
 // 
-
 
 class Parfu_file_slice;
 class Parfu_container_file;
@@ -141,9 +141,14 @@ private:
   // every file is made up of one or more subfiles
   // here's a list of them
   list <Parfu_file_slice> slices;
+  // A link to the container file class that this file
+  // will/does reside in.  This is null if it hasn't
+  // been assigned to a container file.  
   Parfu_container_file *parent_container=NULL;
-
+  
+  // Size of the file in bytes
   long int file_size;
+  // File type.  Regular file, symlink, etc.  
   int file_type_value=PARFU_FILE_TYPE_INVALID;
 };
 
@@ -184,8 +189,17 @@ public:
   }
   Parfu_target_file *parent_file;
 private:
-  long int slice_size = PARFU_FILE_SIZE_INVALID;;
+  // how large the slice is in bytes
+  long int slice_size = PARFU_FILE_SIZE_INVALID;
+  // Location of the beginning of the slice within the target file
+  // itself.  If this is either the first slice of many in the 
+  // file, or this is the only slice in the file, then this
+  // will be zero.  
   long int slice_offset_in_file=PARFU_OFFSET_INVALID;
+  // Location of the beginning of this slice in the DATA AREA 
+  // of the container file.  Typically the data area begins after 
+  // the end of the catalog.  The code the actually copies the 
+  // data into the file will know this and compensate.  
   long int slice_offset_in_container=PARFU_OFFSET_INVALID;
 };
 

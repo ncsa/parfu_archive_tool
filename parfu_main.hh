@@ -29,11 +29,15 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <mpi.h>
+#include <dirent.h>
+#include <string.h>
+#include <unistd.h>
 
 #include <iostream>
 #include <string>
 #include <vector>
 #include <list>
+#include <filesystem>
 
 #define PARFU_OFFSET_INVALID        (-1L)
 
@@ -56,10 +60,16 @@
 
 #define PARFU_SPIDER_DIRECTORY_RETURN_ERROR             (-1L)
 
-
 #include "tarentry.hh"
 #include "parfu_file_system_classes.hh"
+#include "parfu_2021_legacy.hh"
 
+#define PARFU_WHAT_IS_PATH_REGFILE         0x001
+#define PARFU_WHAT_IS_PATH_SYMLINK         0x002
+#define PARFU_WHAT_IS_PATH_DIR             0x004
+#define PARFU_WHAT_IS_PATH_DOES_NOT_EXIST  0x100
+#define PARFU_WHAT_IS_PATH_IGNORED_TYPE    0x200
+#define PARFU_WHAT_IS_PATH_ERROR           0x400
 
 using namespace std;
 

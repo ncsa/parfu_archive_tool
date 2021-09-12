@@ -24,11 +24,14 @@
 
 
 #include "parfu_main.hh"
+#include "parfu_2021_legacy.hh"
 
 #ifndef PARFU_FILE_SYSTEM_CLASSES_HH_
 #define PARFU_FILE_SYSTEM_CLASSES_HH_
 
 using namespace std;
+//using namespace filesystem;
+//namespace fs = std::filesystem;
 
 ////////////////////
 //
@@ -253,16 +256,53 @@ public:
   long int spider_directory(void){
     // This is a big fuction, used when creating an 
     // archive.  
-    // Returns the total number of entries found
-    // (This function should be in a position to 
-    // send MPI messages to other ranks, so that
-    // they can cooperate in spidering the file 
-    // system.)
-
     long int total_entries_found=0;
+    DIR *my_dir=NULL;
+    struct dirent *next_entry;  
+    unsigned int path_type_result;
     
+    char **link_target=NULL;
+    long int file_size=(-1);
+    int follow_symlinks=0; // need to fix this
+
+    if(spidered){
+      cerr << "This directory already spidered!  >>" << directory_path << "\n";
+      return -1L;
+    }
+    //    for (const auto & next_entry : std::filesystem::directory_iterator(directory_path)){
+    if((my_dir=opendir(directory_path.c_str()))==NULL){
+      cerr << "Could not open directory >>" << directory_path << "for scanning!\n";
+      return -2L;
+    }
+    next_entry=readdir(my_dir);
+    while(next_entry!=NULL){
+      // traverse once per entry
+      // first flush out "." and ".."
+      if(!strncmp(next_entry->d_name,".",1)){
+	next_entry=readdir(my_dir);
+	continue;
+      }
+      if(!strncmp(next_entry->d_name,"..",2)){
+	next_entry=readdir(my_dir);
+	continue;
+      }
+      // it's a name we need to check the type of
+      string entry_bare_name = string(next_entry->d_name);
+      string entry_relative_name = directory_path;
+      entry_relative_name.append("/");
+      entry_relative_name.append(entry_bare_name);
+      // entry_relative_name is the next entry.  
+      // we now need to check it to find out what it is 
+      // (directory,regular file, symlink) and how big
+      // it is if it's a regular file.
+      path_type_result=
+	parfu_what_is_path(entry_relative_name.c_str(),link_target,&file_size,follow_symlinks);
+      
+      
+      
+    } // while(next_entry...)
     return total_entries_found;
-  }
+  } // long int spider_directory()
   // copy constructor
   Parfu_directory(const Parfu_directory &in_dir){
     directory_path = in_dir.directory_path;

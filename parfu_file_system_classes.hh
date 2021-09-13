@@ -248,7 +248,10 @@ class Parfu_directory
 {
 public:
   // main constructor
-  Parfu_directory(string directory_path){
+  Parfu_directory(void){
+  }
+  Parfu_directory(string my_dirpath){
+    directory_path = my_dirpath;
   }
   bool is_directory_spidered(void){
     return spidered;
@@ -261,7 +264,7 @@ public:
     struct dirent *next_entry;  
     unsigned int path_type_result;
     
-    char **link_target=NULL;
+    string link_target;
     long int file_size=(-1);
     int follow_symlinks=0; // need to fix this
 
@@ -271,7 +274,7 @@ public:
     }
     //    for (const auto & next_entry : std::filesystem::directory_iterator(directory_path)){
     if((my_dir=opendir(directory_path.c_str()))==NULL){
-      cerr << "Could not open directory >>" << directory_path << "for scanning!\n";
+      cerr << "Could not open directory >>" << directory_path << "<<for scanning!\n";
       return -2L;
     }
     next_entry=readdir(my_dir);
@@ -297,10 +300,13 @@ public:
       // it is if it's a regular file.
       path_type_result=
 	parfu_what_is_path(entry_relative_name.c_str(),link_target,&file_size,follow_symlinks);
+      cout << "relative name: >>" << entry_relative_name << "<< file size: " << file_size << "\n";
       
       
-      
+      next_entry=readdir(my_dir);
     } // while(next_entry...)
+    
+    spidered=true;
     return total_entries_found;
   } // long int spider_directory()
   // copy constructor

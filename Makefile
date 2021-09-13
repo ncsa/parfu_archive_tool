@@ -103,7 +103,8 @@ TARGETS := parfu_0_5_1 parfu_0_6_test
 PARFU_HEADER_FILES := parfu_primary.h tarentry.hh parfu_main.hh parfu_file_system_classes.hh
 
 #PARFU_OBJECT_FILES := parfu_file_list_utils.o parfu_buffer_utils.o parfu_data_transfer.o parfu_behavior_control.o tarentry.o
-PARFU_OBJECT_FILES := parfu_file_list_utils.o parfu_buffer_utils.o parfu_data_transfer.o tarentry.o parfu_2021_legacy.o 
+PARFU_OBJECT_FILES := parfu_2021_legacy.o parfu_file_list_utils.o parfu_buffer_utils.o parfu_data_transfer.o tarentry.o 
+PARFU_TEST_OBJECT_FILES := parfu_2021_legacy.o tarentry.o 
 
 default: ${TARGETS}
 test: parfu_0_6_test
@@ -131,8 +132,8 @@ parfu_write_test: parfu_write_test.o ${PARFU_HEADER_FILES}
 parfu_0_5_1: parfu_0_5_1_main_versA.o ${PARFU_OBJECT_FILES} ${PARFU_HEADER_FILES}
 	${MY_CXX} -o $@ ${CFLAGS} parfu_0_5_1_main_versA.o ${PARFU_OBJECT_FILES}	
 
-parfu_0_6_test: parfu_main_0_6_test.o ${PARFU_OBJECT_FILES} ${PARFU_HEADER_FILES}
-	${MY_CXX} -o $@ ${CFLAGS} parfu_main_0_6_test.o ${PARFU_OBJECT_FILES}
+parfu_0_6_test: parfu_main_0_6_test.o ${PARFU_TEST_OBJECT_FILES} ${PARFU_HEADER_FILES}
+	${MY_CXX} -o $@ ${CFLAGS} parfu_main_0_6_test.o ${PARFU_TEST_OBJECT_FILES}
 
 # utility targets
 

@@ -21,17 +21,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
+using namespace std;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
-unsigned int parfu_what_is_path(const char *pathname,
-				char **target_text,
+unsigned int parfu_what_is_path(string pathname,
+				string &target_text,
 				long int *size,
-				int follow_symlinks);
+				bool follow_symlinks);
 
 
-#ifdef __cplusplus
-}
-#endif

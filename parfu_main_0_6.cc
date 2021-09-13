@@ -24,7 +24,20 @@
 
 #include "parfu_main.hh"
 
-int main(){
+int main(int argc, char *argv[]){
+  
+  Parfu_directory test_dir;
+
   cout << "parfu test build\n";
+  if(argc > 1){
+    cout << "We will scan directory:";
+    cout << argv[1];
+    cout << "\n";
+  }
+  else{
+    cout << "You must input a directory to scan!\n";
+  }
+
+
   return 0;
 }

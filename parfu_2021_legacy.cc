@@ -23,10 +23,13 @@
 #include "parfu_main.hh"
 #include "parfu_2021_legacy.hh"
 
+using namespace std;
+
+
 unsigned int parfu_what_is_path(string pathname,
-				string &target_text,
-				long int *size,
-				bool follow_symlinks){
+				       string &target_text,
+				       long int *size,
+				       bool follow_symlinks){
   struct stat filestruct;
   int returnval;
   int buffer_length;

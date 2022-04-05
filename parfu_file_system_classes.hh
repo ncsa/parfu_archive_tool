@@ -308,8 +308,28 @@ public:
       path_type_result=
 	parfu_what_is_path(entry_relative_name.c_str(),link_target,&file_size,follow_symlinks);
       cout << "relative name: >>" << entry_relative_name << "<< file size: " << file_size << "\n";
-      
-      
+      switch(path_type_result){
+      case PARFU_WHAT_IS_PATH_DOES_NOT_EXIST:
+	cerr << "Parfu_directory const; does not exist: >>" << entry_relative_name << "<<\n";
+	break;
+      case PARFU_WHAT_IS_PATH_IGNORED_TYPE:
+	cerr << "Parfu_directory const; ignored type??: >>" << entry_relative_name << "<<\n";
+	break;
+      case PARFU_WHAT_IS_PATH_REGFILE:
+	// it's a regular file that we need to store
+      case PARFU_WHAT_IS_PATH_DIR:
+	// it's a directory that we need to note and it will need to be spidered in the future
+      case PARFU_WHAT_IS_PATH_SYMLINK:
+	// simlink that we'll need to store for now
+      case PARFU_WHAT_IS_PATH_ERROR:
+	// not sure what would cause an error in this function, but catch it here
+	cerr << "Parfu_directory const; ERROR from what_is_path: >>" << entry_relative_name << "<<\n";
+	break;
+      default:
+	// don't know if it's possible to fall through to here??
+	cerr << "Parfu_directory const; reached default branch??: >>" << entry_relative_name << "<<\n";
+	break:
+      }
       next_entry=readdir(my_dir);
     } // while(next_entry...)
     

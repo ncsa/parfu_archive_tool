@@ -266,7 +266,8 @@ public:
     
     string link_target;
     long int file_size=(-1);
-    int follow_symlinks=0; // need to fix this
+    // TODO: make this sensitive to command-line input
+    int follow_symlinks=0;
 
     if(spidered){
       cerr << "This directory already spidered!  >>" << directory_path << "\n";

@@ -296,7 +296,7 @@ public:
 	next_entry=readdir(my_dir);
 	continue;
       }
-      // it's a name we need to check the type of the entry
+      // it's a name so we need to check the type of the entry
       string entry_bare_name = string(next_entry->d_name);
       string entry_relative_name = directory_path;
       entry_relative_name.append("/");

@@ -25,6 +25,10 @@
 
 using namespace std;
 
+///////////////////////////////////
+//
+// This file contains some of the utility functions from the original C version
+// of the code that we're using in the C++ class functions.  
 
 unsigned int parfu_what_is_path(string pathname,
 				       string &target_text,

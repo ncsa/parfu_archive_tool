@@ -260,11 +260,16 @@ public:
     // This is a big fuction, used when creating an 
     // archive.  
     long int total_entries_found=0;
+    // OS-level directory structure
     DIR *my_dir=NULL;
     struct dirent *next_entry;  
+    // internal parfu variable telling us what the entry is
+    // regular file, symlink, directory, etc. 
     unsigned int path_type_result;
     
     string link_target;
+    // File size if > 0.  Otherwise, this will be some slightly
+    // negative number useful for classification
     long int file_size=(-1);
     // TODO: make this sensitive to command-line input
     int follow_symlinks=0;
@@ -278,10 +283,11 @@ public:
       cerr << "Could not open directory >>" << directory_path << "<<for scanning!\n";
       return -2L;
     }
+    // using the C library for traversing this directory
     next_entry=readdir(my_dir);
     while(next_entry!=NULL){
       // traverse once per entry
-      // first flush out "." and ".."
+      // skip over "." and ".."
       if(!strncmp(next_entry->d_name,".",1)){
 	next_entry=readdir(my_dir);
 	continue;
@@ -290,7 +296,7 @@ public:
 	next_entry=readdir(my_dir);
 	continue;
       }
-      // it's a name we need to check the type of
+      // it's a name we need to check the type of the entry
       string entry_bare_name = string(next_entry->d_name);
       string entry_relative_name = directory_path;
       entry_relative_name.append("/");

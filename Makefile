@@ -104,7 +104,7 @@ PARFU_HEADER_FILES := parfu_primary.h tarentry.hh parfu_main.hh parfu_file_syste
 
 #PARFU_OBJECT_FILES := parfu_file_list_utils.o parfu_buffer_utils.o parfu_data_transfer.o parfu_behavior_control.o tarentry.o
 PARFU_OBJECT_FILES := parfu_2021_legacy.o parfu_file_list_utils.o parfu_buffer_utils.o parfu_data_transfer.o tarentry.o 
-PARFU_TEST_OBJECT_FILES := parfu_2021_legacy.o tarentry.o 
+PARFU_TEST_OBJECT_FILES := parfu_2021_legacy.o parfu_file_system_classes.o tarentry.o 
 
 default: ${TARGETS}
 test: parfu_0_6_test

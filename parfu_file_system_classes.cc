@@ -67,7 +67,8 @@ long int Parfu_directory::spider_directory(void){
       next_entry=readdir(my_dir);
       continue;
     }
-    // it's a name so we need to check the type of the entry
+    // We know now that it's an actual thing with a name,
+    // so we need to check *what* it is
     string entry_bare_name = string(next_entry->d_name);
     string entry_relative_name = directory_path;
     entry_relative_name.append("/");
@@ -82,9 +83,14 @@ long int Parfu_directory::spider_directory(void){
     switch(path_type_result){
     case PARFU_WHAT_IS_PATH_DOES_NOT_EXIST:
       cerr << "Parfu_directory const; does not exist: >>" << entry_relative_name << "<<\n";
+      // this should generally never happen 
       break;
     case PARFU_WHAT_IS_PATH_IGNORED_TYPE:
-      cerr << "Parfu_directory const; ignored type??: >>" << entry_relative_name << "<<\n";
+      cerr << "Parfu_directory spider_dir function: ignored type, will skip file: >>" << entry_relative_name << "<<\n";
+      // I presume for now we'll just jump over this entry without acknowledging it or storing
+      // anywhere.  This would be an entry that's not a file, not a symlink, and not a
+      // subdirectory.  So....a dev file?  Something else?  Probably save to not save it
+      // to the archive.  Possibly leaving the warning?  
       break;
     case PARFU_WHAT_IS_PATH_REGFILE:
       // it's a regular file that we need to store

@@ -296,7 +296,7 @@ private:
   // Time stamp when the directory was last searched for contents (spidered)
   time_t last_time_spidered=PARFU_DEFAULT_LAST_TIME_SPIDERED;
   vector <Parfu_directory*> subdirectories;
-  vector <Parfu_target_file*> subfiles;
+  vector <Parfu_target_file> subfiles;
 };
 
 //////////////////////////////////

@@ -93,7 +93,9 @@ long int Parfu_directory::spider_directory(void){
       // to the archive.  Possibly leaving the warning?  
       break;
     case PARFU_WHAT_IS_PATH_REGFILE:
-      // it's a regular file that we need to store
+      // it's a regular file that we need to store.  This is the
+      // core of what parfu needs to tackle.
+      subfiles.push_back(Parfu_target_file(directory_path,entry_relative_name,path_type_result));
     case PARFU_WHAT_IS_PATH_DIR:
       // it's a directory that we need to note and it will need to be spidered in the future
     case PARFU_WHAT_IS_PATH_SYMLINK:

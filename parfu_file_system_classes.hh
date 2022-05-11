@@ -87,6 +87,10 @@ class Parfu_container_file;
 
 ////////////////
 // 
+// A "target file" will be anything that's not a directory that
+// needs to be stored in a target file.  A target file could
+// be a regular file (a sequence of bytes), a symlink (which
+// consists only of a name and the name of its target)
 class Parfu_target_file
 { 
 public:  
@@ -141,6 +145,7 @@ private:
   // if there aren't any, the entirety of relative_full_path.  
   string relative_full_path;
   string base_path;
+  string symlink_target;
   
   // every file is made up of one or more subfiles
   // here's a list of them

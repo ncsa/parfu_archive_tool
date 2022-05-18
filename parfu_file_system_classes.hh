@@ -96,11 +96,7 @@ class Parfu_target_file
 public:  
   // constructor
   Parfu_target_file(string in_base_path, string in_relative_path,
-		   int in_file_type){
-    relative_full_path=in_relative_path;
-    base_path=in_base_path;
-    file_type_value=in_file_type;
-  }
+		    int in_file_type);
   // copy constructor
   Parfu_target_file(const Parfu_target_file &in_file){
     relative_full_path = in_file.relative_full_path;
@@ -131,6 +127,9 @@ public:
   }
   bool are_slices_populated(void){
     return true;
+  }
+  void set_symlink_target(string target_string){
+    symlink_target=target_string;
   }
 private:
   // base_path here will typically be the location that parfu was pointed to 

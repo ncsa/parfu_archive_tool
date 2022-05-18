@@ -27,6 +27,13 @@
 //#include "parfu_2021_legacy.hh"
 #include "parfu_file_system_classes.hh"
 
+Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_path,
+				     int in_file_type){
+  relative_full_path=in_relative_path;
+  base_path=in_base_path;
+  file_type_value=in_file_type;
+}
+
 long int Parfu_directory::spider_directory(void){
   // This is a big fuction, used when creating an 
   // archive.  
@@ -89,17 +96,25 @@ long int Parfu_directory::spider_directory(void){
       cerr << "Parfu_directory spider_dir function: ignored type, will skip file: >>" << entry_relative_name << "<<\n";
       // I presume for now we'll just jump over this entry without acknowledging it or storing
       // anywhere.  This would be an entry that's not a file, not a symlink, and not a
-      // subdirectory.  So....a dev file?  Something else?  Probably save to not save it
+      // subdirectory.  So....a dev file?  Something else?  Probably safe to not save it
       // to the archive.  Possibly leaving the warning?  
       break;
     case PARFU_WHAT_IS_PATH_REGFILE:
       // it's a regular file that we need to store.  This is the
       // core of what parfu needs to tackle.
       subfiles.push_back(Parfu_target_file(directory_path,entry_relative_name,path_type_result));
+      break;
     case PARFU_WHAT_IS_PATH_DIR:
       // it's a directory that we need to note and it will need to be spidered in the future
+      break;
     case PARFU_WHAT_IS_PATH_SYMLINK:
       // simlink that we'll need to store for now
+      Parfu_target_file *my_tempfile;
+      my_tempfile =
+	new Parfu_target_file(directory_path,entry_relative_name,path_type_result);
+      my_tempfile->set_symlink_target(link_target);
+      subfiles.push_back(*my_tempfile);
+      break;
     case PARFU_WHAT_IS_PATH_ERROR:
       // not sure what would cause an error in this function, but catch it here
       cerr << "Parfu_directory const; ERROR from what_is_path: >>" << entry_relative_name << "<<\n";

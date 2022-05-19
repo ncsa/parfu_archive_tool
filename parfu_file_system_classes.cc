@@ -61,6 +61,14 @@ long int Parfu_directory::spider_directory(void){
     cerr << "Could not open directory >>" << directory_path << "<<for scanning!\n";
     return -2L;
   }
+  // This loop is the *initial* traverse of the directory that
+  // this instance points to.  That is, this next loop
+  // traverses the top level of the directory.  This will
+  // mark down symlinks and regular files to use later
+  // during the data storage/movement phase.  We will
+  // also note down subdirectories that will later
+  // need to be traversed.  
+  
   // using the C library for traversing this directory
   next_entry=readdir(my_dir);
   while(next_entry!=NULL){
@@ -106,6 +114,10 @@ long int Parfu_directory::spider_directory(void){
       break;
     case PARFU_WHAT_IS_PATH_DIR:
       // it's a directory that we need to note and it will need to be spidered in the future
+      Parfu_directory *new_subdir_ptr;
+      new_subdir_ptr =
+	new Parfu_directory(directory_path);
+      subdirectories.push_back(new_subdir_ptr);
       break;
     case PARFU_WHAT_IS_PATH_SYMLINK:
       // simlink that we'll need to store for now
@@ -126,6 +138,31 @@ long int Parfu_directory::spider_directory(void){
     }
     next_entry=readdir(my_dir);
   } // while(next_entry...)
+  
+  // Now this directory has been read.  Now we need to
+  // go through all the subdirectories and read their
+  // entries too.
+  //
+  // For now (May 19 2022) we'll attempt to do this
+  // as a recursive function call.
+  // If I've done this right, I think this should
+  // basically end up as a callstack as deep as the
+  // deepest layer of the file directory.  I don't
+  // think we'll get a thread explosion; I think
+  // the upper calling threads will just be waiting
+  // for the lower directory threads each to finish. 
+
+  // Possibly in the
+  // future, here we'll make calls to other ranks
+  // to do this, although we'll have to be very
+  // careful not to make a giant mess.
+  
+  for(std::size_t subdir_index=0;subdir_index < subdirectories.size();subdir_index++){
+    // fire off the spider function of each subdirectory in turn
+    Parfu_directory *local_subdir;
+    local_subdir=subdirectories[subdir_index];
+    local_subdir->spider_directory();
+  }
   
   spidered=true;
   return total_entries_found;

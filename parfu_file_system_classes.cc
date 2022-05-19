@@ -71,6 +71,9 @@ long int Parfu_directory::spider_directory(void){
   
   // using the C library for traversing this directory
   next_entry=readdir(my_dir);
+  if(next_entry == NULL){
+    cerr << "\nFound NULL entry in directory!!!\n\n";
+  }
   while(next_entry!=NULL){
     // traverse once per entry
     // skip over "." and ".."
@@ -95,6 +98,7 @@ long int Parfu_directory::spider_directory(void){
     path_type_result=
       parfu_what_is_path(entry_relative_name.c_str(),link_target,&file_size,follow_symlinks);
     cout << "relative name: >>" << entry_relative_name << "<< file size: " << file_size << "\n";
+    cout << "file type: \n" << path_type_result << "\n";
     switch(path_type_result){
     case PARFU_WHAT_IS_PATH_DOES_NOT_EXIST:
       cerr << "Parfu_directory const; does not exist: >>" << entry_relative_name << "<<\n";

@@ -39,8 +39,8 @@ long int Parfu_directory::spider_directory(void){
   // archive.  
   long int total_entries_found=0;
   // OS-level directory structure
-  DIR *my_dir=NULL;
-  struct dirent *next_entry;  
+  DIR *my_dir;
+  struct dirent * next_entry;
   // internal parfu variable telling us what the entry is
   // regular file, symlink, directory, etc. 
   unsigned int path_type_result;
@@ -57,7 +57,7 @@ long int Parfu_directory::spider_directory(void){
     return -1L;
   }
   //    for (const auto & next_entry : std::filesystem::directory_iterator(directory_path)){
-  if((my_dir=opendir(directory_path.c_str()))==NULL){
+  if((my_dir=opendir(directory_path.c_str()))==nullptr){
     cerr << "Could not open directory >>" << directory_path << "<<for scanning!\n";
     return -2L;
   }
@@ -70,19 +70,22 @@ long int Parfu_directory::spider_directory(void){
   // need to be traversed.  
   
   // using the C library for traversing this directory
-  next_entry=readdir(my_dir);
-  if(next_entry == NULL){
-    cerr << "\nFound NULL entry in directory!!!\n\n";
-  }
-  while(next_entry!=NULL){
+  //  next_entry=readdir(my_dir);
+  //  if(next_entry == nullptr){
+  //    cerr << "\nFound nullptr entry in directory!!!\n\n";
+  //  }
+  while( (next_entry=readdir(my_dir)) != nullptr ){
+
+
+    //    if(next_entry == nullptr){
+    //      cerr << "\nFound nullptr entry in directory!!!\n\n";
+    //    }
     // traverse once per entry
     // skip over "." and ".."
     if(!strncmp(next_entry->d_name,".",1)){
-      next_entry=readdir(my_dir);
       continue;
     }
     if(!strncmp(next_entry->d_name,"..",2)){
-      next_entry=readdir(my_dir);
       continue;
     }
     // We know now that it's an actual thing with a name,
@@ -120,7 +123,7 @@ long int Parfu_directory::spider_directory(void){
       // it's a directory that we need to note and it will need to be spidered in the future
       Parfu_directory *new_subdir_ptr;
       new_subdir_ptr =
-	new Parfu_directory(directory_path);
+      	new Parfu_directory(entry_relative_name);
       subdirectories.push_back(new_subdir_ptr);
       break;
     case PARFU_WHAT_IS_PATH_SYMLINK:
@@ -140,7 +143,6 @@ long int Parfu_directory::spider_directory(void){
       cerr << "Parfu_directory const; reached default branch??: >>" << entry_relative_name << "<<\n";
       break;
     }
-    next_entry=readdir(my_dir);
   } // while(next_entry...)
   
   // Now this directory has been read.  Now we need to

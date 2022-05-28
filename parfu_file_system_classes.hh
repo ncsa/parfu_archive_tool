@@ -97,6 +97,9 @@ public:
   // constructor
   Parfu_target_file(string in_base_path, string in_relative_path,
 		    int in_file_type);
+  // constructor (with symlink target)
+  Parfu_target_file(string in_base_path, string in_relative_path,
+		    int in_file_type, string in_symlink_target);
   // copy constructor
   Parfu_target_file(const Parfu_target_file &in_file){
     relative_full_path = in_file.relative_full_path;
@@ -106,7 +109,7 @@ public:
     file_size = in_file.file_size;
     file_type_value = in_file.file_type_value;
   }
-  // assignemnt operator
+  // assignment operator
   Parfu_target_file& operator=(const Parfu_target_file &in_file){
     relative_full_path = in_file.relative_full_path;
     base_path = in_file.base_path;

@@ -34,6 +34,14 @@ Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_pat
   file_type_value=in_file_type;
 }
 
+Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_path,
+				     int in_file_type, string in_symlink_target){
+  relative_full_path=in_relative_path;
+  base_path=in_base_path;
+  file_type_value=in_file_type;
+  symlink_target = in_symlink_target;
+}
+
 long int Parfu_directory::spider_directory(void){
   // This is a big fuction, used when creating an 
   // archive.  

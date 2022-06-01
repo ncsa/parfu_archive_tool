@@ -39,10 +39,21 @@ string Parfu_target_file::generate_archive_catalog_line(void){
   // (the shorter one)
   string out_string;
   // path + filename within the archive
-  
+  out_string.append(relative_full_path);
   out_string.append("\t"); // \t
-  // type
 
+  // type
+  switch(file_type_value){
+  case PARFU_FILE_TYPE_REGULAR:
+    out_string += PARFU_FILE_TYPE_REGULAR_CHAR;
+    break;
+  case PARFU_FILE_TYPE_DIRECTORY:
+    out_string += PARFU_FILE_TYPE_DIRECTORY_CHAR;
+    break;
+  case PARFU_FILE_TYPE_SYMLINK:
+    out_string += PARFU_FILE_TYPE_SYMLINK_CHAR;
+    break;
+  }
   out_string.append("\t"); // \t
   // symlink target
 
@@ -68,6 +79,7 @@ string Parfu_target_file::generate_full_catalog_line(void){
   // this line will be suitable for sending over MPI
   // to other ranks.
   string out_string;
+
   // path + filename, realtive to parfu process CWD
   // \t
   // path + filename within the archive

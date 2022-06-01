@@ -44,8 +44,11 @@
 #define PARFU_DEFAULT_LAST_TIME_SPIDERED          (0)
 
 #define PARFU_FILE_TYPE_INVALID      (-1)
-#define PARFU_FILE_TYPE_REAL          (0)
-#define PARFU_FILE_TYPE_PAD           (1)
+#define PARFU_FILE_TYPE_REGULAR          (0)
+#define PARFU_FILE_TYPE_DIRECTORY     (1)
+#define PARFU_FILE_TYPE_SYMLINK       (2)
+#define PARFU_FILE_TYPE_PAD           (22)
+
 
 #define PARFU_FILE_SIZE_EMPTY              (0L)
 // These legacy values should not be used in new .pfu files.  
@@ -71,6 +74,11 @@
 #define PARFU_WHAT_IS_PATH_IGNORED_TYPE    0x200
 #define PARFU_WHAT_IS_PATH_ERROR           0x400
 
+#define PARFU_FILE_TYPE_REGULAR_CHAR 'F'
+#define PARFU_FILE_TYPE_DIRECTORY_CHAR 'd'
+#define PARFU_FILE_TYPE_SYMLINK_CHAR 'L'
+#define PARFU_FILE_TYPE_INVALID_CHAR 'X'
+  
 using namespace std;
 
 // classes to define for new structure of parfu

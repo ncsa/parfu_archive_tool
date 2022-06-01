@@ -38,6 +38,7 @@ string Parfu_target_file::generate_archive_catalog_line(void){
   // format is the *archive* catalog line
   // (the shorter one)
   string out_string;
+
   // path + filename within the archive
   out_string.append(relative_full_path);
   out_string.append("\t"); // \t
@@ -55,14 +56,18 @@ string Parfu_target_file::generate_archive_catalog_line(void){
     break;
   }
   out_string.append("\t"); // \t
+
   // symlink target
-
+  out_string.append(symlink_target);
   out_string.append("\t"); // \t
+
   // size
-
+  out_string.append(to_string(file_size));
   out_string.append("\t");// \t
-  // size of tar header
 
+  // size of tar header
+  
+  
   // \t
   // location in archive file
   out_string.append("\n");// \n

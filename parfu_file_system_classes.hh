@@ -108,6 +108,7 @@ public:
     parent_container = in_file.parent_container; 
     file_size = in_file.file_size;
     file_type_value = in_file.file_type_value;
+    symlink_target = in_file.symlink_target;
   }
   // assignment operator
   Parfu_target_file& operator=(const Parfu_target_file &in_file){
@@ -116,7 +117,8 @@ public:
     slices = in_file.slices;
     parent_container = in_file.parent_container; 
     file_size = in_file.file_size;
-    slices = in_file.slices;    
+    file_type_value = in_file.file_type_value;
+    symlink_target = in_file.symlink_target;    
     return *this;
   }
   // destructor

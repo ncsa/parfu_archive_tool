@@ -310,6 +310,54 @@ private:
 
 //////////////////////////////////
 //
+// These "target_collection" classes will collect
+// lots of directories and their files together to
+// keep track of them as a unit.  Any one instance of
+// parfu may need to be keeping track of lots of
+// directories and files, and these classes will
+// have the tools to transmit, collect them between
+// ranks and subdivide them if needed.
+//
+/////////////////////////
+class Parfu_target_collection
+{
+public:
+  // everyday-use constructor
+  Parfu_target_collection(){
+  }
+  // copy constructor
+  Parfu_target_collection(const Parfu_target_collection &in_collec){
+    for( unsigned int i=0 ; i < in_collec.directories.size() ; i++){
+      directories[i] = in_collec.directories[i];
+    }
+    for( unsigned int i=0 ; i < in_collec.files.size() ; i++){
+      files[i] = in_collec.files[i];
+    }
+  }
+  // assignment operator
+  Parfu_target_collection& operator=(const Parfu_target_collection &in_collec){
+    for( unsigned int i=0 ; i < in_collec.directories.size() ; i++){
+      directories[i] = in_collec.directories[i];
+    }
+    for( unsigned int i=0 ; i < in_collec.files.size() ; i++){
+      files[i] = in_collec.files[i];
+    }    
+    return *this;
+  }
+  
+  // destructor
+  ~Parfu_target_collection(void){
+  }
+
+private:
+  vector <Parfu_directory*> directories;
+  vector <Parfu_target_file> files;
+
+};
+
+
+//////////////////////////////////
+//
 // Classes pertaining to container files
 // 
 // Parfu_container_file contains the file pointers and metadata 

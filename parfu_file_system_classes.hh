@@ -100,6 +100,8 @@ public:
   // constructor (with symlink target)
   Parfu_target_file(string in_base_path, string in_relative_path,
 		    int in_file_type, string in_symlink_target);
+  // constructor from a transmitted catalog line as a string
+  Parfu_target_file(string catalog_line);
   // copy constructor
   Parfu_target_file(const Parfu_target_file &in_file){
     relative_full_path = in_file.relative_full_path;
@@ -136,6 +138,8 @@ public:
   void set_symlink_target(string target_string){
     symlink_target=target_string;
   }
+  string generate_archive_catalog_line(void);
+  string generate_full_catalog_line(void);
 private:
   // base_path here will typically be the location that parfu was pointed to 
   // to archive.  So the absolute path of this file will typically be:

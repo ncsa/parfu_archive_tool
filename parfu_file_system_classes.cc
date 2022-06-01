@@ -27,6 +27,89 @@
 //#include "parfu_2021_legacy.hh"
 #include "parfu_file_system_classes.hh"
 
+// these functions transform a target file to a line in a catalog, or take a
+// line from a catalog (as a string) and constructs the corresponding
+// target file class
+// For now taking definitions and format for these lines
+// from parfu_buffer_utils.c
+
+string Parfu_target_file::generate_archive_catalog_line(void){
+  // dump contents as a string
+  // format is the *archive* catalog line
+  // (the shorter one)
+  string out_string;
+  // path + filename within the archive
+  
+  out_string.append("\t"); // \t
+  // type
+
+  out_string.append("\t"); // \t
+  // symlink target
+
+  out_string.append("\t"); // \t
+  // size
+
+  out_string.append("\t");// \t
+  // size of tar header
+
+  // \t
+  // location in archive file
+  out_string.append("\n");// \n
+  return out_string;  
+}
+
+// OOPS this needs to be per slice?  (called "fragment" in
+// .c version?
+
+string Parfu_target_file::generate_full_catalog_line(void){
+  // dump contents as a string
+  // format is the *full* catalog line
+  // (the longer one)
+  // this line will be suitable for sending over MPI
+  // to other ranks.
+  string out_string;
+  // path + filename, realtive to parfu process CWD
+  // \t
+  // path + filename within the archive
+  // \t
+  // type
+  // \t
+  // symlink target
+  // \t
+  // size
+  // \t
+  // size of tar header
+  // \t
+  // location in archive file
+  // \t
+  // location of fragment in original file
+  // \t
+  // location of previous pad file in archive file
+  // \t
+  // filename of preceeding pad file
+  // \t
+  // tar header size of preceeding pad file
+  // \t
+  // size of preceeding pad file
+  // \t
+  // total slices this file is divided into
+  // \t
+  // file pointer index (internal use only)
+  // \t
+  // rank bucket index this slice goes in
+
+  return out_string;
+
+}
+Parfu_target_file::Parfu_target_file(string catalog_line){
+  // parse the line to extract the target file
+  
+}
+
+
+
+
+
 Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_path,
 				     int in_file_type){
   relative_full_path=in_relative_path;
@@ -41,6 +124,8 @@ Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_pat
   file_type_value=in_file_type;
   symlink_target = in_symlink_target;
 }
+
+
 
 long int Parfu_directory::spider_directory(void){
   // This is a big fuction, used when creating an 

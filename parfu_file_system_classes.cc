@@ -66,10 +66,10 @@ string Parfu_target_file::generate_archive_catalog_line(void){
   out_string.append("\t");// \t
 
   // size of tar header
-  
-  
-  // \t
+  out_string.append("\t");  // \t
+
   // location in archive file
+  
   out_string.append("\n");// \n
   return out_string;  
 }
@@ -86,15 +86,33 @@ string Parfu_target_file::generate_full_catalog_line(void){
   string out_string;
 
   // path + filename, realtive to parfu process CWD
-  // \t
+  out_string.append(relative_full_path);
+  out_string.append("\t"); // \t
+
   // path + filename within the archive
   // \t
   // type
-  // \t
+  switch(file_type_value){
+  case PARFU_FILE_TYPE_REGULAR:
+    out_string += PARFU_FILE_TYPE_REGULAR_CHAR;
+    break;
+  case PARFU_FILE_TYPE_DIRECTORY:
+    out_string += PARFU_FILE_TYPE_DIRECTORY_CHAR;
+    break;
+  case PARFU_FILE_TYPE_SYMLINK:
+    out_string += PARFU_FILE_TYPE_SYMLINK_CHAR;
+    break;
+  }
+  out_string.append("\t"); // \t
+
   // symlink target
-  // \t
+  out_string.append(symlink_target);
+  out_string.append("\t"); // \t
+
   // size
-  // \t
+  out_string.append(to_string(file_size));
+  out_string.append("\t");// \t
+
   // size of tar header
   // \t
   // location in archive file

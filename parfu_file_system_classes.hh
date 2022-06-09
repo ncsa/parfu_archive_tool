@@ -100,6 +100,12 @@ public:
   // constructor (with symlink target)
   Parfu_target_file(string in_base_path, string in_relative_path,
 		    int in_file_type, string in_symlink_target);
+  Parfu_target_file(string in_base_path, string in_relative_path,
+		    int in_file_type, long int in_file_size,
+		    string in_symlink_target);
+  Parfu_target_file(string in_base_path, string in_relative_path,
+		    int in_file_type, long int in_file_size);
+
   // constructor from a transmitted catalog line as a string
   Parfu_target_file(string catalog_line);
   // copy constructor
@@ -125,6 +131,7 @@ public:
   }
   // destructor
   ~Parfu_target_file(void){
+    
   }
   string absolute_path(){
     return base_path+"/"+relative_full_path;
@@ -140,7 +147,13 @@ public:
   }
   string generate_archive_catalog_line(void);
   string generate_full_catalog_line(void);
+  bool are_locations_set(void){
+    return are_locations_filled_out;
+  }
+  int fill_out_locations(long int start_offset,
+			 long int slice_size);
 private:
+  bool are_locations_filled_out=false;
   // base_path here will typically be the location that parfu was pointed to 
   // to archive.  So the absolute path of this file will typically be:
   // <base_path> / <relative_full_path>
@@ -186,6 +199,12 @@ public:
     slice_size = in_size;
     slice_offset_in_file = in_offset_in_file;
     slice_offset_in_container = in_offset_in_container;
+  }
+  Parfu_file_slice(long int in_size,
+		   long int in_offset_in_file){
+    slice_size = in_size;
+    slice_offset_in_file = in_offset_in_file;
+    slice_offset_in_container = -1L;
   }
   // copy constructor
   Parfu_file_slice(const Parfu_file_slice &in_slice){

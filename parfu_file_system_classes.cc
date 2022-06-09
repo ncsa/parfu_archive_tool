@@ -33,6 +33,18 @@
 // For now taking definitions and format for these lines
 // from parfu_buffer_utils.c
 
+int Parfu_target_file::fill_out_locations(long int start_offset,
+					  long int slice_size){
+  int internal_n_slices;
+  
+  // start_offset is the input starting location in the
+  // archive file.  This function then populates the
+  // slice(s) with the corresponding slice(s) location(s)
+
+  are_locations_filled_out=true;
+  return slices.size();
+}
+
 string Parfu_target_file::generate_archive_catalog_line(void){
   // dump contents as a string
   // format is the *archive* catalog line
@@ -136,6 +148,7 @@ string Parfu_target_file::generate_full_catalog_line(void){
   return out_string;
 
 }
+
 Parfu_target_file::Parfu_target_file(string catalog_line){
   // parse the line to extract the target file
   
@@ -150,6 +163,7 @@ Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_pat
   relative_full_path=in_relative_path;
   base_path=in_base_path;
   file_type_value=in_file_type;
+  
 }
 
 Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_path,
@@ -158,6 +172,28 @@ Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_pat
   base_path=in_base_path;
   file_type_value=in_file_type;
   symlink_target = in_symlink_target;
+}
+
+Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_path,
+				     int in_file_type, long int in_file_size,
+				     string in_symlink_target){
+  // offset of file within itself is zero
+
+  relative_full_path=in_relative_path;
+  base_path=in_base_path;
+  file_type_value=in_file_type;
+  file_size = in_file_size;
+  symlink_target = in_symlink_target;
+
+  slices.push_back(Parfu_file_slice(in_file_size,0));
+}
+
+Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_path,
+				     int in_file_type, long int in_file_size){
+  relative_full_path=in_relative_path;
+  base_path=in_base_path;
+  file_type_value=in_file_type;
+  file_size = in_file_size;
 }
 
 
@@ -245,7 +281,7 @@ long int Parfu_directory::spider_directory(void){
     case PARFU_WHAT_IS_PATH_REGFILE:
       // it's a regular file that we need to store.  This is the
       // core of what parfu needs to tackle.
-      subfiles.push_back(Parfu_target_file(directory_path,entry_relative_name,path_type_result));
+      subfiles.push_back(Parfu_target_file(directory_path,entry_relative_name,path_type_result,file_size));
       break;
     case PARFU_WHAT_IS_PATH_DIR:
       // it's a directory that we need to note and it will need to be spidered in the future
@@ -258,8 +294,8 @@ long int Parfu_directory::spider_directory(void){
       // simlink that we'll need to store for now
       Parfu_target_file *my_tempfile;
       my_tempfile =
-	new Parfu_target_file(directory_path,entry_relative_name,path_type_result);
-      my_tempfile->set_symlink_target(link_target);
+	new Parfu_target_file(directory_path,entry_relative_name,path_type_result,file_size,link_target);
+      //      my_tempfile->set_symlink_target(link_target);
       subfiles.push_back(*my_tempfile);
       break;
     case PARFU_WHAT_IS_PATH_ERROR:

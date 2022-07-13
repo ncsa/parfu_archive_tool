@@ -36,11 +36,17 @@
 int Parfu_target_file::fill_out_locations(long int start_offset,
 					  long int slice_size){
   int internal_n_slices;
+  int internal_file_size;
+
+  // TODO: need to make sure we don't start this calculation
+  // for a non-real file, or dir, or link or something.
   
   // start_offset is the input starting location in the
   // archive file.  This function then populates the
   // slice(s) with the corresponding slice(s) location(s)
 
+  internal_n_slices = 1 + ( file_size / slice_size );
+  
   are_locations_filled_out=true;
   return slices.size();
 }
@@ -78,6 +84,7 @@ string Parfu_target_file::generate_archive_catalog_line(void){
   out_string.append("\t");// \t
 
   // size of tar header
+  
   out_string.append("\t");  // \t
 
   // location in archive file
@@ -149,14 +156,23 @@ string Parfu_target_file::generate_full_catalog_line(void){
 
 }
 
-Parfu_target_file::Parfu_target_file(string catalog_line){
-  // parse the line to extract the target file
-  
+int Parfu_target_file::header_size(void){
+  if(tar_header_size<0)
+    return tar_header_size;
+  else{
+    // compute it
+    string my_absolute_path=this->absolute_path();
+    tar_header_size =
+      tarentry::compute_hdr_size(my_absolute_path.c_str(),symlink_target.c_str(),file_size);
+    return tar_header_size;
+  }
 }
 
-
-
-
+Parfu_target_file::Parfu_target_file(string catalog_line){
+  // take a catalog line as a string as input
+  // and build a target file class
+  
+}
 
 Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_path,
 				     int in_file_type){

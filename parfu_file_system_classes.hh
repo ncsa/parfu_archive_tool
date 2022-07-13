@@ -115,6 +115,7 @@ public:
     slices = in_file.slices;
     parent_container = in_file.parent_container; 
     file_size = in_file.file_size;
+    tar_header_size = in_file.tar_header_size;
     file_type_value = in_file.file_type_value;
     symlink_target = in_file.symlink_target;
   }
@@ -125,6 +126,7 @@ public:
     slices = in_file.slices;
     parent_container = in_file.parent_container; 
     file_size = in_file.file_size;
+    tar_header_size = in_file.tar_header_size;
     file_type_value = in_file.file_type_value;
     symlink_target = in_file.symlink_target;    
     return *this;
@@ -152,6 +154,7 @@ public:
   }
   int fill_out_locations(long int start_offset,
 			 long int slice_size);
+  int header_size(void);
 private:
   bool are_locations_filled_out=false;
   // base_path here will typically be the location that parfu was pointed to 
@@ -178,6 +181,7 @@ private:
   
   // Size of the file in bytes
   long int file_size;
+  int tar_header_size=-1;
   // File type.  Regular file, symlink, etc.  
   int file_type_value=PARFU_FILE_TYPE_INVALID;
 };

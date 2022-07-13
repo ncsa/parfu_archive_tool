@@ -33,6 +33,11 @@
 // For now taking definitions and format for these lines
 // from parfu_buffer_utils.c
 
+void Parfu_target_file::slices_init(void){
+  // offset of file within itself is zero
+  slices.push_back(Parfu_file_slice(file_size,0));  
+}
+
 int Parfu_target_file::fill_out_locations(long int start_offset,
 					  long int slice_size){
   int internal_n_slices;
@@ -84,7 +89,7 @@ string Parfu_target_file::generate_archive_catalog_line(void){
   out_string.append("\t");// \t
 
   // size of tar header
-  
+  out_string.append(to_string(this->header_size()));
   out_string.append("\t");  // \t
 
   // location in archive file
@@ -170,39 +175,24 @@ int Parfu_target_file::header_size(void){
 
 Parfu_target_file::Parfu_target_file(string catalog_line){
   // take a catalog line as a string as input
-  // and build a target file class
+  // and build a target file class  
+}
+
+//Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_path,
+//				     int in_file_type){
+//  relative_full_path=in_relative_path;
+//  base_path=in_base_path;
+//  file_type_value=in_file_type;
   
-}
+//}
 
-Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_path,
-				     int in_file_type){
-  relative_full_path=in_relative_path;
-  base_path=in_base_path;
-  file_type_value=in_file_type;
-  
-}
-
-Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_path,
-				     int in_file_type, string in_symlink_target){
-  relative_full_path=in_relative_path;
-  base_path=in_base_path;
-  file_type_value=in_file_type;
-  symlink_target = in_symlink_target;
-}
-
-Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_path,
-				     int in_file_type, long int in_file_size,
-				     string in_symlink_target){
-  // offset of file within itself is zero
-
-  relative_full_path=in_relative_path;
-  base_path=in_base_path;
-  file_type_value=in_file_type;
-  file_size = in_file_size;
-  symlink_target = in_symlink_target;
-
-  slices.push_back(Parfu_file_slice(in_file_size,0));
-}
+//Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_path,
+//				     int in_file_type, string in_symlink_target){
+//  relative_full_path=in_relative_path;
+//  base_path=in_base_path;
+//  file_type_value=in_file_type;
+//  symlink_target = in_symlink_target;
+//}
 
 Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_path,
 				     int in_file_type, long int in_file_size){
@@ -210,8 +200,22 @@ Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_pat
   base_path=in_base_path;
   file_type_value=in_file_type;
   file_size = in_file_size;
+
+  this->slices_init();
 }
 
+Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_path,
+				     int in_file_type, long int in_file_size,
+				     string in_symlink_target){
+
+  relative_full_path=in_relative_path;
+  base_path=in_base_path;
+  file_type_value=in_file_type;
+  file_size = in_file_size;
+  symlink_target = in_symlink_target;
+
+  this->slices_init();
+}
 
 
 long int Parfu_directory::spider_directory(void){

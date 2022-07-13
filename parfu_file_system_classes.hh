@@ -155,6 +155,8 @@ public:
   int fill_out_locations(long int start_offset,
 			 long int slice_size);
   int header_size(void);
+  
+  void slices_init(void); // requires size to be set to work right
 private:
   bool are_locations_filled_out=false;
   // base_path here will typically be the location that parfu was pointed to 
@@ -180,7 +182,7 @@ private:
   Parfu_container_file *parent_container=NULL;
   
   // Size of the file in bytes
-  long int file_size;
+  long int file_size=-1L;
   int tar_header_size=-1;
   // File type.  Regular file, symlink, etc.  
   int file_type_value=PARFU_FILE_TYPE_INVALID;

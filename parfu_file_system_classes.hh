@@ -155,9 +155,12 @@ public:
   int fill_out_locations(long int start_offset,
 			 long int slice_size);
   int header_size(void);
-  
-  void slices_init(void); // requires size to be set to work right
+  long int offset_in_container(void);
+
+  long int next_available_after_me(long int start_of_available);
 private:
+  void slices_init(void); // requires size to be set to work right
+  
   bool are_locations_filled_out=false;
   // base_path here will typically be the location that parfu was pointed to 
   // to archive.  So the absolute path of this file will typically be:
@@ -242,6 +245,9 @@ private:
   // of the container file.  Typically the data area begins after 
   // the end of the catalog.  The code the actually copies the 
   // data into the file will know this and compensate.  
+  // The slidce_offset_in_container is the beginning of the
+  // file's area, so it will typically be where the header
+  // starts, not the file contentents themselves.  
   long int slice_offset_in_container=PARFU_OFFSET_INVALID;
 };
 

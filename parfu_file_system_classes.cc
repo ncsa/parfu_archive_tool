@@ -35,13 +35,52 @@
 
 void Parfu_target_file::slices_init(void){
   // offset of file within itself is zero
-  slices.push_back(Parfu_file_slice(file_size,0));  
+  slices.push_back(Parfu_file_slice(file_size,0));
+}
+
+long int Parfu_target_file::next_available_after_me(long int start_of_available){
+
+  // this function serves as a sort of informal iterator while
+  // stringing files together into an archive.  The argument of
+  // this function is location of the very first available byte
+  // in the archive file.  This function then works out where after that
+  // this file's header begins, where this file's actual file data begins,
+  // and where it ends.  It then hands the next byte available AFTER
+  // this file back as the return value.
+
+  // As we work through this problem, this is our running
+  // pointer keeping track of where we are in the overall
+  // container
+  long int container_pointer;
+  long int header_location;
+  long int file_contents_location;
+  int my_header_size;
+  
+  
+  container_pointer = start_of_available;
+  if(container_pointer % BLOCKSIZE){
+    // if the next available block starts on a blocksize
+    // boundary we start allocating there.  Otherwise we start
+    // at the next even block boundary.  This is a core feature
+    // that makes parfu tar-compatible
+    container_pointer =
+      ( ( container_pointer / BLOCKSIZE ) + 1 ) * BLOCKSIZE;
+  }
+  header_location = container_pointer;
+  my_header_size = this->header_size();
+  file_contents_location = header_location + my_header_size;
+  if(slices.size()>0){
+    throw "next_available_after_me: file already has base slice!!!\n";
+  }
+  slices.push_back(Parfu_file_slice(file_size,0,header_location));
+  
+  return file_contents_location + file_size;
 }
 
 int Parfu_target_file::fill_out_locations(long int start_offset,
 					  long int slice_size){
-  int internal_n_slices;
-  int internal_file_size;
+  //  int internal_n_slices;
+  //  int internal_file_size;
 
   // TODO: need to make sure we don't start this calculation
   // for a non-real file, or dir, or link or something.
@@ -50,7 +89,7 @@ int Parfu_target_file::fill_out_locations(long int start_offset,
   // archive file.  This function then populates the
   // slice(s) with the corresponding slice(s) location(s)
 
-  internal_n_slices = 1 + ( file_size / slice_size );
+  //  internal_n_slices = 1 + ( file_size / slice_size );
   
   are_locations_filled_out=true;
   return slices.size();
@@ -93,8 +132,9 @@ string Parfu_target_file::generate_archive_catalog_line(void){
   out_string.append("\t");  // \t
 
   // location in archive file
-  
+  //  out_string.append(to_string(
   out_string.append("\n");// \n
+
   return out_string;  
 }
 

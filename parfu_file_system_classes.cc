@@ -99,7 +99,7 @@ string Parfu_target_file::generate_archive_catalog_line(void){
   string out_string;
 
   // path + filename within the archive
-  out_string.append(relative_full_path);
+  out_string.append(relative_path);
   out_string.append("\t"); // \t
 
   // type
@@ -147,7 +147,7 @@ string Parfu_target_file::generate_full_catalog_line(void){
   string out_string;
 
   // path + filename, realtive to parfu process CWD
-  out_string.append(relative_full_path);
+  out_string.append(relative_path);
   out_string.append("\t"); // \t
 
   // path + filename within the archive
@@ -233,7 +233,7 @@ Parfu_target_file::Parfu_target_file(string catalog_line){
 
 Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_path,
 				     int in_file_type, long int in_file_size){
-  relative_full_path=in_relative_path;
+  relative_path=in_relative_path;
   base_path=in_base_path;
   file_type_value=in_file_type;
   file_size = in_file_size;
@@ -245,7 +245,7 @@ Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_pat
 				     int in_file_type, long int in_file_size,
 				     string in_symlink_target){
 
-  relative_full_path=in_relative_path;
+  relative_path=in_relative_path;
   base_path=in_base_path;
   file_type_value=in_file_type;
   file_size = in_file_size;

@@ -85,8 +85,6 @@ using namespace std;
 class Parfu_file_slice;
 class Parfu_container_file;
 
-
-
 ////////////////
 //
 // Parent class for the below derived classes
@@ -96,42 +94,56 @@ class Parfu_container_file;
 class Parfu_storage_entry
 {
 public:
-
+  
 private:
+  // allow derived classes to initialize variables
+  // not sure it's the right way to do this, but it'll work
+  // for now
+  friend class Parfu_target_file;
+  friend class Parfu_target_symlink;
+  friend class Parfu_directory;
+  
   // The absolute path of this file will typically be:
   // <base_path> / <relative_full_path>
-
+  
   // For *create* mode, base_path is the location where parfu
   // was initially pointed.
   // For *extract* mode, base_path is the location where the
   // extraction is being pointed to.
   // In either case, base path is the path that the relative
   // path is relative *to*
-
+  
   // base_path should *ALWAYS* begin with the leading "/"; otherwise something
   // is horribly wrong.  base_path should NOT end in a "/".  
-
+  
   string base_path;
-
+  
   // relative_path is the path in the archive, that is the
   // file's location relative to the above base path.  
-
+  
   // relative_path should NOT begin with a "/".  
   // It may contain zero or more "/" characters to delineate its directory location
   // relative to base_path.  It ends in the actual file name.  We can strip out just
   // the file's filename itself by outputting relative_full_path after the last "/" or 
   // if there aren't any, the entirety of relative_full_path.  
-
-  string relative_path;
-};
   
+  string relative_path;
+
+  string absolute_path(){
+    return base_path+"/"+relative_path;
+  }
+  
+
+};
+
 ////////////////
 // 
 // A "target file" will be anything that's not a directory that
 // needs to be stored in a target file.  A target file could
 // be a regular file (a sequence of bytes), a symlink (which
 // consists only of a name and the name of its target)
-class Parfu_target_file
+
+class Parfu_target_file : Parfu_storage_entry
 { 
 public:
   // constructor
@@ -150,7 +162,7 @@ public:
   Parfu_target_file(string catalog_line);
   // copy constructor
   Parfu_target_file(const Parfu_target_file &in_file){
-    relative_full_path = in_file.relative_full_path;
+    relative_path = in_file.relative_path;
     base_path = in_file.base_path;
     slices = in_file.slices;
     parent_container = in_file.parent_container; 
@@ -161,7 +173,7 @@ public:
   }
   // assignment operator
   Parfu_target_file& operator=(const Parfu_target_file &in_file){
-    relative_full_path = in_file.relative_full_path;
+    relative_path = in_file.relative_path;
     base_path = in_file.base_path;
     slices = in_file.slices;
     parent_container = in_file.parent_container; 
@@ -174,9 +186,6 @@ public:
   // destructor
   ~Parfu_target_file(void){
     
-  }
-  string absolute_path(){
-    return base_path+"/"+relative_full_path;
   }
   int file_type(){
     return file_type_value;
@@ -196,15 +205,15 @@ public:
 			 long int slice_size);
   int header_size(void);
   long int offset_in_container(void);
-
+  
   long int next_available_after_me(long int start_of_available);
 private:
   void slices_init(void); // requires size to be set to work right
   
   bool are_locations_filled_out=false;
-
-  string relative_full_path;
-  string base_path;
+  
+  //  string relative_full_path;
+  //  string base_path;
   string symlink_target;
   
   // every file is made up of one or more subfiles

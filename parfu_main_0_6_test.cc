@@ -40,7 +40,7 @@ int main(int argc, char *argv[]){
   }
   
   my_string = new string(argv[1]);
-  test_dir = new Parfu_directory(*my_string);
+  test_dir = new Parfu_directory(*my_string,"");
   
   cout << "Have we spidered directory?" << test_dir->is_directory_spidered() << "\n";
   test_dir->spider_directory();

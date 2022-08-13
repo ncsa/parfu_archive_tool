@@ -93,7 +93,7 @@ class Parfu_container_file;
 // consists only of a name and the name of its target)
 class Parfu_target_file
 { 
-public:  
+public:
   // constructor
   Parfu_target_file(string in_base_path, string in_relative_path,
 		    int in_file_type);
@@ -295,8 +295,14 @@ public:
   // main constructor
   Parfu_directory(void){
   }
-  Parfu_directory(string my_dirpath){
-    directory_path = my_dirpath;
+  Parfu_directory(string my_base_path){
+    base_path = my_base_path;
+    relative_path = string("");
+  }
+  Parfu_directory(string my_base_path,
+		  string my_relative_path){
+    base_path = my_base_path;
+    relative_path = my_relative_path;
   }
   bool is_directory_spidered(void){
     return spidered;
@@ -304,7 +310,8 @@ public:
   long int spider_directory(void);
   // copy constructor
   Parfu_directory(const Parfu_directory &in_dir){
-    directory_path = in_dir.directory_path;
+    base_path = in_dir.base_path;
+    relative_path = in_dir.relative_path;
     spidered = in_dir.spidered;
     for( unsigned int i=0 ; i < in_dir.subdirectories.size() ; i++ ){
       subdirectories[i] = in_dir.subdirectories[i];
@@ -315,7 +322,8 @@ public:
   }
   // assignment operator
   Parfu_directory& operator=(const Parfu_directory &in_dir){
-    directory_path = in_dir.directory_path;
+    base_path = in_dir.base_path;
+    relative_path = in_dir.relative_path;
     spidered = in_dir.spidered;
     for( unsigned int i=0 ; i < in_dir.subdirectories.size() ; i++ ){
       subdirectories[i] = in_dir.subdirectories[i];
@@ -327,8 +335,10 @@ public:
   }
   // destructor
   ~Parfu_directory(void){
-  }  
+  }
 private:
+  string relative_path;
+  string base_path;
   // directory path should not end with "/" unless it is the root directory
   string directory_path="";
   // "spider" here is a verb to search down a directory tree from a starting

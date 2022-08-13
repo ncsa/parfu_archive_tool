@@ -82,9 +82,6 @@ int Parfu_target_file::fill_out_locations(long int start_offset,
   //  int internal_n_slices;
   //  int internal_file_size;
 
-  // TODO: need to make sure we don't start this calculation
-  // for a non-real file, or dir, or link or something.
-  
   // start_offset is the input starting location in the
   // archive file.  This function then populates the
   // slice(s) with the corresponding slice(s) location(s)

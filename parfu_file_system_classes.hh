@@ -85,6 +85,46 @@ using namespace std;
 class Parfu_file_slice;
 class Parfu_container_file;
 
+
+
+////////////////
+//
+// Parent class for the below derived classes
+// (directory, regular file, symlink) that appear as entries
+// in a file listing.  This is to keep all of the location
+// and size functions together.
+class Parfu_storage_entry
+{
+public:
+
+private:
+  // The absolute path of this file will typically be:
+  // <base_path> / <relative_full_path>
+
+  // For *create* mode, base_path is the location where parfu
+  // was initially pointed.
+  // For *extract* mode, base_path is the location where the
+  // extraction is being pointed to.
+  // In either case, base path is the path that the relative
+  // path is relative *to*
+
+  // base_path should *ALWAYS* begin with the leading "/"; otherwise something
+  // is horribly wrong.  base_path should NOT end in a "/".  
+
+  string base_path;
+
+  // relative_path is the path in the archive, that is the
+  // file's location relative to the above base path.  
+
+  // relative_path should NOT begin with a "/".  
+  // It may contain zero or more "/" characters to delineate its directory location
+  // relative to base_path.  It ends in the actual file name.  We can strip out just
+  // the file's filename itself by outputting relative_full_path after the last "/" or 
+  // if there aren't any, the entirety of relative_full_path.  
+
+  string relative_path;
+};
+  
 ////////////////
 // 
 // A "target file" will be anything that's not a directory that
@@ -162,16 +202,7 @@ private:
   void slices_init(void); // requires size to be set to work right
   
   bool are_locations_filled_out=false;
-  // base_path here will typically be the location that parfu was pointed to 
-  // to archive.  So the absolute path of this file will typically be:
-  // <base_path> / <relative_full_path>
-  // base_path should *ALWAYS* begin with the leading "/"; otherwise something
-  // is horribly wrong.  base_path should NOT end in a "/".  
-  // relative_full_path should NOT begin with a "/".  
-  // It may contain zero or more "/" characters to delineate its directory location
-  // relative to base_path.  It ends in the actual file name.  We can strip out just
-  // the file's filename itself by outputting relative_full_path after the last "/" or 
-  // if there aren't any, the entirety of relative_full_path.  
+
   string relative_full_path;
   string base_path;
   string symlink_target;

@@ -265,7 +265,9 @@ long int Parfu_directory::spider_directory(void){
   // internal parfu variable telling us what the entry is
   // regular file, symlink, directory, etc. 
   unsigned int path_type_result;
-  
+
+  string my_directory_path;
+
   string link_target;
   // File size if > 0.  Otherwise, this will be some slightly
   // negative number useful for classification
@@ -274,12 +276,20 @@ long int Parfu_directory::spider_directory(void){
   int follow_symlinks=0;
   
   if(spidered){
-    cerr << "This directory already spidered!  >>" << directory_path << "\n";
+    cerr << "This directory already spidered!  >>" << base_path << "\n";
     return -1L;
   }
+
+  my_directory_path = base_path;
+
+  if(relative_path.length() > 0){
+    my_directory_path.append("/");
+    my_directory_path.append(relative_path);
+  }
+    
   //    for (const auto & next_entry : std::filesystem::directory_iterator(directory_path)){
-  if((my_dir=opendir(directory_path.c_str()))==nullptr){
-    cerr << "Could not open directory >>" << directory_path << "<<for scanning!\n";
+  if((my_dir=opendir(my_directory_path.c_str()))==nullptr){
+    cerr << "Could not open directory >>" << my_directory_path << "<<for scanning!\n";
     return -2L;
   }
   // This loop is the *initial* traverse of the directory that
@@ -312,9 +322,16 @@ long int Parfu_directory::spider_directory(void){
     // We know now that it's an actual thing with a name,
     // so we need to check *what* it is
     string entry_bare_name = string(next_entry->d_name);
-    string entry_relative_name = directory_path;
-    entry_relative_name.append("/");
-    entry_relative_name.append(entry_bare_name);
+    //    string entry_relative_name = directory_path;
+    string entry_relative_name = string("");
+    if(relative_path.length() == 0){
+      entry_relative_name = entry_bare_name;
+    }
+    else{
+      entry_relative_name = relative_path;
+      entry_relative_name.append("/");
+      entry_relative_name.append(entry_bare_name);
+    }
     // entry_relative_name is the next entry.  
     // we now need to check it to find out what it is 
     // (directory,regular file, symlink) and how big
@@ -338,20 +355,20 @@ long int Parfu_directory::spider_directory(void){
     case PARFU_WHAT_IS_PATH_REGFILE:
       // it's a regular file that we need to store.  This is the
       // core of what parfu needs to tackle.
-      subfiles.push_back(Parfu_target_file(directory_path,entry_relative_name,path_type_result,file_size));
+      subfiles.push_back(Parfu_target_file(base_path,entry_relative_name,path_type_result,file_size));
       break;
     case PARFU_WHAT_IS_PATH_DIR:
       // it's a directory that we need to note and it will need to be spidered in the future
       Parfu_directory *new_subdir_ptr;
       new_subdir_ptr =
-      	new Parfu_directory(entry_relative_name);
+      	new Parfu_directory(base_path,entry_relative_name);
       subdirectories.push_back(new_subdir_ptr);
       break;
     case PARFU_WHAT_IS_PATH_SYMLINK:
       // simlink that we'll need to store for now
       Parfu_target_file *my_tempfile;
       my_tempfile =
-	new Parfu_target_file(directory_path,entry_relative_name,path_type_result,file_size,link_target);
+	new Parfu_target_file(base_path,entry_relative_name,path_type_result,file_size,link_target);
       //      my_tempfile->set_symlink_target(link_target);
       subfiles.push_back(*my_tempfile);
       break;

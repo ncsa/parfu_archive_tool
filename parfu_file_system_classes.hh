@@ -329,7 +329,7 @@ private:
 
 ///////////////
 //
-class Parfu_directory
+class Parfu_directory : Parfu_storage_entry
 {
 public:
   // main constructor
@@ -377,10 +377,6 @@ public:
   ~Parfu_directory(void){
   }
 private:
-  string relative_path;
-  string base_path;
-  // directory path should not end with "/" unless it is the root directory
-  string directory_path="";
   // "spider" here is a verb to search down a directory tree from a starting
   // point to list all of the subdirectories and contents.  
   // spidered is false if directory_path has a value but a list has not been 

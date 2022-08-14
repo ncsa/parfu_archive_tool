@@ -218,7 +218,7 @@ public:
   }
   int fill_out_locations(long int start_offset,
 			 long int slice_size);
-  long int offset_in_container(void);
+  //  long int offset_in_container(void);
   
   long int next_available_after_me(long int start_of_available);
 private:
@@ -292,6 +292,7 @@ private:
   // The slidce_offset_in_container is the beginning of the
   // file's area, so it will typically be where the header
   // starts, not the file contentents themselves.  
+
   long int slice_offset_in_container=PARFU_OFFSET_INVALID;
 };
 

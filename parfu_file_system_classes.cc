@@ -249,7 +249,6 @@ Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_pat
   entry_type_value=in_file_type;
   file_size = in_file_size;
   symlink_target = in_symlink_target;
-
   //  this->slices_init();
 }
 

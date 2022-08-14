@@ -413,6 +413,28 @@ typedef struct{
 // have the tools to transmit, collect them between
 // ranks and subdivide them if needed.
 //
+//
+// The idea here is if parfu is archiving into one file, then
+// one instance of Parfu_target_collection could contain the
+// entire set of what is going to be archived.  That probably
+// wouldn't be worth creating an entire class separately, it
+// could just be done in the main code.  However, we want
+// to be able to have the vehicle to subdivide the whole
+// collection for separate storage.  For instance one
+// parfu process might be archiving into four separate
+// archive files.  The real on-disk file entries would
+// be split and distributed among the four
+// Parfu_target_collection entities.  Each regular file
+// would only exist in one, and likewise each symlink.
+// However, in that case, each directory being archived
+// would probably be listed in EVERY SINGLE archive file,
+// so that there would never be a possibility that one
+// of the archive files would be unpacked and there
+// wouldn't be a directory to receive one of the files
+// in that sub-collection.  So the directories are
+// listed separately so that they can be treated
+// separately for splitting.
+// 
 /////////////////////////
 class Parfu_target_collection
 {

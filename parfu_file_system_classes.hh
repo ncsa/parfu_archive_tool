@@ -394,6 +394,15 @@ private:
   vector <Parfu_target_file> subfiles;
 };
 
+// Parfu_storage_reference is a generic object that points to a single
+// reference (to a directory or regular file or symlink) along with
+// its size.  This is used to order for the storage container.  
+
+typedef struct{
+  long int size;
+  Parfu_storage_entry *entry;
+}Parfu_storage_reference;
+
 //////////////////////////////////
 //
 // These "target_collection" classes will collect
@@ -411,6 +420,9 @@ public:
   // everyday-use constructor
   Parfu_target_collection(){
   }
+  // bring in an entire directory tree
+  Parfu_target_collection(Parfu_directory in_directory);
+
   // copy constructor
   Parfu_target_collection(const Parfu_target_collection &in_collec){
     for( unsigned int i=0 ; i < in_collec.directories.size() ; i++){
@@ -427,7 +439,7 @@ public:
     }
     for( unsigned int i=0 ; i < in_collec.files.size() ; i++){
       files[i] = in_collec.files[i];
-    }    
+    }
     return *this;
   }
   
@@ -436,9 +448,8 @@ public:
   }
 
 private:
-  vector <Parfu_directory*> directories;
-  vector <Parfu_target_file> files;
-
+  vector <Parfu_storage_reference> directories;
+  vector <Parfu_storage_reference> files;
 };
 
 

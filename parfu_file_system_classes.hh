@@ -94,6 +94,13 @@ class Parfu_container_file;
 class Parfu_storage_entry
 {
 public:
+  string absolute_path(){
+    return base_path+"/"+relative_path;
+  }
+  bool are_locations_set(void){
+    return are_locations_filled_out;
+  }
+  
   
 private:
   // allow derived classes to initialize variables
@@ -129,10 +136,10 @@ private:
   
   string relative_path;
 
-  string absolute_path(){
-    return base_path+"/"+relative_path;
-  }
-  
+  // indicates if the locations for a given storage entry have been filled
+  // out for its container file
+  bool are_locations_filled_out=false;
+
 
 };
 
@@ -198,9 +205,6 @@ public:
   }
   string generate_archive_catalog_line(void);
   string generate_full_catalog_line(void);
-  bool are_locations_set(void){
-    return are_locations_filled_out;
-  }
   int fill_out_locations(long int start_offset,
 			 long int slice_size);
   int header_size(void);
@@ -208,9 +212,6 @@ public:
   
   long int next_available_after_me(long int start_of_available);
 private:
-  void slices_init(void); // requires size to be set to work right
-  
-  bool are_locations_filled_out=false;
   
   //  string relative_full_path;
   //  string base_path;
@@ -272,8 +273,10 @@ public:
   ~Parfu_file_slice(void){
     
   }
-  Parfu_target_file *parent_file;
+  Parfu_storage_entry *parent_file=nullptr;
 private:
+  int header_size_this_slice;
+
   // how large the slice is in bytes
   long int slice_size = PARFU_FILE_SIZE_INVALID;
   // Location of the beginning of the slice within the target file

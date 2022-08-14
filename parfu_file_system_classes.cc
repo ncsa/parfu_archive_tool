@@ -33,10 +33,10 @@
 // For now taking definitions and format for these lines
 // from parfu_buffer_utils.c
 
-void Parfu_target_file::slices_init(void){
-  // offset of file within itself is zero
-  slices.push_back(Parfu_file_slice(file_size,0));
-}
+//void Parfu_target_file::slices_init(void){
+//  // offset of file within itself is zero
+//  slices.push_back(Parfu_file_slice(file_size,0));
+//}
 
 long int Parfu_target_file::next_available_after_me(long int start_of_available){
 
@@ -238,7 +238,7 @@ Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_pat
   file_type_value=in_file_type;
   file_size = in_file_size;
 
-  this->slices_init();
+  //  this->slices_init();
 }
 
 Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_path,
@@ -251,7 +251,7 @@ Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_pat
   file_size = in_file_size;
   symlink_target = in_symlink_target;
 
-  this->slices_init();
+  //  this->slices_init();
 }
 
 

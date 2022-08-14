@@ -38,7 +38,7 @@
 //  slices.push_back(Parfu_file_slice(file_size,0));
 //}
 
-long int Parfu_target_file::next_available_after_me(long int start_of_available){
+long int Parfu_storage_entry::next_available_after_me(long int start_of_available){
 
   // this function serves as a sort of informal iterator while
   // stringing files together into an archive.  The argument of
@@ -69,28 +69,28 @@ long int Parfu_target_file::next_available_after_me(long int start_of_available)
   header_location = container_pointer;
   my_header_size = this->header_size();
   file_contents_location = header_location + my_header_size;
-  if(slices.size()>0){
-    throw "next_available_after_me: file already has base slice!!!\n";
-  }
-  slices.push_back(Parfu_file_slice(file_size,0,header_location));
+  //  if(slices.size()>0){
+  //    throw "next_available_after_me: file already has base slice!!!\n";
+  //  }
+  //  slices.push_back(Parfu_file_slice(file_size,0,header_location));
   
   return file_contents_location + file_size;
 }
 
-int Parfu_target_file::fill_out_locations(long int start_offset,
-					  long int slice_size){
-  //  int internal_n_slices;
-  //  int internal_file_size;
-
-  // start_offset is the input starting location in the
-  // archive file.  This function then populates the
-  // slice(s) with the corresponding slice(s) location(s)
-
-  //  internal_n_slices = 1 + ( file_size / slice_size );
-  
-  are_locations_filled_out=true;
-  return slices.size();
-}
+//int Parfu_target_file::fill_out_locations(long int start_offset,
+//					  long int slice_size){
+//  //  int internal_n_slices;
+//  //  int internal_file_size;
+//
+//  // start_offset is the input starting location in the
+//  // archive file.  This function then populates the
+//  // slice(s) with the corresponding slice(s) location(s)
+//
+//  //  internal_n_slices = 1 + ( file_size / slice_size );
+//  
+//  are_locations_filled_out=true;
+//  return slices.size();
+//}
 
 string Parfu_storage_entry::generate_archive_catalog_line(void){
   // dump contents as a string

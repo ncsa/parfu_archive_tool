@@ -106,6 +106,7 @@ public:
   int entry_type(){
     return entry_type_value;
   }
+  long int next_available_after_me(long int start_of_available);
   
   
 private:
@@ -187,7 +188,7 @@ public:
   Parfu_target_file(const Parfu_target_file &in_file){
     relative_path = in_file.relative_path;
     base_path = in_file.base_path;
-    slices = in_file.slices;
+    //    slices = in_file.slices;
     parent_container = in_file.parent_container; 
     file_size = in_file.file_size;
     tar_header_size = in_file.tar_header_size;
@@ -198,7 +199,7 @@ public:
   Parfu_target_file& operator=(const Parfu_target_file &in_file){
     relative_path = in_file.relative_path;
     base_path = in_file.base_path;
-    slices = in_file.slices;
+    //    slices = in_file.slices;
     parent_container = in_file.parent_container; 
     file_size = in_file.file_size;
     tar_header_size = in_file.tar_header_size;
@@ -216,16 +217,14 @@ public:
   void set_symlink_target(string target_string){
     symlink_target=target_string;
   }
-  int fill_out_locations(long int start_offset,
-			 long int slice_size);
+  //  int fill_out_locations(long int start_offset,
+  //			 long int slice_size);
   //  long int offset_in_container(void);
   
-  long int next_available_after_me(long int start_of_available);
 private:
   
   // every file is made up of one or more subfiles
   // here's a list of them
-  list <Parfu_file_slice> slices;
   // A link to the container file class that this file
   // will/does reside in.  This is null if it hasn't
   // been assigned to a container file.  
@@ -401,6 +400,7 @@ private:
 typedef struct{
   long int size;
   Parfu_storage_entry *entry;
+  list <Parfu_file_slice> slices;
 }Parfu_storage_reference;
 
 //////////////////////////////////

@@ -100,6 +100,9 @@ public:
   bool are_locations_set(void){
     return are_locations_filled_out;
   }
+  string generate_archive_catalog_line(void);
+  string generate_full_catalog_line(void);
+  int header_size(void);
   
   
 private:
@@ -136,6 +139,9 @@ private:
   
   string relative_path;
 
+  int tar_header_size=-1;
+
+  
   // indicates if the locations for a given storage entry have been filled
   // out for its container file
   bool are_locations_filled_out=false;
@@ -203,11 +209,8 @@ public:
   void set_symlink_target(string target_string){
     symlink_target=target_string;
   }
-  string generate_archive_catalog_line(void);
-  string generate_full_catalog_line(void);
   int fill_out_locations(long int start_offset,
 			 long int slice_size);
-  int header_size(void);
   long int offset_in_container(void);
   
   long int next_available_after_me(long int start_of_available);
@@ -227,7 +230,6 @@ private:
   
   // Size of the file in bytes
   long int file_size=-1L;
-  int tar_header_size=-1;
   // File type.  Regular file, symlink, etc.  
   int file_type_value=PARFU_FILE_TYPE_INVALID;
 };

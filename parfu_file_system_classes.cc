@@ -92,7 +92,7 @@ int Parfu_target_file::fill_out_locations(long int start_offset,
   return slices.size();
 }
 
-string Parfu_target_file::generate_archive_catalog_line(void){
+string Parfu_storage_entry::generate_archive_catalog_line(void){
   // dump contents as a string
   // format is the *archive* catalog line
   // (the shorter one)
@@ -138,7 +138,7 @@ string Parfu_target_file::generate_archive_catalog_line(void){
 // OOPS this needs to be per slice?  (called "fragment" in
 // .c version?
 
-string Parfu_target_file::generate_full_catalog_line(void){
+string Parfu_storage_entry::generate_full_catalog_line(void){
   // dump contents as a string
   // format is the *full* catalog line
   // (the longer one)
@@ -198,16 +198,14 @@ string Parfu_target_file::generate_full_catalog_line(void){
 
 }
 
-int Parfu_target_file::header_size(void){
-  if(tar_header_size<0)
-    return tar_header_size;
-  else{
+int Parfu_storage_entry::header_size(void){
+  if(tar_header_size<0){
     // compute it
     string my_absolute_path=this->absolute_path();
     tar_header_size =
       tarentry::compute_hdr_size(my_absolute_path.c_str(),symlink_target.c_str(),file_size);
-    return tar_header_size;
   }
+  return tar_header_size;
 }
 
 Parfu_target_file::Parfu_target_file(string catalog_line){

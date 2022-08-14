@@ -103,7 +103,7 @@ string Parfu_storage_entry::generate_archive_catalog_line(void){
   out_string.append("\t"); // \t
 
   // type
-  switch(file_type_value){
+  switch(this->entry_type()){
   case PARFU_FILE_TYPE_REGULAR:
     out_string += PARFU_FILE_TYPE_REGULAR_CHAR;
     break;
@@ -153,7 +153,8 @@ string Parfu_storage_entry::generate_full_catalog_line(void){
   // path + filename within the archive
   // \t
   // type
-  switch(file_type_value){
+  //  switch(file_type_value){
+  switch(this->entry_type()){
   case PARFU_FILE_TYPE_REGULAR:
     out_string += PARFU_FILE_TYPE_REGULAR_CHAR;
     break;
@@ -233,7 +234,7 @@ Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_pat
 				     int in_file_type, long int in_file_size){
   relative_path=in_relative_path;
   base_path=in_base_path;
-  file_type_value=in_file_type;
+  entry_type_value=in_file_type;
   file_size = in_file_size;
 
   //  this->slices_init();
@@ -245,7 +246,7 @@ Parfu_target_file::Parfu_target_file(string in_base_path, string in_relative_pat
 
   relative_path=in_relative_path;
   base_path=in_base_path;
-  file_type_value=in_file_type;
+  entry_type_value=in_file_type;
   file_size = in_file_size;
   symlink_target = in_symlink_target;
 

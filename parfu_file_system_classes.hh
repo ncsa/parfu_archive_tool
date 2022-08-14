@@ -103,6 +103,9 @@ public:
   string generate_archive_catalog_line(void);
   string generate_full_catalog_line(void);
   int header_size(void);
+  int entry_type(){
+    return entry_type_value;
+  }
   
   
 private:
@@ -140,6 +143,13 @@ private:
   string relative_path;
 
   int tar_header_size=-1;
+  string symlink_target = string("");
+
+  // Size of the file in bytes
+  long int file_size=-1L;
+
+  // Entry type.  Regular file, symlink, directory, etc.  
+  int entry_type_value=PARFU_FILE_TYPE_INVALID;
 
   
   // indicates if the locations for a given storage entry have been filled
@@ -181,7 +191,7 @@ public:
     parent_container = in_file.parent_container; 
     file_size = in_file.file_size;
     tar_header_size = in_file.tar_header_size;
-    file_type_value = in_file.file_type_value;
+    entry_type_value = in_file.entry_type_value;
     symlink_target = in_file.symlink_target;
   }
   // assignment operator
@@ -192,16 +202,13 @@ public:
     parent_container = in_file.parent_container; 
     file_size = in_file.file_size;
     tar_header_size = in_file.tar_header_size;
-    file_type_value = in_file.file_type_value;
+    entry_type_value = in_file.entry_type_value;
     symlink_target = in_file.symlink_target;    
     return *this;
   }
   // destructor
   ~Parfu_target_file(void){
     
-  }
-  int file_type(){
-    return file_type_value;
   }
   bool are_slices_populated(void){
     return true;
@@ -216,10 +223,6 @@ public:
   long int next_available_after_me(long int start_of_available);
 private:
   
-  //  string relative_full_path;
-  //  string base_path;
-  string symlink_target;
-  
   // every file is made up of one or more subfiles
   // here's a list of them
   list <Parfu_file_slice> slices;
@@ -228,10 +231,6 @@ private:
   // been assigned to a container file.  
   Parfu_container_file *parent_container=NULL;
   
-  // Size of the file in bytes
-  long int file_size=-1L;
-  // File type.  Regular file, symlink, etc.  
-  int file_type_value=PARFU_FILE_TYPE_INVALID;
 };
 
 /////////////////////////

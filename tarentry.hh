@@ -41,7 +41,7 @@
 
 #include <string>
 #include <vector>
-
+ 
 struct ustar_hdr {
   char name[100];      /*   0 */
   char mode[8];        /* 100 */

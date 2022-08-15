@@ -110,7 +110,7 @@ int main(int argc, char *argv[]){
   // Creating the sub-group communicators
   file_result=MPI_Comm_group(MPI_COMM_WORLD,&world_group);
   if(file_result != MPI_SUCCESS){
-    fprintf(stderr,"rank %d MPI_Comm_group to get master returned %d!\n",my_rank,file_result);
+    fprintf(stderr,"rank %d MPI_Comm_group to get world group returned %d!\n",my_rank,file_result);
   }
   for(i=0;i<n_archive_files;i++){
     rank_ranges[0][0] = i;

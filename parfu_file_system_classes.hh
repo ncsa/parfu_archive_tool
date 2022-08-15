@@ -107,7 +107,9 @@ public:
     return entry_type_value;
   }
   long int next_available_after_me(long int start_of_available);
-  
+  int get_entry_type(void){
+    return entry_type_value;
+  }
   
 private:
   // allow derived classes to initialize variables

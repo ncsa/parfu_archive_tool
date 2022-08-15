@@ -305,16 +305,18 @@ long int Parfu_directory::spider_directory(void){
   //  }
   while( (next_entry=readdir(my_dir)) != nullptr ){
 
-
+    cerr << "Raw filename: >" << string(next_entry->d_name) << "<\n";
     //    if(next_entry == nullptr){
     //      cerr << "\nFound nullptr entry in directory!!!\n\n";
     //    }
     // traverse once per entry
     // skip over "." and ".."
-    if(!strncmp(next_entry->d_name,".",1)){
+    if(!strncmp(next_entry->d_name,".",1) &&
+       (strlen(next_entry->d_name)==1) ){
       continue;
     }
-    if(!strncmp(next_entry->d_name,"..",2)){
+    if(!strncmp(next_entry->d_name,"..",2) &&
+       (strlen(next_entry->d_name)==2) ){
       continue;
     }
     // We know now that it's an actual thing with a name,
@@ -336,8 +338,8 @@ long int Parfu_directory::spider_directory(void){
     // it is if it's a regular file.
     path_type_result=
       parfu_what_is_path(entry_relative_name.c_str(),link_target,&file_size,follow_symlinks);
-    cout << "relative name: >>" << entry_relative_name << "<< file size: " << file_size << "\n";
-    cout << "file type: \n" << path_type_result << "\n";
+    cout << "relative name: >>" << entry_relative_name << "<< file size: " << file_size;
+    cout << " file type:" << path_type_result << "\n";
     switch(path_type_result){
     case PARFU_WHAT_IS_PATH_DOES_NOT_EXIST:
       cerr << "Parfu_directory const; does not exist: >>" << entry_relative_name << "<<\n";

@@ -412,7 +412,7 @@ long int Parfu_directory::spider_directory(void){
   return total_entries_found;
 } // long int spider_directory()
 
-Parfu_target_collection::Parfu_target_collection(Parfu_directory in_directory){
+Parfu_target_collection::Parfu_target_collection(Parfu_directory *in_directory){
   // take a directory tree, presumably a root of a collection of files,
   // and create a target collection with all the contents
   // filed
@@ -423,26 +423,53 @@ Parfu_target_collection::Parfu_target_collection(Parfu_directory in_directory){
   Parfu_storage_reference my_ref;
   Parfu_file_slice my_slice;
   
-  
+  cerr << "starting constructor function\n";
   // prepare to process directories
   // the collection could be pointed at a file, in which case there will
   // be zero, but most likely we have at least one
-  my_ref.size = PARFU_FILE_SIZE_DIR;
+  my_ref.order_size = PARFU_FILE_SIZE_DIR;
+  cerr << "finished first assignment\n";
   my_ref.slices.push_back(my_slice); // has one and only once slice here
   my_slice = my_ref.slices.front(); // my_slice is within my_ref
+  cerr << "pulled my_slice back out\n";
   my_slice.slice_offset_in_file = 0L; // ony one; always at the beginning of the file
   my_slice.slice_size = 0L; // directories are zero payload size
   // the offset_in_container's will be set sequentially, probably after we create
   // this collection.  So setting them to an invalid value (-1) for now.
   (my_ref.slices.front()).slice_offset_in_container = -1L; 
-  for(std::size_t dir_ndx=0; dir_ndx < in_directory.subdirectories.size();dir_ndx++){
+
+  // We expect we have been given the root of a directory tree.  If that's the
+  // case, we would expect the relative_path to be an empty string and the
+  // base path to be the path to the directory.
+  // TODO: it would probably be smart to check that here specifically, and then
+  // do the 0th iteration outside the loop, then start the loop at index=1
+  // to do the rest of the (sub) directories in that root directory.
+
+  cerr << "about to iterate...\n";
+  for(std::size_t dir_ndx=0; dir_ndx < in_directory->subdirectories.size();dir_ndx++){
     // TODO (I'm not 100% sure this is the correct pointer dereference)
-    my_ref.storage_ptr = *(  (in_directory.subdirectories.data()) + dir_ndx);    
+    cerr << "about to deref...\n";
+    my_ref.storage_ptr = *(  (in_directory->subdirectories.data()) + dir_ndx);    
     // header size for a directory could be larger than a single block if the pathname
     // is very long, or whatever.  
+    cerr << "about to use the deref\n";
     my_slice.header_size_this_slice =
       my_ref.storage_ptr->header_size();      
+    cerr << "about to push_back()\n";
     directories.push_back(my_ref);
+    cerr << "loop done\n";
   }
+  cerr << "function done!\n";
   
+}
+
+void Parfu_target_collection::dump(void){
+  Parfu_storage_entry *this_entry;
+  //  this_entry=directories.start();
+  cerr << "Parfu_target_collection::dump() running\n";
+  for(std::size_t ndx=0; ndx < directories.size(); ndx++){
+    this_entry = (directories.data() + ndx)->storage_ptr;
+    cerr << "index=" << ndx << " base_path=>" << this_entry->base_path << "< ";
+    cerr << "relative_path=>" << this_entry->relative_path << "< \n";
+  }
 }

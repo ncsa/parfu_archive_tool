@@ -27,7 +27,8 @@
 int main(int argc, char *argv[]){
   Parfu_directory *test_dir;
   string *my_string;
-
+  Parfu_target_collection *my_target_collec;
+  
   cout << "parfu test build\n";
   if(argc > 1){
     cout << "We will scan directory:";
@@ -46,6 +47,12 @@ int main(int argc, char *argv[]){
   test_dir->spider_directory();
   cout << "Have we spidered directory? " << test_dir->is_directory_spidered() << "\n";
 
+  cout << "First build the target collection\n";
+  my_target_collec = new Parfu_target_collection(test_dir);
+  cout << "Target collection built.  Now dump it.\n";
+  my_target_collec->dump();
+  cout << "Dump finished.\n";
+  
 
   return 0;
 }

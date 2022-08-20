@@ -118,6 +118,7 @@ private:
   friend class Parfu_target_file;
   friend class Parfu_target_symlink;
   friend class Parfu_directory;
+  friend class Parfu_target_collection;
   
   // The absolute path of this file will typically be:
   // <base_path> / <relative_full_path>
@@ -402,7 +403,11 @@ private:
 // its size.  This is used to order for the storage container.  
 
 typedef struct{
-  long int size;
+  // order_size is sort of a virtual size.  In the case of real "regular" files
+  // on disk, it's the size of the file in bytes.  For other
+  // entries (symlinks, directories, other things) it's some virtual
+  // size, possibly negative, that's used in sorting entries by group.
+  long int order_size;
   Parfu_storage_entry *storage_ptr;
   //  Parfu_directory *dir_ptr;
   //  Parfu_target_file *tgt_file_ptr;
@@ -449,8 +454,10 @@ public:
   Parfu_target_collection(){
   }
   // bring in an entire directory tree
-  Parfu_target_collection(Parfu_directory in_directory);
+  Parfu_target_collection(Parfu_directory *in_directory);
 
+  void dump(void);
+  
   // copy constructor
   Parfu_target_collection(const Parfu_target_collection &in_collec){
     for( unsigned int i=0 ; i < in_collec.directories.size() ; i++){

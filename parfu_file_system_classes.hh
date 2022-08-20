@@ -277,7 +277,8 @@ public:
   }
   Parfu_storage_entry *parent_file=nullptr;
 private:
-  int header_size_this_slice;
+  friend class Parfu_target_collection;
+  int header_size_this_slice=-1;
 
   // how large the slice is in bytes
   long int slice_size = PARFU_FILE_SIZE_INVALID;
@@ -383,6 +384,7 @@ public:
   ~Parfu_directory(void){
   }
 private:
+  friend class Parfu_target_collection;
   // "spider" here is a verb to search down a directory tree from a starting
   // point to list all of the subdirectories and contents.  
   // spidered is false if directory_path has a value but a list has not been 
@@ -401,7 +403,9 @@ private:
 
 typedef struct{
   long int size;
-  Parfu_storage_entry *entry;
+  Parfu_storage_entry *storage_ptr;
+  //  Parfu_directory *dir_ptr;
+  //  Parfu_target_file *tgt_file_ptr;
   list <Parfu_file_slice> slices;
 }Parfu_storage_reference;
 

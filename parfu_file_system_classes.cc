@@ -411,3 +411,38 @@ long int Parfu_directory::spider_directory(void){
   spidered=true;
   return total_entries_found;
 } // long int spider_directory()
+
+Parfu_target_collection::Parfu_target_collection(Parfu_directory in_directory){
+  // take a directory tree, presumably a root of a collection of files,
+  // and create a target collection with all the contents
+  // filed
+  // This function will merely bring in the contents and set the sizes
+  // properly, this will not set up the container offsets.  That's another
+  // function.
+
+  Parfu_storage_reference my_ref;
+  Parfu_file_slice my_slice;
+  
+  
+  // prepare to process directories
+  // the collection could be pointed at a file, in which case there will
+  // be zero, but most likely we have at least one
+  my_ref.size = PARFU_FILE_SIZE_DIR;
+  my_ref.slices.push_back(my_slice); // has one and only once slice here
+  my_slice = my_ref.slices.front(); // my_slice is within my_ref
+  my_slice.slice_offset_in_file = 0L; // ony one; always at the beginning of the file
+  my_slice.slice_size = 0L; // directories are zero payload size
+  // the offset_in_container's will be set sequentially, probably after we create
+  // this collection.  So setting them to an invalid value (-1) for now.
+  (my_ref.slices.front()).slice_offset_in_container = -1L; 
+  for(std::size_t dir_ndx=0; dir_ndx < in_directory.subdirectories.size();dir_ndx++){
+    // TODO (I'm not 100% sure this is the correct pointer dereference)
+    my_ref.storage_ptr = *(  (in_directory.subdirectories.data()) + dir_ndx);    
+    // header size for a directory could be larger than a single block if the pathname
+    // is very long, or whatever.  
+    my_slice.header_size_this_slice =
+      my_ref.storage_ptr->header_size();      
+    directories.push_back(my_ref);
+  }
+  
+}

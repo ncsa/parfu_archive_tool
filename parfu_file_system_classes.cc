@@ -468,11 +468,15 @@ Parfu_target_collection::Parfu_target_collection(Parfu_directory *in_directory){
   // this same function if the target was a file; we'd have to modify it
   // a bit but it would work the same.  
   
+  // We need to attach the root spidered directory here.  While its existence
+  // could be assumed, it contains files and symlinks, so it has to be in the 
+  // list even though it doesn't contain any actual separate information.
   //  my_ref.storage_ptr = *(  (in_directory->subdirectories.data()) + 0 );    
   //  my_ref.storage_ptr = in_directory->nth_subdir(0);
-  //  my_slice.header_size_this_slice =
-  //    my_ref.storage_ptr->header_size();
-  //  directories.push_back(my_ref);
+  my_ref.storage_prt = in_directory;
+  my_slice.header_size_this_slice =
+    my_ref.storage_ptr->header_size();
+  directories.push_back(my_ref);
   
   cerr << "about to iterate...\n";
 

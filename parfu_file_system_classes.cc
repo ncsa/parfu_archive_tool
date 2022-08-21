@@ -473,7 +473,7 @@ Parfu_target_collection::Parfu_target_collection(Parfu_directory *in_directory){
   // list even though it doesn't contain any actual separate information.
   //  my_ref.storage_ptr = *(  (in_directory->subdirectories.data()) + 0 );    
   //  my_ref.storage_ptr = in_directory->nth_subdir(0);
-  my_ref.storage_prt = in_directory;
+  my_ref.storage_ptr = in_directory;
   my_slice.header_size_this_slice =
     my_ref.storage_ptr->header_size();
   directories.push_back(my_ref);
@@ -481,6 +481,7 @@ Parfu_target_collection::Parfu_target_collection(Parfu_directory *in_directory){
   cerr << "about to iterate...\n";
 
   
+  /*
   for(std::size_t dir_ndx=0; dir_ndx < in_directory->subdirectories.size();dir_ndx++){
     //  for(auto dir_iter=in_directory->subdirectories.begin();
     //      dir_iter != in_directory->subdirectories.end();
@@ -498,40 +499,40 @@ Parfu_target_collection::Parfu_target_collection(Parfu_directory *in_directory){
     cerr << "about to push_back()\n";
     directories.push_back(my_ref);
     cerr << "loop done\n";
-  }
+    } */
 
-  if( directories.size() > 1 ){
-    cerr << "directories size = " << directories.size() << "\n";
-    //    for(auto myiter = directories.begin() ; myiter != directories.end(); myiter++ ){
-    for(unsigned int myiter = 0 ; myiter < directories.size(); myiter++ ){
-      cerr << " in loop: directories size = " << directories.size() << "\n";
-      //      Parfu_storage_entry *loop_dir_ptr = myiter->storage_ptr;
-      Parfu_storage_entry *loop_dir_ptr = directories.at(myiter).storage_ptr;
-      if(loop_dir_ptr == nullptr){
-	cerr << "Warning!!!!!  loop_dir_ptr is NULL!\n";
-      }
-      cerr << "iterating on that directory\n";
-      cerr << "base_path=>" << loop_dir_ptr->base_path ;
-      cerr << "<  rel_path=>" << loop_dir_ptr->relative_path << "< \n";
-      for(std::size_t dir_ndx=0; dir_ndx < loop_dir_ptr->N_subdirs();dir_ndx++){
-	cerr << "inner loop: about to deref...\n";
-	my_ref.storage_ptr =
-	  loop_dir_ptr->nth_subdir(dir_ndx);
-	cerr << "cross check pointer\n";
-	cerr << "relative_path: >" << my_ref.storage_ptr->relative_path << "<\n";
-	cerr << "cross check complete\n";
-	//	  *(  (  ((Parfu_directory*)(myiter->storage_ptr))->subdirectories.data()) + dir_ndx);    
-	// header size for a directory could be larger than a single block if the pathname
-	// is very long, or whatever.  
-	cerr << "inner loop: about to use the deref\n";
-	my_slice.header_size_this_slice =
-	  my_ref.storage_ptr->header_size();      
-	cerr << "inner loop: about to push_back()\n";
-	directories.push_back(my_ref);
-	cerr << "inner loop done\n";
-      } // for(std::size_t dir_ndx=0;
-    } // for(auto myiter = directories.begin();
-  } //   if( directories.size() > 1 ){
+  //  if( directories.size() > 1 ){
+  cerr << "directories size = " << directories.size() << "\n";
+  //    for(auto myiter = directories.begin() ; myiter != directories.end(); myiter++ ){
+  for(unsigned int myiter = 0 ; myiter < directories.size(); myiter++ ){
+    cerr << " in loop: directories size = " << directories.size() << "\n";
+    //      Parfu_storage_entry *loop_dir_ptr = myiter->storage_ptr;
+    Parfu_storage_entry *loop_dir_ptr = directories.at(myiter).storage_ptr;
+    if(loop_dir_ptr == nullptr){
+      cerr << "Warning!!!!!  loop_dir_ptr is NULL!\n";
+    }
+    cerr << "iterating on that directory\n";
+    cerr << "base_path=>" << loop_dir_ptr->base_path ;
+    cerr << "<  rel_path=>" << loop_dir_ptr->relative_path << "< \n";
+    for(std::size_t dir_ndx=0; dir_ndx < loop_dir_ptr->N_subdirs();dir_ndx++){
+      cerr << "inner loop: about to deref...\n";
+      my_ref.storage_ptr =
+	loop_dir_ptr->nth_subdir(dir_ndx);
+      cerr << "cross check pointer\n";
+      cerr << "relative_path: >" << my_ref.storage_ptr->relative_path << "<\n";
+      cerr << "cross check complete\n";
+      //	  *(  (  ((Parfu_directory*)(myiter->storage_ptr))->subdirectories.data()) + dir_ndx);    
+      // header size for a directory could be larger than a single block if the pathname
+      // is very long, or whatever.  
+      cerr << "inner loop: about to use the deref\n";
+      my_slice.header_size_this_slice =
+	my_ref.storage_ptr->header_size();      
+      cerr << "inner loop: about to push_back()\n";
+      directories.push_back(my_ref);
+      cerr << "inner loop done\n";
+    } // for(std::size_t dir_ndx=0;
+  } // for(auto myiter = directories.begin();
+  //} //   if( directories.size() > 1 ){
 
   cerr << "function done!\n";
   

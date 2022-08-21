@@ -517,7 +517,8 @@ public:
   // destructor
   ~Parfu_target_collection(void){
   }
-
+  void order_files(void);
+  
 private:
   vector <Parfu_storage_reference> directories;
   vector <Parfu_storage_reference> files;

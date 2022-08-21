@@ -27,6 +27,8 @@
 //#include "parfu_2021_legacy.hh"
 #include "parfu_file_system_classes.hh"
 
+#include<algorithm>
+
 // these functions transform a target file to a line in a catalog, or take a
 // line from a catalog (as a string) and constructs the corresponding
 // target file class
@@ -554,4 +556,13 @@ void Parfu_target_collection::dump(void){
     cerr << "relative_path=>" << this_entry->relative_path << "< OS=";
     cerr << (files.data() + ndx)->order_size << "\n";
   }
+}
+
+bool sort_by_size(Parfu_storage_reference item1, Parfu_storage_reference item2){
+  return (item1.order_size < item2.order_size);
+}
+
+void Parfu_target_collection::order_files(void){
+  // sort file entries in order of increasing size_order.
+  std::sort(files.begin(),files.end(),sort_by_size);
 }

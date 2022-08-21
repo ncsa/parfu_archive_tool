@@ -49,10 +49,13 @@ int main(int argc, char *argv[]){
 
   //  cout << "First build the target collection\n";
   my_target_collec = new Parfu_target_collection(test_dir);
-  cout << "Target collection built.  Now dump it.\n";
+  cout << "Target collection built.  Now dump it, unsorted.\n";
   my_target_collec->dump();
-  cout << "Dump finished.\n";
-  
+  cout << "now sort the files...\n";
+  my_target_collec->order_files();
+  cout << "and dump it again.\n";
+  my_target_collec->dump();
+  cout << "all done.\n";
 
   return 0;
 }

@@ -184,7 +184,7 @@ private:
 // be a regular file (a sequence of bytes), a symlink (which
 // consists only of a name and the name of its target)
 
-class Parfu_target_file : Parfu_storage_entry
+class Parfu_target_file : public Parfu_storage_entry
 { 
 public:
   // constructor
@@ -405,7 +405,7 @@ public:
     return subdirectories.size();
   }
   virtual Parfu_target_file* nth_subfile(int my_index){
-    return nullptr;
+    return subfiles.at(my_index);
   }
   virtual unsigned int N_subfiles(void){
     return 0;

@@ -510,8 +510,21 @@ Parfu_target_collection::Parfu_target_collection(Parfu_directory *in_directory){
   // Now walk through the directories again, and this time, pull in all the
   // files and sylinks in each directory and add them to our subfiles list.
 
-  
-  
+  for(unsigned int myiter = 0 ; myiter < directories.size(); myiter++ ){
+    Parfu_storage_entry *loop_dir_ptr = directories.at(myiter).storage_ptr;
+    if(loop_dir_ptr == nullptr){
+      cerr << "Warning!!!!!  loop_dir_ptr is NULL!\n";
+    }
+    
+    for(std::size_t file_ndx=0; file_ndx < loop_dir_ptr->N_subfiles(); file_ndx++){
+      my_ref.storage_ptr =
+	loop_dir_ptr->nth_subfile(file_ndx);
+      my_slice.header_size_this_slice =
+	my_ref.storage_ptr->header_size();
+      files.push_back(my_ref);
+    } // for(std::size_t file_ndx=0; 
+  } // for(unsigned int myiter = 0 ;
+    
 }
 
 void Parfu_target_collection::dump(void){

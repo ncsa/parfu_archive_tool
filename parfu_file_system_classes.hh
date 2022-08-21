@@ -84,6 +84,7 @@ using namespace std;
 
 class Parfu_file_slice;
 class Parfu_container_file;
+class Parfu_directory;
 
 ////////////////
 //
@@ -109,6 +110,12 @@ public:
   long int next_available_after_me(long int start_of_available);
   int get_entry_type(void){
     return entry_type_value;
+  }
+  virtual Parfu_directory* nth_subdir(int my_index){
+    return nullptr;
+  }
+  virtual unsigned int N_subdirs(void){
+    return 0;
   }
   
 private:
@@ -159,7 +166,7 @@ private:
   // indicates if the locations for a given storage entry have been filled
   // out for its container file
   bool are_locations_filled_out=false;
-
+  //  virtual vector <Parfu_directory*> subdirectories;
 
 };
 
@@ -383,6 +390,12 @@ public:
   }
   // destructor
   ~Parfu_directory(void){
+  }
+  virtual Parfu_directory* nth_subdir(int my_index){
+    return subdirectories.at(my_index);
+  }
+  virtual unsigned int N_subdirs(void){
+    return subdirectories.size();
   }
 private:
   friend class Parfu_target_collection;

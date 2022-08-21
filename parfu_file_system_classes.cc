@@ -277,7 +277,10 @@ long int Parfu_directory::spider_directory(void){
     cerr << "This directory already spidered!  >>" << base_path << "\n";
     return -1L;
   }
+  cerr << "spider dir: base=>" << base_path ;
+  cerr << "< relative=>" << relative_path << "<\n";
 
+  
   my_directory_path = base_path;
 
   if(relative_path.length() > 0){
@@ -324,6 +327,7 @@ long int Parfu_directory::spider_directory(void){
     string entry_bare_name = string(next_entry->d_name);
     //    string entry_relative_name = directory_path;
     string entry_relative_name = string("");
+    string entry_full_name;
     if(relative_path.length() == 0){
       entry_relative_name = entry_bare_name;
     }
@@ -336,17 +340,25 @@ long int Parfu_directory::spider_directory(void){
     // we now need to check it to find out what it is 
     // (directory,regular file, symlink) and how big
     // it is if it's a regular file.
+    //
+    // for file system purposes we need to combine it with the
+    // base path so that we can find it.
+    if(base_path.length()){
+      entry_full_name = base_path;
+      entry_full_name.append("/");
+    }
+    entry_full_name.append(entry_relative_name);
     path_type_result=
-      parfu_what_is_path(entry_relative_name.c_str(),link_target,&file_size,follow_symlinks);
-    cout << "relative name: >>" << entry_relative_name << "<< file size: " << file_size;
+      parfu_what_is_path(entry_full_name.c_str(),link_target,&file_size,follow_symlinks);
+    cout << "relative name: >>" << entry_full_name << "<< file size: " << file_size;
     cout << " file type:" << path_type_result << "\n";
     switch(path_type_result){
     case PARFU_WHAT_IS_PATH_DOES_NOT_EXIST:
-      cerr << "Parfu_directory const; does not exist: >>" << entry_relative_name << "<<\n";
+      cerr << "Parfu_directory const; does not exist: >>" << entry_full_name << "<<\n";
       // this should generally never happen 
       break;
     case PARFU_WHAT_IS_PATH_IGNORED_TYPE:
-      cerr << "Parfu_directory spider_dir function: ignored type, will skip file: >>" << entry_relative_name << "<<\n";
+      cerr << "Parfu_directory spider_dir function: ignored type, will skip file: >>" << entry_full_name << "<<\n";
       // I presume for now we'll just jump over this entry without acknowledging it or storing
       // anywhere.  This would be an entry that's not a file, not a symlink, and not a
       // subdirectory.  So....a dev file?  Something else?  Probably safe to not save it
@@ -374,11 +386,11 @@ long int Parfu_directory::spider_directory(void){
       break;
     case PARFU_WHAT_IS_PATH_ERROR:
       // not sure what would cause an error in this function, but catch it here
-      cerr << "Parfu_directory const; ERROR from what_is_path: >>" << entry_relative_name << "<<\n";
+      cerr << "Parfu_directory const; ERROR from what_is_path: >>" << entry_full_name << "<<\n";
       break;
     default:
       // don't know if it's possible to fall through to here??
-      cerr << "Parfu_directory const; reached default branch??: >>" << entry_relative_name << "<<\n";
+      cerr << "Parfu_directory const; reached default branch??: >>" << entry_full_name << "<<\n";
       break;
     }
   } // while(next_entry...)
@@ -422,6 +434,8 @@ Parfu_target_collection::Parfu_target_collection(Parfu_directory *in_directory){
 
   Parfu_storage_reference my_ref;
   Parfu_file_slice my_slice;
+
+  std::list<Parfu_storage_reference> myiter;
   
   cerr << "starting constructor function\n";
   // prepare to process directories
@@ -429,6 +443,10 @@ Parfu_target_collection::Parfu_target_collection(Parfu_directory *in_directory){
   // be zero, but most likely we have at least one
   my_ref.order_size = PARFU_FILE_SIZE_DIR;
   cerr << "finished first assignment\n";
+
+  // We're creating a boilerplate (unpopulated) slice
+  // here just as a placeholder.  The following statements will
+  // populate it with actual data. 
   my_ref.slices.push_back(my_slice); // has one and only once slice here
   my_slice = my_ref.slices.front(); // my_slice is within my_ref
   cerr << "pulled my_slice back out\n";
@@ -445,11 +463,29 @@ Parfu_target_collection::Parfu_target_collection(Parfu_directory *in_directory){
   // do the 0th iteration outside the loop, then start the loop at index=1
   // to do the rest of the (sub) directories in that root directory.
 
+  // this is all assuming that the target
+  // (argument to this function) is a directory.  We could perform
+  // this same function if the target was a file; we'd have to modify it
+  // a bit but it would work the same.  
+  
+  //  my_ref.storage_ptr = *(  (in_directory->subdirectories.data()) + 0 );    
+  //  my_ref.storage_ptr = in_directory->nth_subdir(0);
+  //  my_slice.header_size_this_slice =
+  //    my_ref.storage_ptr->header_size();
+  //  directories.push_back(my_ref);
+  
   cerr << "about to iterate...\n";
+
+  
   for(std::size_t dir_ndx=0; dir_ndx < in_directory->subdirectories.size();dir_ndx++){
+    //  for(auto dir_iter=in_directory->subdirectories.begin();
+    //      dir_iter != in_directory->subdirectories.end();
+    //      dir_iter++){
     // TODO (I'm not 100% sure this is the correct pointer dereference)
     cerr << "about to deref...\n";
-    my_ref.storage_ptr = *(  (in_directory->subdirectories.data()) + dir_ndx);    
+    //    my_ref.storage_ptr = *(  (in_directory->subdirectories.data()) + dir_ndx);    
+    //   my_ref.storage_ptr = (*dir_iter);
+    my_ref.storage_ptr = in_directory->nth_subdir(dir_ndx);
     // header size for a directory could be larger than a single block if the pathname
     // is very long, or whatever.  
     cerr << "about to use the deref\n";
@@ -459,6 +495,40 @@ Parfu_target_collection::Parfu_target_collection(Parfu_directory *in_directory){
     directories.push_back(my_ref);
     cerr << "loop done\n";
   }
+
+  if( directories.size() > 1 ){
+    cerr << "directories size = " << directories.size() << "\n";
+    //    for(auto myiter = directories.begin() ; myiter != directories.end(); myiter++ ){
+    for(unsigned int myiter = 0 ; myiter < directories.size(); myiter++ ){
+      cerr << " in loop: directories size = " << directories.size() << "\n";
+      //      Parfu_storage_entry *loop_dir_ptr = myiter->storage_ptr;
+      Parfu_storage_entry *loop_dir_ptr = directories.at(myiter).storage_ptr;
+      if(loop_dir_ptr == nullptr){
+	cerr << "Warning!!!!!  loop_dir_ptr is NULL!\n";
+      }
+      cerr << "iterating on that directory\n";
+      cerr << "base_path=>" << loop_dir_ptr->base_path ;
+      cerr << "<  rel_path=>" << loop_dir_ptr->relative_path << "< \n";
+      for(std::size_t dir_ndx=0; dir_ndx < loop_dir_ptr->N_subdirs();dir_ndx++){
+	cerr << "inner loop: about to deref...\n";
+	my_ref.storage_ptr =
+	  loop_dir_ptr->nth_subdir(dir_ndx);
+	cerr << "cross check pointer\n";
+	cerr << "relative_path: >" << my_ref.storage_ptr->relative_path << "<\n";
+	cerr << "cross check complete\n";
+	//	  *(  (  ((Parfu_directory*)(myiter->storage_ptr))->subdirectories.data()) + dir_ndx);    
+	// header size for a directory could be larger than a single block if the pathname
+	// is very long, or whatever.  
+	cerr << "inner loop: about to use the deref\n";
+	my_slice.header_size_this_slice =
+	  my_ref.storage_ptr->header_size();      
+	cerr << "inner loop: about to push_back()\n";
+	directories.push_back(my_ref);
+	cerr << "inner loop done\n";
+      } // for(std::size_t dir_ndx=0;
+    } // for(auto myiter = directories.begin();
+  } //   if( directories.size() > 1 ){
+
   cerr << "function done!\n";
   
 }

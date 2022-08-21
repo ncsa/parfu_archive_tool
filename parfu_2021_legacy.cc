@@ -39,18 +39,27 @@ unsigned int parfu_what_is_path(string pathname,
   int buffer_length;
   char *target_name_buffer;
   
-
+  // check for existence first
+  
   if(follow_symlinks){ // treat symlinks like what they point to
     if((returnval=stat(pathname.c_str(),&filestruct))){
-      fprintf(stderr,"parfu_what_is_path:\n");
-      fprintf(stderr,"  stat returned %d!!!\n",returnval);
-      return PARFU_WHAT_IS_PATH_ERROR;
+      if(std::filesystem::exists(pathname.c_str())){
+	fprintf(stderr,"parfu_what_is_path:\n");
+	fprintf(stderr,"  stat returned %d for existing file!!!\n",returnval);
+	return PARFU_WHAT_IS_PATH_ERROR;
+      }
+      else{
+	cerr << "parfu_what_is_path:\n";
+	cerr << "ERROR: file >" << pathname << "< does not exist!\n";
+	return PARFU_WHAT_IS_PATH_DOES_NOT_EXIST;
+
+      }
     }
   }
   else{ // treat symlinks like symlinks
     if((returnval=lstat(pathname.c_str(),&filestruct))){
       fprintf(stderr,"parfu_what_is_path:\n");
-      fprintf(stderr,"  lstat returned %d!!!\n",returnval);
+      fprintf(stderr,"  lstat returned %d with path >%s<!!!\n",returnval,pathname.c_str());
       return PARFU_WHAT_IS_PATH_ERROR;
     }
     if(S_ISLNK(filestruct.st_mode)){

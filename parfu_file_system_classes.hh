@@ -85,6 +85,7 @@ using namespace std;
 class Parfu_file_slice;
 class Parfu_container_file;
 class Parfu_directory;
+class Parfu_target_file;
 
 ////////////////
 //
@@ -115,6 +116,12 @@ public:
     return nullptr;
   }
   virtual unsigned int N_subdirs(void){
+    return 0;
+  }
+  virtual Parfu_target_file* nth_subfile(int my_index){
+    return nullptr;
+  }
+  virtual unsigned int N_subfiles(void){
     return 0;
   }
   
@@ -396,6 +403,12 @@ public:
   }
   virtual unsigned int N_subdirs(void){
     return subdirectories.size();
+  }
+  virtual Parfu_target_file* nth_subfile(int my_index){
+    return nullptr;
+  }
+  virtual unsigned int N_subfiles(void){
+    return 0;
   }
 private:
   friend class Parfu_target_collection;

@@ -124,6 +124,9 @@ public:
   virtual unsigned int N_subfiles(void){
     return 0;
   }
+  virtual bool is_symlink(void){
+    return false;
+  }
   
 private:
   // allow derived classes to initialize variables
@@ -237,6 +240,13 @@ public:
   //  int fill_out_locations(long int start_offset,
   //			 long int slice_size);
   //  long int offset_in_container(void);
+  virtual bool is_symlink(void){
+    if(symlink_target.size() > 0)
+      return true;
+    else
+      return false;
+  }
+  
   
 private:
   

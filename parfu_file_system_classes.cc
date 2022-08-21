@@ -524,6 +524,12 @@ Parfu_target_collection::Parfu_target_collection(Parfu_directory *in_directory){
 	loop_dir_ptr->nth_subfile(file_ndx);
       my_slice.header_size_this_slice =
 	my_ref.storage_ptr->header_size();
+      if(my_ref.storage_ptr->is_symlink()){
+	my_ref.order_size=PARFU_FILE_SIZE_SYMLINK;
+      }
+      else{
+	my_ref.order_size=my_ref.storage_ptr->file_size;
+      }
       files.push_back(my_ref);
     } // for(std::size_t file_ndx=0; 
   } // for(unsigned int myiter = 0 ;
@@ -538,12 +544,14 @@ void Parfu_target_collection::dump(void){
   for(std::size_t ndx=0; ndx < directories.size(); ndx++){
     this_entry = (directories.data() + ndx)->storage_ptr;
     cerr << "index=" << ndx << " base_path=>" << this_entry->base_path << "< ";
-    cerr << "relative_path=>" << this_entry->relative_path << "< \n";
+    cerr << "relative_path=>" << this_entry->relative_path << "< OS=";
+    cerr << (directories.data() + ndx)->order_size << "\n";
   }
   cerr << "dump: then files\n";
   for(std::size_t ndx=0; ndx < files.size(); ndx++){
     this_entry = (files.data() + ndx)->storage_ptr;
     cerr << "index=" << ndx << " base_path=>" << this_entry->base_path << "< ";
-    cerr << "relative_path=>" << this_entry->relative_path << "< \n";
+    cerr << "relative_path=>" << this_entry->relative_path << "< OS=";
+    cerr << (files.data() + ndx)->order_size << "\n";
   }
 }

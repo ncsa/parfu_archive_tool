@@ -408,7 +408,7 @@ public:
     return subfiles.at(my_index);
   }
   virtual unsigned int N_subfiles(void){
-    return 0;
+    return subfiles.size();
   }
 private:
   friend class Parfu_target_collection;

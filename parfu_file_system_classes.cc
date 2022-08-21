@@ -498,6 +498,7 @@ Parfu_target_collection::Parfu_target_collection(Parfu_directory *in_directory){
       cerr << "Warning!!!!!  loop_dir_ptr is NULL!\n";
     }
 
+    //    cerr << "subdirs=" << loop_dir_ptr->N_subdirs() << "\n";
     for(std::size_t dir_ndx=0; dir_ndx < loop_dir_ptr->N_subdirs();dir_ndx++){
       my_ref.storage_ptr =
 	loop_dir_ptr->nth_subdir(dir_ndx);
@@ -516,7 +517,9 @@ Parfu_target_collection::Parfu_target_collection(Parfu_directory *in_directory){
       cerr << "Warning!!!!!  loop_dir_ptr is NULL!\n";
     }
     
+    //    cerr << "subfiles=" << loop_dir_ptr->N_subfiles() << "\n";
     for(std::size_t file_ndx=0; file_ndx < loop_dir_ptr->N_subfiles(); file_ndx++){
+      //      cerr << "one file\n";
       my_ref.storage_ptr =
 	loop_dir_ptr->nth_subfile(file_ndx);
       my_slice.header_size_this_slice =
@@ -531,8 +534,15 @@ void Parfu_target_collection::dump(void){
   Parfu_storage_entry *this_entry;
   //  this_entry=directories.start();
   cerr << "Parfu_target_collection::dump() running\n";
+  cerr << "dump: first directories\n";
   for(std::size_t ndx=0; ndx < directories.size(); ndx++){
     this_entry = (directories.data() + ndx)->storage_ptr;
+    cerr << "index=" << ndx << " base_path=>" << this_entry->base_path << "< ";
+    cerr << "relative_path=>" << this_entry->relative_path << "< \n";
+  }
+  cerr << "dump: then files\n";
+  for(std::size_t ndx=0; ndx < files.size(); ndx++){
+    this_entry = (files.data() + ndx)->storage_ptr;
     cerr << "index=" << ndx << " base_path=>" << this_entry->base_path << "< ";
     cerr << "relative_path=>" << this_entry->relative_path << "< \n";
   }

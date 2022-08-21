@@ -367,7 +367,10 @@ long int Parfu_directory::spider_directory(void){
     case PARFU_WHAT_IS_PATH_REGFILE:
       // it's a regular file that we need to store.  This is the
       // core of what parfu needs to tackle.
-      subfiles.push_back(Parfu_target_file(base_path,entry_relative_name,path_type_result,file_size));
+      Parfu_target_file *new_target_file_ptr;
+      new_target_file_ptr = new 
+	Parfu_target_file(base_path,entry_relative_name,path_type_result,file_size);
+      subfiles.push_back(new_target_file_ptr);
       break;
     case PARFU_WHAT_IS_PATH_DIR:
       // it's a directory that we need to note and it will need to be spidered in the future
@@ -382,7 +385,7 @@ long int Parfu_directory::spider_directory(void){
       my_tempfile =
 	new Parfu_target_file(base_path,entry_relative_name,path_type_result,file_size,link_target);
       //      my_tempfile->set_symlink_target(link_target);
-      subfiles.push_back(*my_tempfile);
+      subfiles.push_back(my_tempfile);
       break;
     case PARFU_WHAT_IS_PATH_ERROR:
       // not sure what would cause an error in this function, but catch it here

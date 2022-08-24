@@ -1,0 +1,129 @@
+////////////////////////////////////////////////////////////////////////////////////
+// 
+//  University of Illinois/NCSA Open Source License
+//  http://otm.illinois.edu/disclose-protect/illinois-open-source-license
+//  
+//  Parfu is copyright (c) 2017-2022, The Trustees of the University of Illinois. 
+//  All rights reserved.
+//  
+//  Parfu was developed by:
+//  The University of Illinois
+//  The National Center For Supercomputing Applications (NCSA)
+//  Blue Waters Science and Engineering Applications Support Team (SEAS)
+//  Craig P Steffen <csteffen@ncsa.illinois.edu>
+//  Roland Haas <rhaas@illinois.edu>
+//  
+//  https://github.com/ncsa/parfu_archive_tool
+//  http://www.ncsa.illinois.edu/People/csteffen/parfu/
+//  
+//  For full licnse text see the LICENSE file provided with the source
+//  distribution.
+//  
+///////////////////////////////////////////////////////////////////////////////////
+
+// This file is the re-write of the header format for the 0.6 and later
+// C++ port created during the summer and fall of 2022.
+
+// The original format documentation is in the top of the file
+// parfu_buffer_utils.com.  This supercedes that format, and is used
+// by parfu going forward.  
+
+// A quick 2022 note: pad files are no longer a thing, so all the references
+// to padding and pad files are gone.  This makes the archive files more
+// like native tar files, makes the code simpler, and saves a lot of
+// complexity in the archive file format.  
+
+// The beginning of the archive file will be the parfu
+// catalog, and at the beginning of the catalog is this
+// header block, which is approximately human readable.
+
+///////////////////////////////////////////////////////////////////////
+//
+// catalog file header:
+// each of the initial header numbers is a 10-digit number delineated 
+// by an '\n' at the end
+
+// all numbers in the catalog header or catalog body lines are written 
+// out in ASCII.  This makes it human readable.
+// \n is a newline (single byte)
+// \t is a tab character (single byte)
+// which characters are actually used as the value delimeters can
+// be set in the parfu header file with #define statements
+
+// catalog header format: 
+// SSSSSSSSSS\n  total size of catalog, in bytes, including whole header
+// parfu_v06 \n  version string
+// 000 of 001\n  index within multiple archive files
+// FFFFFFFFFF\n  total number of file entries in catalog
+
+//////////////////////////////////////////////////////////////////////
+//
+// Catalog file entry lines
+// 
+// These are the file entry lines that will be written to the front
+// of the archive file ON DISK.  
+// Each directory or file or symlink in the archive is represented in
+// the catalog by a single line entry.  The format of that line
+// is as follows:
+
+// AAA \t T \t TGT \t SZ \t THSZ \t LOC_AR \n
+// with the entries defined thusly:
+
+//   AAA relative filename within the archive
+//   T  type of entry: dir, symlink, or regular file
+//   TGT: if symlink, the target, otherwise empty
+
+//   SZ is size of file in bytes
+//   THSZ is the size of the tar header in bytes
+//   LOC_AR is the beginning of file or fragment in archive file
+
+/////////////////////////////////////////////////////////////////////
+//
+// MPI "working orders" entry lines
+//
+// These lines are the format that rank 0 ("boss" rank) uses to
+// signal to the worker over MPI message that the worker is to
+// move X bytes from target file Y to archive file Z and where
+// exactly to move them.
+//
+// these lines are a modified version of the catalog lines
+// above but contain a couple of additional pices of
+// information
+
+// NNN \t AAA \t T \t TGT \t SZ \t THSZ \t LOC_AR \t LOC_OR \n
+// with the entries defined thusly:
+
+//   NNN index of which of the multiple open archive files we're to be
+//       written into.  The file information will be stored in some
+//       kind of shared structure or some such.  
+//   AAA relative filename within the archive
+//   T  type of entry: dir, symlink, or regular file
+//   TGT: if symlink, the target, otherwise empty
+
+//   SZ is size of file in bytes
+//   THSZ is the size of the tar header in bytes
+//   LOC_AR is the beginning of file or fragment in archive file
+//   LOC_OR is location of fragment in orig file (zero for single file)
+
+
+////////////////////////
+//
+// below are discarded entries in the file entries.
+// RRR path+filename, relative to CWD of running process
+
+  // catalog header (full):
+  // SSSSSSSSSS\n  total size of catalog, in bytes, including whole header
+  // parfu_v04 \n  version string
+  // full      \n  indicates full catalog
+  // BBBBBBBBBB\n  bucket size (a whole number of buckets reserved for catalog
+  // FFFFFFFFFF\n  total number of file entries in catalog
+  
+
+
+//   RNK_BKT rank bucket index of the file fragment
+
+//   N_FRG file is divided into this many fragments
+//   FP_IND file pointer index; internal use only
+
+
+

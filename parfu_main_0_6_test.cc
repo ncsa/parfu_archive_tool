@@ -55,7 +55,11 @@ int main(int argc, char *argv[]){
   my_target_collec->order_files();
   cout << "and dump it again.\n";
   my_target_collec->dump();
+  cout << "about to set offsets.\n";
+  my_target_collec->set_offsets(0L);
+  cout << "about to dump offsets\n";
+  my_target_collec->dump_offsets();
   cout << "all done.\n";
-
+  
   return 0;
 }

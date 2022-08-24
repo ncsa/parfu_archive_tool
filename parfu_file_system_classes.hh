@@ -167,7 +167,7 @@ private:
   string symlink_target = string("");
 
   // Size of the file in bytes
-  long int file_size=-1L;
+  long int file_size=0L;
 
   // Entry type.  Regular file, symlink, directory, etc.  
   int entry_type_value=PARFU_FILE_TYPE_INVALID;
@@ -273,6 +273,15 @@ public:
   Parfu_file_slice(long int in_size,
 		   long int in_offset_in_file,
 		   long int in_offset_in_container){
+    slice_size = in_size;
+    slice_offset_in_file = in_offset_in_file;
+    slice_offset_in_container = in_offset_in_container;
+  }
+  Parfu_file_slice(int in_header_size,
+		   long int in_size,
+		   long int in_offset_in_file,
+		   long int in_offset_in_container){
+    header_size_this_slice = in_header_size;
     slice_size = in_size;
     slice_offset_in_file = in_offset_in_file;
     slice_offset_in_container = in_offset_in_container;
@@ -518,7 +527,8 @@ public:
   ~Parfu_target_collection(void){
   }
   void order_files(void);
-  
+  void set_offsets(long int max_extent_size);
+  void dump_offsets(void);  
 private:
   vector <Parfu_storage_reference> directories;
   vector <Parfu_storage_reference> files;

@@ -379,6 +379,7 @@ long int Parfu_directory::spider_directory(void){
       Parfu_directory *new_subdir_ptr;
       new_subdir_ptr =
       	new Parfu_directory(base_path,entry_relative_name);
+      new_subdir_ptr->file_size = 0L;
       subdirectories.push_back(new_subdir_ptr);
       break;
     case PARFU_WHAT_IS_PATH_SYMLINK:
@@ -558,6 +559,28 @@ void Parfu_target_collection::dump(void){
   }
 }
 
+void Parfu_target_collection::dump_offsets(void){
+  Parfu_storage_reference my_ref;
+  Parfu_storage_entry *this_entry;
+  cerr << "dumping offsets\n";
+  for(std::size_t ndx=0; ndx < directories.size(); ndx++){
+    my_ref = directories.at(ndx);
+    this_entry = (directories.data() + ndx)->storage_ptr;
+    cerr << "rp=" << this_entry->relative_path;
+    fprintf(stderr,"       %06lu",my_ref.slices.begin()->slice_offset_in_container);
+    cerr << "\n";
+  }
+  cerr << "directory offsets finished; now files:\n";
+  for(std::size_t ndx=0; ndx < files.size(); ndx++){
+    my_ref = files.at(ndx);
+    this_entry = (files.data() + ndx)->storage_ptr;
+    cerr << "rp=" << this_entry->relative_path;
+    fprintf(stderr,"       %06lu",my_ref.slices.begin()->slice_offset_in_container);
+
+    cerr << "\n";
+  }
+}
+
 bool sort_by_size(Parfu_storage_reference item1, Parfu_storage_reference item2){
   return (item1.order_size < item2.order_size);
 }
@@ -565,4 +588,77 @@ bool sort_by_size(Parfu_storage_reference item1, Parfu_storage_reference item2){
 void Parfu_target_collection::order_files(void){
   // sort file entries in order of increasing size_order.
   std::sort(files.begin(),files.end(),sort_by_size);
+}
+
+long unsigned int parfu_next_block_boundary(long unsigned int first_available){
+  long unsigned int working_location = first_available;
+  if(working_location % BLOCKSIZE){
+    // if the next available block starts on a blocksize
+    // boundary we start allocating there.  Otherwise we start
+    // at the next even block boundary.  This is a core feature
+    // that makes parfu tar-compatible
+    working_location =
+      ( ( working_location / BLOCKSIZE ) + 1 ) * BLOCKSIZE;
+  }
+  return working_location;
+}
+
+void Parfu_target_collection::set_offsets(long int max_extent_size){
+  long unsigned int working_offset = 0L;
+  long int my_file_size;
+  long unsigned int total_extent; // length of header plus file payload
+  long unsigned int next_offset;
+  //  int return_val;
+  int my_header_size;
+
+  // flush the existing directory slices
+  for(std::size_t ndx=0; ndx < directories.size(); ndx++){
+    directories.at(ndx).slices.erase(directories.at(ndx).slices.begin(),directories.at(ndx).slices.end());
+    if(directories.at(ndx).slices.size() > 0){
+      cerr << "Warning!  directories index " << ndx << "has length > 0 after erasing!\n";
+    }
+  }
+  // flush the existing file slices
+  for(std::size_t ndx=0; ndx < files.size(); ndx++){
+    files.at(ndx).slices.erase(files.at(ndx).slices.begin(),files.at(ndx).slices.end());
+  }
+
+  // every entry has an empty vector of slices; all offsets are gone
+  // now we walk the collection from the beginning, starting with
+  // offset zero
+
+  working_offset = 0L;
+  // first directories
+  for(std::size_t ndx=0; ndx < directories.size(); ndx++){
+    my_header_size = directories.at(ndx).storage_ptr->header_size();
+    my_file_size = directories.at(ndx).storage_ptr->file_size;
+    if(my_file_size < 0){
+      cerr << "DANGER!  File size < 0!!!\n";
+    }
+    total_extent = my_header_size + my_file_size;
+    next_offset = working_offset + total_extent;
+    directories.at(ndx).slices.push_back(Parfu_file_slice(my_header_size,my_file_size,0L,working_offset));
+
+    // now we do book keeping to set up for the next item
+    working_offset = next_offset;
+    working_offset = parfu_next_block_boundary(working_offset);
+  }
+  // then files
+  //  cerr << "set_offsets function done.\n";
+  for(std::size_t ndx=0; ndx < files.size(); ndx++){
+    //    fprintf(stderr,"setting_offset->%06lu\n",working_offset);
+    my_header_size = files.at(ndx).storage_ptr->header_size();
+    my_file_size = files.at(ndx).storage_ptr->file_size;
+    if(my_file_size < 0){
+      cerr << "DANGER!  File size < 0!!!\n";
+    }
+    total_extent = my_header_size + my_file_size;
+    next_offset = working_offset + total_extent;
+    files.at(ndx).slices.push_back(Parfu_file_slice(my_header_size,my_file_size,0L,working_offset));
+
+    // now we do book keeping to set up for the next item
+    working_offset = next_offset;
+    working_offset = parfu_next_block_boundary(working_offset);
+  }
+  
 }

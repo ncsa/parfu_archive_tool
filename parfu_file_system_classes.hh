@@ -529,7 +529,8 @@ public:
   void order_files(void);
   void set_offsets();
   void dump_offsets(void);
-  //  long unsigned int next_target_collection(long unsigned int 
+  vector <string> *create_transfer_orders(int archive_file_index,
+					  long unsigned int bucket_size);
 private:
   vector <Parfu_storage_reference> directories;
   vector <Parfu_storage_reference> files;

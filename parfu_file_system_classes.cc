@@ -667,3 +667,87 @@ void Parfu_target_collection::set_offsets(){
   }
   
 }
+
+vector <string> *Parfu_target_collection::create_transfer_orders(int archive_file_index,
+								 long unsigned int bucket_size){
+  // vector of output buffers containing transfer instructions
+  // (essentially just a series of buffers that will be sent
+  // via MPI but managed by string classes)
+  vector <string> *trans_orders = new vector <string>;
+  // endpoint is one byte past the last byte the archive file should occupy
+  long unsigned int endpoint;
+  long unsigned int position_in_archive;
+  // bucket here is the chunk of archive that will be handled by a single rank
+  // mover node.  
+  long unsigned int position_in_bucket;
+  long unsigned int next_position_in_bucket;
+  long unsigned int total_extent;
+  long unsigned int position_jump;
+  Parfu_file_slice last_slice;
+  
+  if(bucket_size < 100000){
+    cerr << "create_transfer_orders called w/ bucket_size=" << bucket_size << "\n";
+    cerr << "This is extremely unlikely to work.\n";
+    return nullptr;
+  }
+  
+  if(files.size() > 0){
+    last_slice = files.back().slices.back();
+  }
+  else{
+    if(directories.size() > 0){
+      last_slice = directories.back().slices.back();
+    }
+    else{
+      // somehow we got a collection that contains zero directories and
+      // zero files.  I don't know that that's possible; except maybe
+      // if the initial directory didn't exist at all?
+      cerr << "WARNING!  create_transfer_orders received empty set!!!\n";
+      return nullptr;
+    }
+  }
+  // at this point we know we have at least one directory or
+  // at least one file, so we have stuff to save to an archive file
+  // and last_slice indicates the last thing in that archive  
+
+  endpoint = last_slice.slice_offset_in_container;
+  endpoint += last_slice.header_size_this_slice;
+  endpoint += last_slice.slice_size;
+  // endpoint is now one byte past where we should end
+
+  trans_orders->push_back(string(""));
+  position_in_archive = 0UL;
+  position_in_bucket = 0UL;
+  
+  // iterate through directories
+  
+  for(unsigned int ndx=0;ndx<directories.size();ndx++){
+    Parfu_storage_entry *mydir = directories.at(ndx).storage_ptr;
+    unsigned long int position_in_file=0UL;
+    total_extent = mydir->header_size();
+    position_jump = parfu_next_block_boundary(total_extent);
+    next_position_in_bucket = position_in_bucket + position_jump;
+    
+    if(total_extent <= bucket_size){
+      // this file can live in one bucket
+      if(next_position_in_bucket > bucket_size){
+	// due to previous files in this bucket,
+	// it spills off the end, so we jump to the
+	// next bucket
+	trans_orders->push_back(string(""));
+	position_in_bucket = 0UL;
+	next_position_in_bucket = position_in_bucket + total_extent;
+	if(next_position_in_bucket > bucket_size){
+	  cerr << "WARNING!!! bucket size math error!\n";
+	}
+      }
+      // whatever bucket we're in, this file will fit in it
+      position_in_bucket = next_position_in_bucket;
+      
+    }
+  }
+  
+
+	
+	return trans_orders;
+}

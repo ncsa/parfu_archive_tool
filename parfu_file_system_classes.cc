@@ -40,6 +40,20 @@
 //  slices.push_back(Parfu_file_slice(file_size,0));
 //}
 
+char Parfu_storage_entry::type_char(void){
+  switch(entry_type_value){
+  case PARFU_FILE_TYPE_DIRECTORY:
+    return PARFU_FILE_TYPE_DIRECTORY_CHAR;
+  case PARFU_FILE_TYPE_SYMLINK:
+    return PARFU_FILE_TYPE_SYMLINK_CHAR;
+  case PARFU_FILE_TYPE_REGULAR:
+    return PARFU_FILE_TYPE_REGULAR_CHAR;
+  default:
+    return PARFU_FILE_TYPE_INVALID_CHAR;
+  }
+}
+
+
 long int Parfu_storage_entry::next_available_after_me(long int start_of_available){
 
   // this function serves as a sort of informal iterator while
@@ -684,6 +698,7 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
   long unsigned int total_extent;
   long unsigned int position_jump;
   Parfu_file_slice last_slice;
+  string type_string;
   
   if(bucket_size < 100000){
     cerr << "create_transfer_orders called w/ bucket_size=" << bucket_size << "\n";
@@ -723,6 +738,7 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
   
   for(unsigned int ndx=0;ndx<directories.size();ndx++){
     Parfu_storage_entry *mydir = directories.at(ndx).storage_ptr;
+    Parfu_file_slice *myslice = &(directories.at(ndx).slices.back());
     unsigned long int position_in_file=0UL;
     total_extent = mydir->header_size();
     position_jump = parfu_next_block_boundary(total_extent);
@@ -742,6 +758,27 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
 	}
       }
       // whatever bucket we're in, this file will fit in it
+      trans_orders->back().append(to_string(archive_file_index));
+      trans_orders->back().append("\t");
+      trans_orders->back().append(mydir->relative_path);
+      trans_orders->back().append("\t");
+      type_string = mydir->type_char();
+      trans_orders->back().append(type_string);
+      trans_orders->back().append("\t");
+      trans_orders->back().append(mydir->symlink_target);     
+      trans_orders->back().append("\t");
+      trans_orders->back().append(to_string(myslice->slice_size));
+      trans_orders->back().append("\t");
+      trans_orders->back().append(to_string(myslice->header_size_this_slice));
+      trans_orders->back().append("\t");
+      trans_orders->back().append(to_string(myslice->slice_offset_in_container));
+      trans_orders->back().append("\t");
+      trans_orders->back().append(to_string(0));
+      trans_orders->back().append("\n");
+      
+
+
+
       position_in_bucket = next_position_in_bucket;
       
     }

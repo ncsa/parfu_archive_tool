@@ -127,6 +127,7 @@ public:
   virtual bool is_symlink(void){
     return false;
   }
+  char type_char(void);
   
 private:
   // allow derived classes to initialize variables

@@ -386,7 +386,7 @@ long int Parfu_directory::spider_directory(void){
       // simlink that we'll need to store for now
       Parfu_target_file *my_tempfile;
       my_tempfile = 
-	new Parfu_target_file(base_path,entry_relative_name,path_type_result,file_size,link_target);
+	new Parfu_target_file(base_path,entry_relative_name,path_type_result,0,link_target);
       //      my_tempfile->set_symlink_target(link_target);
       subfiles.push_back(my_tempfile);
       break;
@@ -603,7 +603,11 @@ long unsigned int parfu_next_block_boundary(long unsigned int first_available){
   return working_location;
 }
 
-void Parfu_target_collection::set_offsets(long int max_extent_size){
+
+
+void Parfu_target_collection::set_offsets(){
+  // After this fuction this collection will have valid
+  // offsets all the way through it.  The files aren't sub-divded, though. 
   long unsigned int working_offset = 0L;
   long int my_file_size;
   long unsigned int total_extent; // length of header plus file payload
@@ -633,7 +637,7 @@ void Parfu_target_collection::set_offsets(long int max_extent_size){
     my_header_size = directories.at(ndx).storage_ptr->header_size();
     my_file_size = directories.at(ndx).storage_ptr->file_size;
     if(my_file_size < 0){
-      cerr << "DANGER!  File size < 0!!!\n";
+      cerr << "DANGER!  File size < 0!!! dir:" << directories.at(ndx).storage_ptr->relative_path << "\n";
     }
     total_extent = my_header_size + my_file_size;
     next_offset = working_offset + total_extent;
@@ -650,7 +654,8 @@ void Parfu_target_collection::set_offsets(long int max_extent_size){
     my_header_size = files.at(ndx).storage_ptr->header_size();
     my_file_size = files.at(ndx).storage_ptr->file_size;
     if(my_file_size < 0){
-      cerr << "DANGER!  File size < 0!!!\n";
+      //      cerr << "DANGER!  File size < 0!!!\n";
+      cerr << "DANGER!  File size < 0!!! file:" << files.at(ndx).storage_ptr->relative_path << "\n";
     }
     total_extent = my_header_size + my_file_size;
     next_offset = working_offset + total_extent;

@@ -527,8 +527,9 @@ public:
   ~Parfu_target_collection(void){
   }
   void order_files(void);
-  void set_offsets(long int max_extent_size);
-  void dump_offsets(void);  
+  void set_offsets();
+  void dump_offsets(void);
+  //  long unsigned int next_target_collection(long unsigned int 
 private:
   vector <Parfu_storage_reference> directories;
   vector <Parfu_storage_reference> files;

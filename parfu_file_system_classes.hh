@@ -294,18 +294,18 @@ public:
     slice_offset_in_container = 0UL;
   }
   // copy constructor
-  Parfu_file_slice(const Parfu_file_slice &in_slice){
-    slice_size = in_slice.slice_size;
-    slice_offset_in_file = in_slice.slice_offset_in_file;
-    slice_offset_in_container = in_slice.slice_offset_in_container;
-  }
+  //  Parfu_file_slice(const Parfu_file_slice &in_slice){
+  //    slice_size = in_slice.slice_size;
+  //    slice_offset_in_file = in_slice.slice_offset_in_file;
+  //    slice_offset_in_container = in_slice.slice_offset_in_container;
+  //  }
   // assignment operator
-  Parfu_file_slice& operator=(const Parfu_file_slice &in_slice){
-    slice_size = in_slice.slice_size;
-    slice_offset_in_file = in_slice.slice_offset_in_file;
-    slice_offset_in_container = in_slice.slice_offset_in_container;    
-    return *this;
-  }
+  //  Parfu_file_slice& operator=(const Parfu_file_slice &in_slice){
+  //  slice_size = in_slice.slice_size;
+  //  slice_offset_in_file = in_slice.slice_offset_in_file;
+  //  slice_offset_in_container = in_slice.slice_offset_in_container;    
+  //  return *this;
+  //}
   // destructor
   ~Parfu_file_slice(void){
     

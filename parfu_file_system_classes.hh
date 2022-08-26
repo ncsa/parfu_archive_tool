@@ -534,6 +534,13 @@ public:
 					  long unsigned int bucket_size);
   string print_marching_order(int file_index,
 			      Parfu_storage_reference myref);
+  string print_marching_order_raw(int file_index,
+				  Parfu_storage_reference myref,
+				  unsigned long mysize,
+				  unsigned int my_header_size,
+				  unsigned long my_container_offset,
+				  unsigned long my_file_offset);
+    
 private:
   vector <Parfu_storage_reference> directories;
   vector <Parfu_storage_reference> files;

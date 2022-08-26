@@ -818,15 +818,31 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
       unsigned long int position_in_file=0UL;
       unsigned long int extent_remaining;
       trans_orders->push_back(string(""));
-      position_in_bucket = 0UL;
-      next_position_in_bucket = position_in_bucket + position_jump;      
       extent_remaining = total_extent;
       
       // loop over the file, cutting into bucket-sized pieces until
       // we put the remainder in the last one
-      while(position_in_file > 0){
-				  //	while 
+
+      // iterate by lowering extent_remaining as we set up transfer orders
+      // position_in_bucket is not relevant for this section because all
+      // transfers start at an integer multiple of buckes from the
+      // beginning of the file
+      //      while(position_in_file > 0){
+      while(extent_remaining > bucket_size){
+	// we go through this while loop setting up transfers until
+	// exactly one bucket, or less is left to transfer
+
+	// print the orders for this full bucket
+	trans_orders->back().append(print_marching_order(archive_file_index,
+							 files.at(ndx)));
+	
+	position_in_file += bucket_size;
+	extent_remaining -= bucket_size;
       }
+      // and now take care of the last file fragment that's smaller than
+      // a bucket (possibly zero if the file extent (file itself plus its
+      // header) is exactly a multiple of bucket size)
+      //      }
       
     }
 
@@ -837,6 +853,21 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
 
 string Parfu_target_collection::print_marching_order(int file_index,
 						     Parfu_storage_reference myref){
+  
+  return print_marching_order_raw(file_index,
+				  myref,
+				  myref.slices.front().slice_size,
+				  myref.slices.front().header_size_this_slice,
+				  myref.slices.front().slice_offset_in_container,
+				  myref.slices.front().slice_offset_in_file);
+}
+
+string Parfu_target_collection::print_marching_order_raw(int file_index,
+							 Parfu_storage_reference myref,
+							 unsigned long mysize,
+							 unsigned int my_header_size,
+							 unsigned long my_container_offset,
+							 unsigned long my_file_offset){
   string out_string;
   string type_string;
   
@@ -849,14 +880,12 @@ string Parfu_target_collection::print_marching_order(int file_index,
   out_string.append("\t");
   out_string.append(myref.storage_ptr->symlink_target);     
   out_string.append("\t");
-  out_string.append(to_string(myref.slices.front().slice_size));
+  out_string.append(to_string(mysize));
   out_string.append("\t");
-  out_string.append(to_string(myref.slices.front().header_size_this_slice));
+  out_string.append(to_string(my_header_size));
   out_string.append("\t");
-  out_string.append(to_string(myref.slices.front().slice_offset_in_container));
+  out_string.append(to_string(my_container_offset));
   out_string.append("\t");
-  out_string.append(to_string(myref.slices.front().slice_offset_in_file));
+  out_string.append(to_string(my_file_offset));
   out_string.append("\n");
-  
-  return out_string;
 }

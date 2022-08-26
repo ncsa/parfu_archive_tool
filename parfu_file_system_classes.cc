@@ -678,8 +678,7 @@ void Parfu_target_collection::set_offsets(){
     // now we do book keeping to set up for the next item
     working_offset = next_offset;
     working_offset = parfu_next_block_boundary(working_offset);
-  }
-  
+  }  
 }
 
 vector <string> *Parfu_target_collection::create_transfer_orders(int archive_file_index,
@@ -853,13 +852,13 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
       
       position_in_file += bucket_size;
       extent_remaining -= bucket_size;
-      trans_orders->push_back(string(""));
       
       while(extent_remaining > bucket_size){
 	// we go through this while loop setting up transfers until
 	// exactly one bucket or less is left to transfer
 
 	// print the orders for this full bucket
+	trans_orders->push_back(string(""));
 	trans_orders->back().append(print_marching_order_raw(archive_file_index,
 							     files.at(ndx),
 							     bucket_size, // full bucket
@@ -871,12 +870,12 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
 	
 	position_in_file += bucket_size;
 	extent_remaining -= bucket_size;
-	trans_orders->push_back(string(""));
       }
       // and now take care of the last file fragment that's smaller than
       // a bucket (possibly zero if the file extent (file itself plus its
       // header) is exactly a multiple of bucket size)
       if(extent_remaining > 0){
+	trans_orders->push_back(string(""));
 	trans_orders->back().append(print_marching_order_raw(archive_file_index,
 							     files.at(ndx),
 							     extent_remaining, // just the remainder
@@ -888,7 +887,6 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
 	// the per-file counters don't need cleaning up, but we do need to roll
 	// the main archive position to the next tar-compatible block position
 	position_in_archive = parfu_next_block_boundary(position_in_archive);
-	trans_orders->push_back(string(""));
       } // if(extent_remaining > 0)
       
     } // else (if the file extent is bigger than a bucket

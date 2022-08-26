@@ -385,7 +385,7 @@ long int Parfu_directory::spider_directory(void){
       // core of what parfu needs to tackle.
       Parfu_target_file *new_target_file_ptr;
       new_target_file_ptr = new 
-	Parfu_target_file(base_path,entry_relative_name,path_type_result,file_size);
+	Parfu_target_file(base_path,entry_relative_name,PARFU_FILE_TYPE_REGULAR,file_size);
       subfiles.push_back(new_target_file_ptr);
       break;
     case PARFU_WHAT_IS_PATH_DIR:
@@ -400,7 +400,7 @@ long int Parfu_directory::spider_directory(void){
       // simlink that we'll need to store for now
       Parfu_target_file *my_tempfile;
       my_tempfile = 
-	new Parfu_target_file(base_path,entry_relative_name,path_type_result,0,link_target);
+	new Parfu_target_file(base_path,entry_relative_name,PARFU_FILE_TYPE_SYMLINK,0,link_target);
       //      my_tempfile->set_symlink_target(link_target);
       subfiles.push_back(my_tempfile);
       break;
@@ -853,6 +853,7 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
       position_in_file += bucket_size;
       extent_remaining -= bucket_size;
       
+      
       while(extent_remaining > bucket_size){
 	// we go through this while loop setting up transfers until
 	// exactly one bucket or less is left to transfer
@@ -865,8 +866,8 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
 							     0,   // header zero because header would have
 							          // already been entered by first bucket
 							          // of the file
-							     position_in_file,
-							     position_in_archive));
+							     position_in_archive,
+							     position_in_file));
 	
 	position_in_file += bucket_size;
 	extent_remaining -= bucket_size;
@@ -882,8 +883,8 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
 							     0,   // header zero because header would have
 							          // already been entered by first bucket
 							          // of the file
-							     position_in_file,
-							     position_in_archive));
+							     position_in_archive,
+							     position_in_file));
 	// the per-file counters don't need cleaning up, but we do need to roll
 	// the main archive position to the next tar-compatible block position
 	position_in_archive = parfu_next_block_boundary(position_in_archive);

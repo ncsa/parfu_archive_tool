@@ -28,6 +28,7 @@ int main(int argc, char *argv[]){
   Parfu_directory *test_dir;
   string *my_string;
   Parfu_target_collection *my_target_collec;
+  vector <string> *transfer_orders=nullptr;
   
   cout << "parfu test build\n";
   if(argc > 1){
@@ -55,10 +56,22 @@ int main(int argc, char *argv[]){
   my_target_collec->order_files();
   cout << "and dump it again.\n";
   my_target_collec->dump();
-  cout << "about to set offsets.\n";
+  cout << "set offsets.\n";
   my_target_collec->set_offsets();
-  cout << "about to dump offsets\n";
+  cout << "dump offsets\n";
   my_target_collec->dump_offsets();
+  cout << "generate rank orders\n";
+  transfer_orders = my_target_collec->create_transfer_orders(0,1000000);
+  cout << "there are " << transfer_orders->size() << " orders.\n";
+
+  cout << "\n\n\nFirst order:\n\n";
+  cout << transfer_orders->front();
+  cout << "\n\n end first order.\n\n";
+  
+  cout << "\n\nLast Order:\n\n";
+  cout << transfer_orders->back();
+  cout << "\n\nEnd Last Order\n\n";
+  
   cout << "all done.\n";
   
   return 0;

@@ -376,15 +376,19 @@ class Parfu_directory : Parfu_storage_entry
 public:
   // main constructor
   Parfu_directory(void){
+    entry_type_value=PARFU_FILE_TYPE_DIRECTORY;
+
   }
   Parfu_directory(string my_base_path){
     base_path = my_base_path;
     relative_path = string("");
+    entry_type_value=PARFU_FILE_TYPE_DIRECTORY;
   }
   Parfu_directory(string my_base_path,
 		  string my_relative_path){
     base_path = my_base_path;
     relative_path = my_relative_path;
+    entry_type_value=PARFU_FILE_TYPE_DIRECTORY;
   }
   bool is_directory_spidered(void){
     return spidered;

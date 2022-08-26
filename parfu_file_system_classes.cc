@@ -698,7 +698,6 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
   long unsigned int total_extent;
   long unsigned int position_jump;
   Parfu_file_slice last_slice;
-  string type_string;
   
   if(bucket_size < 100000){
     cerr << "create_transfer_orders called w/ bucket_size=" << bucket_size << "\n";
@@ -729,9 +728,15 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
   endpoint += last_slice.header_size_this_slice;
   endpoint += last_slice.slice_size;
   // endpoint is now one byte past where we should end
+  // we use it as a signpost to tell when we're done
 
+  // we start by loading the tranfer orders vector with an empty buffer
   trans_orders->push_back(string(""));
+  // Our virtual position in the archive file starts at the
+  // beginning of the data area
   position_in_archive = 0UL;
+  // We start our position in the virtual buck likewise
+  // at its beginning
   position_in_bucket = 0UL;
   
   // iterate through directories
@@ -749,42 +754,109 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
       if(next_position_in_bucket > bucket_size){
 	// due to previous files in this bucket,
 	// it spills off the end, so we jump to the
-	// next bucket
+	// next bucket.  We load a new empty buffer,
+	// leaving the other one complete
 	trans_orders->push_back(string(""));
+	// back to the beginning of the bucket
 	position_in_bucket = 0UL;
-	next_position_in_bucket = position_in_bucket + total_extent;
+	// this now *now* where our file will end
+	next_position_in_bucket = position_in_bucket + position_jump;
+	// if this ((total_extent <= bucket_size) comparison above
+	// worked correctly, the following should NEVER be true.
 	if(next_position_in_bucket > bucket_size){
 	  cerr << "WARNING!!! bucket size math error!\n";
 	}
       }
       // whatever bucket we're in, this file will fit in it
-      trans_orders->back().append(to_string(archive_file_index));
-      trans_orders->back().append("\t");
-      trans_orders->back().append(mydir->relative_path);
-      trans_orders->back().append("\t");
-      type_string = mydir->type_char();
-      trans_orders->back().append(type_string);
-      trans_orders->back().append("\t");
-      trans_orders->back().append(mydir->symlink_target);     
-      trans_orders->back().append("\t");
-      trans_orders->back().append(to_string(myslice->slice_size));
-      trans_orders->back().append("\t");
-      trans_orders->back().append(to_string(myslice->header_size_this_slice));
-      trans_orders->back().append("\t");
-      trans_orders->back().append(to_string(myslice->slice_offset_in_container));
-      trans_orders->back().append("\t");
-      trans_orders->back().append(to_string(0));
-      trans_orders->back().append("\n");
-      
-
-
-
+      trans_orders->back().append(print_marching_order(archive_file_index,
+						       directories.at(ndx)));
       position_in_bucket = next_position_in_bucket;
+      position_in_archive += position_jump;
+      
+    } // if(total_extent <= bucket_size)
+
+    // there would be an "else" here, except that we know that
+    // the largest a directory can be in the archive is the size of
+    // its tar header, which presumably is smaller than the
+    // bucket size.  
+    
+  } // for( ndx over directories
+  
+  // now we loop over the files
+  for(unsigned int ndx=0 ; ndx < files.size() ; ndx++){
+    Parfu_storage_entry *myfile = files.at(ndx).storage_ptr;
+    //    Parfu_file_slice *myslice = &(directories.at(ndx).slices.back());
+    total_extent = myfile->header_size() + myfile->file_size;
+    position_jump = parfu_next_block_boundary(total_extent);
+    next_position_in_bucket = position_in_bucket + position_jump;
+    
+    if(total_extent <= bucket_size){
+      // this file can live in one bucket
+      if(next_position_in_bucket > bucket_size){
+	// due to others in bucket, must jump to next
+	trans_orders->push_back(string(""));
+	// back to the beginning of the bucket
+	position_in_bucket = 0UL;
+	// this now *now* where our file will end
+	next_position_in_bucket = position_in_bucket + position_jump;
+	// if this ((total_extent <= bucket_size) comparison above
+	// worked correctly, the following should NEVER be true.
+	if(next_position_in_bucket > bucket_size){
+	  cerr << "WARNING!!! bucket size math error!\n";
+	}
+      }
+      // whatever bucket we're in, this file will fit in it
+      trans_orders->back().append(print_marching_order(archive_file_index,
+						       files.at(ndx)));
+      position_in_bucket = next_position_in_bucket;
+      position_in_archive += position_jump;
+      
+    } // if(total_extent <= bucket_size)
+    else{
+      // this file will definitely not fit in a bucket, so we'll
+      // start by jumping to the next bucket no matter what
+      unsigned long int position_in_file=0UL;
+      unsigned long int extent_remaining;
+      trans_orders->push_back(string(""));
+      position_in_bucket = 0UL;
+      next_position_in_bucket = position_in_bucket + position_jump;      
+      extent_remaining = total_extent;
+      
+      // loop over the file, cutting into bucket-sized pieces until
+      // we put the remainder in the last one
+      while(position_in_file > 0){
+				  //	while 
+      }
       
     }
-  }
-  
 
-	
-	return trans_orders;
+  } // for( ndx over files
+  
+  return trans_orders;
+}
+
+string Parfu_target_collection::print_marching_order(int file_index,
+						     Parfu_storage_reference myref){
+  string out_string;
+  string type_string;
+  
+  out_string.append(to_string(file_index));
+  out_string.append("\t");
+  out_string.append(myref.storage_ptr->relative_path);
+  out_string.append("\t");
+  type_string = myref.storage_ptr->type_char();
+  out_string.append(type_string);
+  out_string.append("\t");
+  out_string.append(myref.storage_ptr->symlink_target);     
+  out_string.append("\t");
+  out_string.append(to_string(myref.slices.front().slice_size));
+  out_string.append("\t");
+  out_string.append(to_string(myref.slices.front().header_size_this_slice));
+  out_string.append("\t");
+  out_string.append(to_string(myref.slices.front().slice_offset_in_container));
+  out_string.append("\t");
+  out_string.append(to_string(myref.slices.front().slice_offset_in_file));
+  out_string.append("\n");
+  
+  return out_string;
 }

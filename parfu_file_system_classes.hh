@@ -532,6 +532,8 @@ public:
   void dump_offsets(void);
   vector <string> *create_transfer_orders(int archive_file_index,
 					  long unsigned int bucket_size);
+  string print_marching_order(int file_index,
+			      Parfu_storage_reference myref);
 private:
   vector <Parfu_storage_reference> directories;
   vector <Parfu_storage_reference> files;
@@ -647,3 +649,6 @@ private:
 };
 
 #endif // #ifndef PARFU_FILE_SYSTEM_CLASSES_HH_
+
+string print_marching_order(int file_index,
+			    Parfu_storage_reference myref);

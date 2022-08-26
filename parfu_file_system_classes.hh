@@ -273,15 +273,15 @@ public:
   }
   Parfu_file_slice(long int in_size,
 		   long int in_offset_in_file,
-		   long int in_offset_in_container){
+		   unsigned long int in_offset_in_container){
     slice_size = in_size;
     slice_offset_in_file = in_offset_in_file;
     slice_offset_in_container = in_offset_in_container;
-  }
+  } 
   Parfu_file_slice(int in_header_size,
 		   long int in_size,
 		   long int in_offset_in_file,
-		   long int in_offset_in_container){
+		   unsigned long int in_offset_in_container){
     header_size_this_slice = in_header_size;
     slice_size = in_size;
     slice_offset_in_file = in_offset_in_file;
@@ -291,7 +291,7 @@ public:
 		   long int in_offset_in_file){
     slice_size = in_size;
     slice_offset_in_file = in_offset_in_file;
-    slice_offset_in_container = -1L;
+    slice_offset_in_container = 0UL;
   }
   // copy constructor
   Parfu_file_slice(const Parfu_file_slice &in_slice){
@@ -330,7 +330,7 @@ private:
   // file's area, so it will typically be where the header
   // starts, not the file contentents themselves.  
 
-  long int slice_offset_in_container=PARFU_OFFSET_INVALID;
+  unsigned long int slice_offset_in_container=PARFU_OFFSET_INVALID;
 };
 
 ///////////////

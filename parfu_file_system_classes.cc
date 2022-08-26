@@ -743,8 +743,8 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
   
   for(unsigned int ndx=0;ndx<directories.size();ndx++){
     Parfu_storage_entry *mydir = directories.at(ndx).storage_ptr;
-    Parfu_file_slice *myslice = &(directories.at(ndx).slices.back());
-    unsigned long int position_in_file=0UL;
+    //    Parfu_file_slice *myslice = &(directories.at(ndx).slices.back());
+    //    unsigned long int position_in_file=0UL;
     total_extent = mydir->header_size();
     position_jump = parfu_next_block_boundary(total_extent);
     next_position_in_bucket = position_in_bucket + position_jump;
@@ -787,6 +787,8 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
     Parfu_storage_entry *myfile = files.at(ndx).storage_ptr;
     //    Parfu_file_slice *myslice = &(directories.at(ndx).slices.back());
     total_extent = myfile->header_size() + myfile->file_size;
+    // position_jump is the next position in the archive file
+    // we will write, given the block structure of tarfiles
     position_jump = parfu_next_block_boundary(total_extent);
     next_position_in_bucket = position_in_bucket + position_jump;
     
@@ -808,6 +810,14 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
       // whatever bucket we're in, this file will fit in it
       trans_orders->back().append(print_marching_order(archive_file_index,
 						       files.at(ndx)));
+      if (files.at(ndx).slices.front().slice_offset_in_container !=
+	  position_in_archive){
+	cerr << "WARNING!  Offset mismatch! "
+	     << to_string(files.at(ndx).slices.front().slice_offset_in_container)
+	     << to_string(position_in_archive) << "\n";
+      }
+
+      // updated/cleanup for next entry
       position_in_bucket = next_position_in_bucket;
       position_in_archive += position_jump;
       
@@ -817,7 +827,8 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
       // start by jumping to the next bucket no matter what
       unsigned long int position_in_file=0UL;
       unsigned long int extent_remaining;
-      trans_orders->push_back(string(""));
+      if(trans_orders->back().size()>0)
+	trans_orders->push_back(string(""));
       extent_remaining = total_extent;
       
       // loop over the file, cutting into bucket-sized pieces until
@@ -827,24 +838,60 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
       // position_in_bucket is not relevant for this section because all
       // transfers start at an integer multiple of buckes from the
       // beginning of the file
-      //      while(position_in_file > 0){
+
+      // first we do one iteration that includes the header
+      // so that the header will get written, but only once.
+      // note that it contains the correct, non-zero header size
+      // to indicate to the receiving rank that this entry is to
+      // have the header placed before it.
+      trans_orders->back().append(print_marching_order_raw(archive_file_index,
+							   files.at(ndx),
+							   bucket_size,
+							   files.at(ndx).storage_ptr->header_size(),
+							   position_in_file,
+							   position_in_archive));
+      
+      position_in_file += bucket_size;
+      extent_remaining -= bucket_size;
+      trans_orders->push_back(string(""));
+      
       while(extent_remaining > bucket_size){
 	// we go through this while loop setting up transfers until
-	// exactly one bucket, or less is left to transfer
+	// exactly one bucket or less is left to transfer
 
 	// print the orders for this full bucket
-	trans_orders->back().append(print_marching_order(archive_file_index,
-							 files.at(ndx)));
+	trans_orders->back().append(print_marching_order_raw(archive_file_index,
+							     files.at(ndx),
+							     bucket_size, // full bucket
+							     0,   // header zero because header would have
+							          // already been entered by first bucket
+							          // of the file
+							     position_in_file,
+							     position_in_archive));
 	
 	position_in_file += bucket_size;
 	extent_remaining -= bucket_size;
+	trans_orders->push_back(string(""));
       }
       // and now take care of the last file fragment that's smaller than
       // a bucket (possibly zero if the file extent (file itself plus its
       // header) is exactly a multiple of bucket size)
-      //      }
+      if(extent_remaining > 0){
+	trans_orders->back().append(print_marching_order_raw(archive_file_index,
+							     files.at(ndx),
+							     extent_remaining, // just the remainder
+							     0,   // header zero because header would have
+							          // already been entered by first bucket
+							          // of the file
+							     position_in_file,
+							     position_in_archive));
+	// the per-file counters don't need cleaning up, but we do need to roll
+	// the main archive position to the next tar-compatible block position
+	position_in_archive = parfu_next_block_boundary(position_in_archive);
+	trans_orders->push_back(string(""));
+      } // if(extent_remaining > 0)
       
-    }
+    } // else (if the file extent is bigger than a bucket
 
   } // for( ndx over files
   
@@ -888,4 +935,6 @@ string Parfu_target_collection::print_marching_order_raw(int file_index,
   out_string.append("\t");
   out_string.append(to_string(my_file_offset));
   out_string.append("\n");
+
+  return out_string;
 }

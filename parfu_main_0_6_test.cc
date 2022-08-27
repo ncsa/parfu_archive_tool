@@ -3,7 +3,7 @@
 //  University of Illinois/NCSA Open Source License
 //  http://otm.illinois.edu/disclose-protect/illinois-open-source-license
 //  
-//  Parfu is copyright © 2017-2020, 
+//  Parfu is copyright (c) 2017-2022, 
 //  by The Trustees of the University of Illinois. 
 //  All rights reserved.
 //  
@@ -30,57 +30,72 @@ int main(int argc, char *argv[]){
   Parfu_target_collection *my_target_collec;
   vector <string> *transfer_orders=nullptr;
   Parfu_rank_order_set *my_orders=nullptr;
+  int my_rank,total_ranks;
   
-  cout << "parfu test build\n";
-  if(argc > 1){
-    cout << "We will scan directory:";
-    cout << argv[1];
-    cout << "\n";
-  }
-  else{
-    cout << "You must input a directory to scan!\n";
-    return 1;
-  }
   
-  my_string = new string(argv[1]);
-  test_dir = new Parfu_directory(*my_string);
+  // Do argument parsing and "exit with the usage() or help() message stuff
+  // above this point, so that if run in a scalar context (outside of
+  // an MPI launch infrastructure) all that stuff gets done properly
+  // and the code exist cleanly.  Users appreciate that.  
   
-  //  cout << "Have we spidered directory? " << test_dir->is_directory_spidered() << "\n";
-  test_dir->spider_directory();
-  //  cout << "Have we spidered directory? " << test_dir->is_directory_spidered() << "\n";
-
-  //  cout << "First build the target collection\n";
-  my_target_collec = new Parfu_target_collection(test_dir);
-  cout << "Target collection built.  Now dump it, unsorted.\n";
-  my_target_collec->dump();
-  cout << "now sort the files...\n";
-  my_target_collec->order_files();
-  cout << "and dump it again.\n";
-  my_target_collec->dump();
-  cout << "set offsets.\n";
-  my_target_collec->set_offsets();
-  cout << "dump offsets\n";
-  my_target_collec->dump_offsets();
-  cout << "generate rank orders\n";
-  transfer_orders = my_target_collec->create_transfer_orders(0,1000000);
-  cout << "there are " << transfer_orders->size() << " orders.\n";
-
-  //  cout << "\n\n\nFirst order:\n\n";
-  //  cout << transfer_orders->front();
-  //  cout << "\n\n end first order.\n\n";
-
-
-  cout << "transfer orders:\n\n";
-  for(unsigned int i=0;i<transfer_orders->size();i++){
-    cout << "transfer order " << i << "\n";
-    cout << transfer_orders->at(i);
-    cout << "\n";
-  }
-
-  cout << "now parse the orders.\n\n";
-  my_orders = new Parfu_rank_order_set(transfer_orders->at(0));
-  cout << "\n\n parsing done.\n";
+  MPI_Init(NULL,NULL);
+  MPI_Comm_size(MPI_COMM_WORLD,&total_ranks);
+  MPI_Comm_rank(MPI_COMM_WORLD,&my_rank);
   
+  cout << "I am rank " << my_rank << " out of a total of " << total_ranks << "\n";
+  
+  if(my_rank == 0){
+    
+    cout << "parfu test build\n";
+    if(argc > 1){
+      cout << "We will scan directory:";
+      cout << argv[1];
+      cout << "\n";
+    }
+    else{
+      cout << "You must input a directory to scan!\n";
+      return 1;
+    }
+    
+    my_string = new string(argv[1]);
+    test_dir = new Parfu_directory(*my_string);
+    
+    //  cout << "Have we spidered directory? " << test_dir->is_directory_spidered() << "\n";
+    test_dir->spider_directory();
+    //  cout << "Have we spidered directory? " << test_dir->is_directory_spidered() << "\n";
+    
+    //  cout << "First build the target collection\n";
+    my_target_collec = new Parfu_target_collection(test_dir);
+    cout << "Target collection built.  Now dump it, unsorted.\n";
+    my_target_collec->dump();
+    cout << "now sort the files...\n";
+    my_target_collec->order_files();
+    cout << "and dump it again.\n";
+    my_target_collec->dump();
+    cout << "set offsets.\n";
+    my_target_collec->set_offsets();
+    cout << "dump offsets\n";
+    my_target_collec->dump_offsets();
+    cout << "generate rank orders\n";
+    transfer_orders = my_target_collec->create_transfer_orders(0,1000000);
+    cout << "there are " << transfer_orders->size() << " orders.\n";
+    
+    //  cout << "\n\n\nFirst order:\n\n";
+    //  cout << transfer_orders->front();
+    //  cout << "\n\n end first order.\n\n";
+    
+    
+    //  cout << "transfer orders:\n\n";
+    //  for(unsigned int i=0;i<transfer_orders->size();i++){
+    //    cout << "transfer order " << i << "\n";
+    //cout << transfer_orders->at(i);
+    //    cout << "\n";
+    //  }
+    
+    
+  } // if(my_rank == 0)
+  
+  MPI_Finalize();
   cout << "all done.\n";
   
   return 0;

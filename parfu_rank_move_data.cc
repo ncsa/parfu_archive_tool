@@ -47,7 +47,7 @@ Parfu_rank_order_set::Parfu_rank_order_set(string order_buffer){
     local_move_order.rel_filename = order_buffer.substr(entry_begin,entry_end-entry_begin);
     entry_begin = entry_end + 1;
     entry_end = order_buffer.find(PARFU_ENTRY_SEPARATOR_CHARACTER,entry_begin);
-    cerr << "debug order parse:>" << local_move_order.rel_filename << "<\n";
+    //    cerr << "debug order parse:>" << local_move_order.rel_filename << "<\n";
     
     // grab file type
     type_string = order_buffer.substr(entry_begin,entry_end-entry_begin);

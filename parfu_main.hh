@@ -39,6 +39,31 @@
 #include <list>
 #include <filesystem>
 
+///////////////////////
+//
+// User-adjustable build-time parameters
+
+// These numerical constants can be adjusted (within reason) at build
+// time.  
+
+// WARNING:  Setting this to a character that appears
+// in filenames is utterly catastrophic for parfu.  We
+// used "tab" or '\t' because no reasonable person would
+// put a tab in a filename.  If for some reason tab doesn't
+// work in your instance, substituting another non-printable
+// ascii character might work, but test carefully and be cautious.  
+#define PARFU_ENTRY_SEPARATOR_CHARACTER            '\t'
+
+// WARNING:  Setting this to anything other than \n is very
+// dangerous.  If you set it to a character that appears in
+// filenames that would be catastrophic.  It's not clear that
+// any other character would actually ever work.
+#define PARFU_LINE_SEPARATOR_CHARACTER             '\n'
+
+///////////////////////
+//
+// Users: Do not adjust values in the rest of the file
+
 #define PARFU_OFFSET_INVALID        (-1L)
 
 #define PARFU_DEFAULT_LAST_TIME_SPIDERED          (0)

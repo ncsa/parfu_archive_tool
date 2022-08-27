@@ -36,7 +36,7 @@
 typedef struct{
   int file_index;
   string rel_filename;
-  int file_type;
+  char file_type;
   string symlink_target;
   unsigned long file_size;
   unsigned header_size;

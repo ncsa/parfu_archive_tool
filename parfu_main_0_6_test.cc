@@ -29,6 +29,7 @@ int main(int argc, char *argv[]){
   string *my_string;
   Parfu_target_collection *my_target_collec;
   vector <string> *transfer_orders=nullptr;
+  Parfu_rank_order_set *my_orders=nullptr;
   
   cout << "parfu test build\n";
   if(argc > 1){
@@ -75,6 +76,10 @@ int main(int argc, char *argv[]){
     cout << transfer_orders->at(i);
     cout << "\n";
   }
+
+  cout << "now parse the orders.\n\n";
+  my_orders = new Parfu_rank_order_set(transfer_orders->at(0));
+  cout << "\n\n parsing done.\n";
   
   cout << "all done.\n";
   

@@ -23,11 +23,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 
-//#include "parfu_main.hh"
-//#include "parfu_2021_legacy.hh"
-#include "parfu_file_system_classes.hh"
-
-#include<algorithm>
+#include "parfu_main.hh"
 
 // these functions transform a target file to a line in a catalog, or take a
 // line from a catalog (as a string) and constructs the corresponding

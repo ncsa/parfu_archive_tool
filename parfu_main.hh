@@ -38,13 +38,14 @@
 #include <vector>
 #include <list>
 #include <filesystem>
+#include <algorithm>
 
 ///////////////////////
 //
 // User-adjustable build-time parameters
 
 // These numerical constants can be adjusted (within reason) at build
-// time.  
+// time to customize parfu's default behavior.  
 
 // WARNING:  Setting this to a character that appears
 // in filenames is utterly catastrophic for parfu.  We
@@ -105,6 +106,12 @@
 #define PARFU_FILE_TYPE_INVALID_CHAR 'X'
   
 using namespace std;
+
+#include "parfu_2021_legacy.hh"
+#include "parfu_data_transfer.hh"
+#include "parfu_file_system_classes.hh"
+#include "tarentry.hh"
+#include "parfu_rank_move_data.hh"
 
 // classes to define for new structure of parfu
 // Parfu_file: (contains information about target file file on disk)

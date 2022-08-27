@@ -1,9 +1,9 @@
-////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
 // 
 //  University of Illinois/NCSA Open Source License
 //  http://otm.illinois.edu/disclose-protect/illinois-open-source-license
 //  
-//  Parfu is copyright © 2017, The Trustees of the University of Illinois. 
+//  Parfu is copyright (c) 2017-2022, The Trustees of the University of Illinois. 
 //  All rights reserved.
 //  
 //  Parfu was developed by:
@@ -18,10 +18,9 @@
 //  For full licnse text see the LICENSE file provided with the source
 //  distribution.
 //  
-////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
 
-#include "parfu_rank_move_data.hh"
-
+#include "parfu_main.hh"
 
 Parfu_rank_order_set::Parfu_rank_order_set(string order_buffer){
   unsigned entry_begin,entry_end;
@@ -48,7 +47,8 @@ Parfu_rank_order_set::Parfu_rank_order_set(string order_buffer){
     local_move_order.rel_filename = order_buffer.substr(entry_begin,entry_end-entry_begin);
     entry_begin = entry_end + 1;
     entry_end = order_buffer.find(PARFU_ENTRY_SEPARATOR_CHARACTER,entry_begin);
-
+    cerr << "debug order parse:>" << local_move_order.rel_filename << "<\n";
+    
     // grab file type
     type_string = order_buffer.substr(entry_begin,entry_end-entry_begin);
     local_move_order.file_type = type_string.at(0);
@@ -78,6 +78,8 @@ Parfu_rank_order_set::Parfu_rank_order_set(string order_buffer){
     // grab offset in file
     local_move_order.offset_in_file = stoi(order_buffer.substr(entry_begin,entry_end-entry_begin));
 
+    orders.push_back(local_move_order);
+    
     // cleanup for next line
     line_begin = entry_end + 1;
     entry_begin = line_begin;

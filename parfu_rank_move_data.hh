@@ -25,12 +25,9 @@
 #ifndef PARFU_RANK_MOVE_DATA_HH__
 #define PARFU_RANK_MOVE_DATA_HH__
 
-#include "parfu_main.hh"
-#include "parfu_2021_legacy.hh"
+//#include "parfu_main.hh"
+//#include "parfu_2021_legacy.hh"
 //#include "parfu_primary.h"
-#include <iostream>
-#include <vector>
-
 
 // each of this is one move order for either a file or a file slice
 typedef struct{
@@ -55,8 +52,6 @@ public:
   // text order instructions
   Parfu_rank_order_set(string order_buffer);
   
-  
-
 private:
   vector <parfu_move_order_t> orders;
 

@@ -22,3 +22,11 @@
 
 #include "parfu_rank_move_data.hh"
 
+
+Parfu_rank_order_set::Parfu_rank_order_set(void *raw_buffer){
+  parfu_move_order_t local_move_order;
+  if(raw_buffer == nullptr){
+    throw "Parfu_rank_order_set constructor passed null buffer!!!\n";
+  }
+  orders.push_back(local_move_order);
+}

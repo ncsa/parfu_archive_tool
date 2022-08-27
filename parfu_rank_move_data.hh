@@ -30,6 +30,7 @@
 #ifndef PARFU_RANK_MOVE_DATA_HH__
 #define PARFU_RANK_MOVE_DATA_HH__
 
+// each of this is one move order for either a file or a file slice
 typedef struct{
   int file_index;
   string rel_filename;
@@ -42,3 +43,20 @@ typedef struct{
 }parfu_move_order_t;
 
 #endif
+
+/////////////////////////////
+//
+class Parfu_rank_order_set
+{
+public:
+  // construct an order set from a buffer with
+  // text order instructions
+  Parfu_rank_order_set(void *raw_buffer);
+  
+  
+
+private:
+  vector <parfu_move_order_t> orders;
+
+};
+

@@ -36,13 +36,31 @@
 // we've already done MPI_Init() and have our rank
 int parfu_worker_node(int my_rank, int total_ranks){
   string my_base_path;
+  int mpi_return_val;
+  int *my_length=nullptr;
+  char *order_buffer=nullptr;
+  string instruction_letter;
+  string archive_filename;
+  string order_string;
   
   if(my_rank==0){
     cerr << "parfu_worker_node got zero rank!!!\n";
     return -1;
   }
 
+  my_length = new int;
 
-  
+  // receive the length of the order string
+  mpi_return_val = MPI_Bcast((void*)(my_length),1,MPI_INT,0,MPI_COMM_WORLD);
+  order_buffer = (char*)malloc(*my_length);
+  // receive the order string itself
+  mpi_return_val =
+    MPI_Bcast(((void*)(order_buffer)),*my_length,MPI_CHAR,0,MPI_COMM_WORLD);
+  // raw string we've been passed is a C string
+  order_string=string(order_buffer);
+  instruction_letter = order_string.substr(0,1);
+  archive_filename = order_string.substr(1);
+  cout << "rank:" << my_rank << " inst:" << instruction_letter;
+  cout << "  arch flnm:" << archive_filename << "\n";
   return 0;
 }

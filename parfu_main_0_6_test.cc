@@ -132,10 +132,10 @@ int main(int argc, char *argv[]){
     
     cout << "Now we try collective file open.\n";
  
-    mpi_return_val =
-      MPI_File_open(MPI_COMM_WORLD,word_buffer,
-    		    MPI_MODE_WRONLY|MPI_MODE_CREATE,
-    		    MPI_INFO_NULL,file_handle);
+    //    mpi_return_val =
+    //      MPI_File_open(MPI_COMM_WORLD,word_buffer,
+    //		    MPI_MODE_WRONLY|MPI_MODE_CREATE,
+    //		    MPI_INFO_NULL,file_handle);
 
   } // if(my_rank == 0)
   else{

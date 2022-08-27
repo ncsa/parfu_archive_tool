@@ -576,23 +576,23 @@ void Parfu_target_collection::dump(void){
 void Parfu_target_collection::dump_offsets(void){
   Parfu_storage_reference my_ref;
   Parfu_storage_entry *this_entry;
-  cerr << "dumping offsets\n";
+  //  cerr << "dumping offsets\n";
   for(std::size_t ndx=0; ndx < directories.size(); ndx++){
     my_ref = directories.at(ndx);
     this_entry = (directories.data() + ndx)->storage_ptr;
-    cerr << "rp=" << this_entry->relative_path;
-    fprintf(stderr,"       %06lu",my_ref.slices.begin()->slice_offset_in_container);
-    cerr << "\n";
+       cerr << "rp=" << this_entry->relative_path;
+        fprintf(stderr,"       %06lu",my_ref.slices.begin()->slice_offset_in_container);
+        cerr << "\n";
   }
-  cerr << "directory offsets finished; now files:\n";
+  //  cerr << "directory offsets finished; now files:\n";
   for(std::size_t ndx=0; ndx < files.size(); ndx++){
     my_ref = files.at(ndx);
     this_entry = (files.data() + ndx)->storage_ptr;
-    cerr << "rp=" << this_entry->relative_path;
-    fprintf(stderr,"       %06lu",my_ref.slices.begin()->slice_offset_in_container);
+        cerr << "rp=" << this_entry->relative_path;
+        fprintf(stderr,"       %06lu",my_ref.slices.begin()->slice_offset_in_container);
 
-    cerr << "  header_size=" << this_entry->header_size();
-    cerr << "\n";
+    //    cerr << "  header_size=" << this_entry->header_size();
+        cerr << "\n";
   }
 }
 
@@ -657,9 +657,9 @@ void Parfu_target_collection::set_offsets(){
     total_extent = my_header_size + my_file_size;
     next_offset = working_offset + total_extent;
     directories.at(ndx).slices.push_back(Parfu_file_slice(my_header_size,my_file_size,0L,working_offset));
-    cerr << "SPECIAL: " << my_header_size << "  " << directories.at(ndx).slices.back().header_size_this_slice;
+    //    cerr << "SPECIAL: " << my_header_size << "  " << directories.at(ndx).slices.back().header_size_this_slice;
     //    cerr << working_offset << "\n";
-    cerr << "\n";
+    //    cerr << "\n";
     // now we do book keeping to set up for the next item
     working_offset = next_offset;
     working_offset = parfu_next_block_boundary(working_offset);
@@ -810,7 +810,7 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
 	}
       }
       // whatever bucket we're in, this file will fit in it
-      cerr << "check before call: " << files.at(ndx).slices.front().header_size_this_slice << "\n";
+      //      cerr << "check before call: " << files.at(ndx).slices.front().header_size_this_slice << "\n";
       trans_orders->back().append(print_marching_order(archive_file_index,
 						       files.at(ndx)));
       if (files.at(ndx).slices.front().slice_offset_in_container !=
@@ -903,7 +903,7 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
 
 string Parfu_target_collection::print_marching_order(int file_index,
 						     Parfu_storage_reference myref){
-  cerr << "debug: " << myref.slices.front().header_size_this_slice << "\n";
+  //  cerr << "debug: " << myref.slices.front().header_size_this_slice << "\n";
   return print_marching_order_raw(file_index,
 				  myref,
 				  myref.slices.front().slice_size,

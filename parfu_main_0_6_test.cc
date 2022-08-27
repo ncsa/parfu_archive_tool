@@ -64,13 +64,17 @@ int main(int argc, char *argv[]){
   transfer_orders = my_target_collec->create_transfer_orders(0,1000000);
   cout << "there are " << transfer_orders->size() << " orders.\n";
 
-  cout << "\n\n\nFirst order:\n\n";
-  cout << transfer_orders->front();
-  cout << "\n\n end first order.\n\n";
-  
-  cout << "\n\nLast Order:\n\n";
-  cout << transfer_orders->back();
-  cout << "\n\nEnd Last Order\n\n";
+  //  cout << "\n\n\nFirst order:\n\n";
+  //  cout << transfer_orders->front();
+  //  cout << "\n\n end first order.\n\n";
+
+
+  cout << "transfer orders:\n\n";
+  for(unsigned int i=0;i<transfer_orders->size();i++){
+    cout << "transfer order " << i << "\n";
+    cout << transfer_orders->at(i);
+    cout << "\n";
+  }
   
   cout << "all done.\n";
   

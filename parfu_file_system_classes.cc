@@ -851,12 +851,12 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
 							   files.at(ndx),
 							   bucket_size,
 							   files.at(ndx).storage_ptr->header_size(),
-							   position_in_file,
-							   position_in_archive));
+							   position_in_archive,
+							   position_in_file));
       
-      position_in_file += bucket_size;
+      position_in_file += (bucket_size - files.at(ndx).storage_ptr->header_size());
       extent_remaining -= bucket_size;
-      
+      position_in_archive += bucket_size;
       
       while(extent_remaining > bucket_size){
 	// we go through this while loop setting up transfers until
@@ -875,6 +875,7 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
 	
 	position_in_file += bucket_size;
 	extent_remaining -= bucket_size;
+	position_in_archive += bucket_size;
       }
       // and now take care of the last file fragment that's smaller than
       // a bucket (possibly zero if the file extent (file itself plus its
@@ -891,6 +892,7 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
 							     position_in_file));
 	// the per-file counters don't need cleaning up, but we do need to roll
 	// the main archive position to the next tar-compatible block position
+	position_in_archive += extent_remaining;
 	position_in_archive = parfu_next_block_boundary(position_in_archive);
       } // if(extent_remaining > 0)
       
@@ -941,3 +943,4 @@ string Parfu_target_collection::print_marching_order_raw(int file_index,
 
   return out_string;
 }
+

@@ -23,10 +23,19 @@
 #include "parfu_rank_move_data.hh"
 
 
-Parfu_rank_order_set::Parfu_rank_order_set(void *raw_buffer){
+Parfu_rank_order_set::Parfu_rank_order_set(string order_buffer){
+  int begin;
+  int end;
+  unsigned line_begin,line_end;
   parfu_move_order_t local_move_order;
-  if(raw_buffer == nullptr){
-    throw "Parfu_rank_order_set constructor passed null buffer!!!\n";
+  line_begin = 0;
+  line_end = 0;
+  while(line_end < order_buffer.size()){
+    line_end = order_buffer.find('\n',line_begin);
+
+    line_begin = line_end + 1;
   }
+
+
   orders.push_back(local_move_order);
 }

@@ -113,6 +113,9 @@ int main(int argc, char *argv[]){
     //  }
     
     // send initial broadcast orders
+
+
+    /*
     initial_order = string("");
     
     initial_order.append("A");
@@ -131,13 +134,17 @@ int main(int argc, char *argv[]){
     memcpy(word_buffer,my_string.c_str(),my_string.size()+1);
     file_handle = (MPI_File*)malloc(sizeof(MPI_File));
     
+    */
+
+    /*
     cout << "Now we try collective file open.\n";
     
     mpi_return_val =
       MPI_File_open(MPI_COMM_WORLD,word_buffer,
     		    MPI_MODE_WRONLY|MPI_MODE_CREATE,
 		    MPI_INFO_NULL,file_handle);
-    
+    */
+		    
   } // if(my_rank == 0)
   else{
     parfu_worker_node(my_rank,total_ranks,BUCKET_SIZE);

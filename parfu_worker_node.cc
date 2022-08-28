@@ -163,3 +163,28 @@ int parfu_worker_node(int my_rank, int total_ranks,
   return 0;
 }
 
+int parfu_broadcast_order(string instruction,
+			  string message){
+  // instruction is a string with a single letter
+  // message is the bulk of the message.
+  int *message_length=nullptr;
+  //  char *message_buffer=nullptr;
+  int mpi_return_val;
+  
+  message_length = new int;
+
+  string message_contents = string("");
+  message_contents.append(instruction);
+  message_contents.append(message);
+  // the +1 is because of the null-terminated C string.  We're not currently
+  // using C string functions to parse these messages, but we might, and this
+  // allows the null to be transmitted and allows this buffer to be safe for
+  // those functions (I think) in case we change our mind.  
+  *message_length = message_contents.size()+1;
+  mpi_return_val = MPI_Bcast(message_length,1,MPI_INT,0,MPI_COMM_WORLD);
+  mpi_return_val += MPI_Bcast(((void*)(message_contents.data())),
+			      message_contents.size()+1,
+			      MPI_CHAR,0,MPI_COMM_WORLD);
+  delete message_length;
+  return mpi_return_val;
+}

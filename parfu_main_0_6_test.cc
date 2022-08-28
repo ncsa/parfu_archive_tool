@@ -157,12 +157,20 @@ int main(int argc, char *argv[]){
     //    MPI_Barrier(MPI_COMM_WORLD);
     if((mpi_return_val =
       MPI_File_open(MPI_COMM_WORLD,archive_file_name.c_str(),
-    		    MPI_MODE_WRONLY|MPI_MODE_CREATE,
+    		    MPI_MODE_WRONLY|MPI_MODE_CREATE|MPI_MODE_EXCL,
 		    MPI_INFO_NULL,file_handle)) != MPI_SUCCESS){
-      cerr << "main MPI_File_open returned " << mpi_return_val << "!\n";
-      cerr << "Attempted to open file:>" << archive_file_name << "<\n";
+      cerr << "\n\nmain MPI_File_open returned " << mpi_return_val << "!\n";
+      cerr << "WARNING!  Attempted to open file:>" << archive_file_name << "<\n";
+      cerr << "but it failed.  This is likely because the file already exists,\n";
+      cerr << "or the directory doesn't exist or you don't have permission\n";
+      cerr << "to write there.  Exiting program.\n";
+      parfu_broadcast_order(string("X"),
+			    string("bye"));
+      MPI_Finalize();
+      exit(1);
     }
-    
+
+    cout << "Successfully opened archive file >" << archive_file_name << "< for writing.\n";
 		    
     // Now send out a set of orders.
     cout << "We have " << transfer_orders->size();
@@ -178,12 +186,11 @@ int main(int argc, char *argv[]){
     for(int i=1; i<total_ranks; i++){
       parfu_send_order_to_rank(i,0,string("C"),transfer_orders->at(i));
     }
-    cerr << "sent invalid messages\n";
 
     for(int i=1; i<total_ranks; i++){
       parfu_send_order_to_rank(i,0,string("X"),string("shutdown"));
     }
-    cerr << "send shutdown orders; now we're done.\n";
+    cerr << "sent shutdown orders; now we're done.\n";
     
     // This is the shutdown, but only if we're in broadcast mode.  
     //    parfu_broadcast_order(string("X"),

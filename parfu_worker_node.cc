@@ -112,7 +112,7 @@ int parfu_worker_node(int my_rank, int total_ranks,
 	//	MPI_Barrier(MPI_COMM_WORLD);
 	if((mpi_return_val =
 	    MPI_File_open(MPI_COMM_WORLD,archive_filename.c_str(),
-			  MPI_MODE_WRONLY|MPI_MODE_CREATE,
+			  MPI_MODE_WRONLY|MPI_MODE_CREATE|MPI_MODE_EXCL,
 			  MPI_INFO_NULL,file_handle))!=MPI_SUCCESS){
 	  cerr << "parfu_worker rank:" << my_rank << " : 3 MPI_File_open returned " << mpi_return_val << "!\n";
 	}

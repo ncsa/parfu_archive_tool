@@ -116,6 +116,7 @@ int parfu_worker_node(int my_rank, int total_ranks,
 	receive_mode = 'N';
 	// if the "N" message buffer contains other information in the
 	// future, this is where we would retrieve it and process it.
+	cerr << "rank " << my_rank << " switching to iNdividual receive mode.\n";
       }
       if(instruction_letter == "X"){
 	valid_instruction=true;
@@ -140,10 +141,13 @@ int parfu_worker_node(int my_rank, int total_ranks,
       // we're in individual receive mode.  
       mpi_return_val = MPI_Recv((void*)(my_length),1,MPI_INT,
 				0,MPI_ANY_TAG,MPI_COMM_WORLD,message_status);
+      cerr << "individual receive; got length=" << *my_length << "\n";
       message_buffer = (char*)malloc(*my_length);
       mpi_return_val = MPI_Recv((void*)(message_buffer),*my_length,MPI_CHAR,
 				0,MPI_ANY_TAG,MPI_COMM_WORLD,message_status);
+      cerr << "individual RX: got buffer.\n";
       message_string = string(message_buffer);
+      cerr << "individual RX: string: " << message_string << "\n";
       // grab the first letter off the message which is our
       // general order of what to do, and tells us what's in
       // the rest of the buffer.  
@@ -153,7 +157,8 @@ int parfu_worker_node(int my_rank, int total_ranks,
       if(instruction_letter == "C"){
 	valid_instruction=true;
 	// the rest of a message is a buffer with transfer orders
-	cerr << "debug: rank " << my_rank << " received \"create\" order buffer.\n";
+	cerr << "debug: rank " << my_rank << " received \"create\" order buffer";
+	cerr << " of size " << *my_length << "\n";
 	
       } //  if(instruction_letter == "C"){
       if(instruction_letter == "B"){
@@ -165,12 +170,19 @@ int parfu_worker_node(int my_rank, int total_ranks,
 	valid_instruction=true;
 	// we're done.  exit gracefully.
 	free(message_buffer);
+	cerr << "rank " << my_rank << " got individual shutdown.  returning.\n";
 	return 0;
       }	
       if(!valid_instruction){
 	cerr << "WARNING!  rank " << my_rank << " received order:>";
 	cerr << instruction_letter << "< in (Bcast mode) which is invalid!\n";
       }
+      free(message_buffer);
+      message_buffer=nullptr;
+      break;
+    default:
+      cerr << "WARNING! worker node function has mode=" << receive_mode;
+      cerr << "which is invalid and likely fatal!\n"; 
     } // switch(receive_mode)
     
     
@@ -182,6 +194,9 @@ int parfu_worker_node(int my_rank, int total_ranks,
 
 int parfu_broadcast_order(string instruction,
 			  string message){
+  // this function is specifically assuming that rank 0 is
+  // sending the message.  
+
   // instruction is a string with a single letter
   // message is the bulk of the message.
   int *message_length=nullptr;
@@ -204,4 +219,35 @@ int parfu_broadcast_order(string instruction,
 			      MPI_CHAR,0,MPI_COMM_WORLD);
   delete message_length;
   return mpi_return_val;
+}
+
+int parfu_send_order_to_rank(int dest_rank,
+			     int tag,
+			     string instruction,
+			     string message){
+  // this function is specifically assuming that rank 0 is
+  // sending the message.  
+
+  // instruction is a string with a single letter
+  // message is the bulk of the message.
+  int *message_length=nullptr;
+  int mpi_return_val;
+  
+  message_length = new int;
+
+  string message_contents = string("");
+  message_contents.append(instruction);
+  message_contents.append(message);
+  // the +1 is because of the null-terminated C string.  We're not currently
+  // using C string functions to parse these messages, but we might, and this
+  // allows the null to be transmitted and allows this buffer to be safe for
+  // those functions (I think) in case we change our mind.  
+  *message_length = message_contents.size()+1;
+  mpi_return_val = MPI_Send(message_length,1,MPI_INT,dest_rank,tag,MPI_COMM_WORLD);
+  mpi_return_val += MPI_Send(((void*)(message_contents.data())),
+			     message_contents.size()+1,
+			     MPI_CHAR,dest_rank,tag,MPI_COMM_WORLD);
+  delete message_length;
+  return mpi_return_val;
+
 }

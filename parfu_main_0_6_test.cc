@@ -23,7 +23,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "parfu_main.hh"
-#define BUCKET_SIZE         (200000000)
+
+//#define BUCKET_SIZE         (200000000)
+#define BUCKET_SIZE         (500000)
 
 int main(int argc, char *argv[]){
   Parfu_directory *test_dir;
@@ -152,13 +154,25 @@ int main(int argc, char *argv[]){
     		    MPI_MODE_WRONLY|MPI_MODE_CREATE,
 		    MPI_INFO_NULL,file_handle);
 		    
-    
-    
+    // Now send out a set of orders.
+    cout << "We have " << transfer_orders->size();
+    cout << " transfer orders available.\n";
+
+    parfu_broadcast_order(string("N"),
+			  string("individual"));
+    // we're now in individual mode.
+    // all commands must be sent to each rank individually including the shutdown
+    // until we've either sent each of them a shutdown, or sent each of them a command
+    // to go back to broadcast mode.
+    for(int i=1; i<total_ranks; i++){
+      parfu_send_order_to_rank(i,0,string("X"),string("shutdown"));
+    }
+    cerr << "send shutdown orders; now we're done.\n";
     
     // This is the shutdown, but only if we're in broadcast mode.  
-    parfu_broadcast_order(string("X"),
-			  string("bye"));
-			  
+    //    parfu_broadcast_order(string("X"),
+    //			  string("bye"));
+    
     
   } // if(my_rank == 0)
   else{

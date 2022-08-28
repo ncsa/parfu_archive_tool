@@ -144,7 +144,10 @@ int main(int argc, char *argv[]){
     		    MPI_MODE_WRONLY|MPI_MODE_CREATE,
 		    MPI_INFO_NULL,file_handle);
     */
-		    
+    parfu_broadcast_order(string("X"),
+			  string("bye"));
+			  
+    
   } // if(my_rank == 0)
   else{
     parfu_worker_node(my_rank,total_ranks,BUCKET_SIZE);

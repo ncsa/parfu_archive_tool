@@ -45,6 +45,7 @@ int parfu_worker_node(int my_rank, int total_ranks,
   string archive_filename;
   string message_string;
   char receive_mode='B'; // we start in "broadcast" receiving mode
+  bool valid_instruction;
   
   MPI_File *file_handle=nullptr;
   vector <MPI_File*> archive_files;
@@ -95,7 +96,9 @@ int parfu_worker_node(int my_rank, int total_ranks,
       // the rest of the buffer.  
       instruction_letter = message_string.substr(0,1);
       // now we do stuff based on what the order letter was
+      valid_instruction=false;
       if(instruction_letter == "A"){
+	valid_instruction=true;
 	// the rest of the buffer is the name of the archive file we need to open
 	// in a collective open.  
 	archive_filename = message_string.substr(1);
@@ -108,12 +111,14 @@ int parfu_worker_node(int my_rank, int total_ranks,
 	archive_files.push_back(file_handle);
       } // if(instruction_letter == "A"){
       if(instruction_letter == "N"){
+	valid_instruction=true;
 	// we flip from broadcast mode to "iNdividual" receive mode.  
 	receive_mode = 'N';
 	// if the "N" message buffer contains other information in the
 	// future, this is where we would retrieve it and process it.
       }
       if(instruction_letter == "X"){
+	valid_instruction=true;
 	// we're done.  exit gracefully.
 	free(message_buffer);
 	if(file_handle != nullptr){
@@ -124,6 +129,10 @@ int parfu_worker_node(int my_rank, int total_ranks,
       }
       // if in the future we create more message types for broadcast
       // mode, they would be checked for here
+      if(!valid_instruction){
+	cerr << "WARNING!  rank " << my_rank << " received order:>";
+	cerr << instruction_letter << "< in (Bcast mode) which is invalid!\n";
+      }
       free(message_buffer);
       message_buffer=nullptr;
       break;
@@ -140,20 +149,28 @@ int parfu_worker_node(int my_rank, int total_ranks,
       // the rest of the buffer.  
       instruction_letter = message_string.substr(0,1);
       // now we do stuff based on what the order letter was
+      valid_instruction=false;
       if(instruction_letter == "C"){
+	valid_instruction=true;
 	// the rest of a message is a buffer with transfer orders
 	cerr << "debug: rank " << my_rank << " received \"create\" order buffer.\n";
 	
       } //  if(instruction_letter == "C"){
       if(instruction_letter == "B"){
+	valid_instruction=true;
 	// swap back to broadcast receive mode
 	receive_mode = 'B';
       }
       if(instruction_letter == "X"){
+	valid_instruction=true;
 	// we're done.  exit gracefully.
 	free(message_buffer);
 	return 0;
       }	
+      if(!valid_instruction){
+	cerr << "WARNING!  rank " << my_rank << " received order:>";
+	cerr << instruction_letter << "< in (Bcast mode) which is invalid!\n";
+      }
     } // switch(receive_mode)
     
     

@@ -136,14 +136,26 @@ int main(int argc, char *argv[]){
     
     */
 
-    /*
-    cout << "Now we try collective file open.\n";
     
+    cout << "Now we try collective file open.\n";
+
+    parfu_broadcast_order(string("A"),
+			  my_string);
+    
+    //    mpi_return_val =
+    //      MPI_File_open(MPI_COMM_WORLD,word_buffer,
+    //    		    MPI_MODE_WRONLY|MPI_MODE_CREATE,
+    //		    MPI_INFO_NULL,file_handle);
+    file_handle = new MPI_File;
     mpi_return_val =
-      MPI_File_open(MPI_COMM_WORLD,word_buffer,
+      MPI_File_open(MPI_COMM_WORLD,my_string.c_str(),
     		    MPI_MODE_WRONLY|MPI_MODE_CREATE,
 		    MPI_INFO_NULL,file_handle);
-    */
+		    
+    
+    
+    
+    // This is the shutdown, but only if we're in broadcast mode.  
     parfu_broadcast_order(string("X"),
 			  string("bye"));
 			  

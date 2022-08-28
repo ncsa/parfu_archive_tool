@@ -141,13 +141,13 @@ int parfu_worker_node(int my_rank, int total_ranks,
       // we're in individual receive mode.  
       mpi_return_val = MPI_Recv((void*)(my_length),1,MPI_INT,
 				0,MPI_ANY_TAG,MPI_COMM_WORLD,message_status);
-      cerr << "individual receive; got length=" << *my_length << "\n";
+      //      cerr << "individual receive; got length=" << *my_length << "\n";
       message_buffer = (char*)malloc(*my_length);
       mpi_return_val = MPI_Recv((void*)(message_buffer),*my_length,MPI_CHAR,
 				0,MPI_ANY_TAG,MPI_COMM_WORLD,message_status);
-      cerr << "individual RX: got buffer.\n";
+      //      cerr << "individual RX: got buffer.\n";
       message_string = string(message_buffer);
-      cerr << "individual RX: string: " << message_string << "\n";
+      //      cerr << "individual RX: string: " << message_string << "\n";
       // grab the first letter off the message which is our
       // general order of what to do, and tells us what's in
       // the rest of the buffer.  

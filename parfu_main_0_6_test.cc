@@ -100,7 +100,7 @@ int main(int argc, char *argv[]){
     //    my_target_collec->dump_offsets();
     cout << "generate rank orders\n";
     transfer_orders = my_target_collec->create_transfer_orders(0,BUCKET_SIZE);
-    cout << "there are " << transfer_orders->size() << " orders.\n";
+    //    cout << "there are " << transfer_orders->size() << " orders.\n";
     
     //  cout << "\n\n\nFirst order:\n\n";
     //  cout << transfer_orders->front();
@@ -164,6 +164,12 @@ int main(int argc, char *argv[]){
     // all commands must be sent to each rank individually including the shutdown
     // until we've either sent each of them a shutdown, or sent each of them a command
     // to go back to broadcast mode.
+
+    for(int i=1; i<total_ranks; i++){
+      parfu_send_order_to_rank(i,0,string("C"),transfer_orders->at(i));
+    }
+    cerr << "sent invalid messages\n";
+
     for(int i=1; i<total_ranks; i++){
       parfu_send_order_to_rank(i,0,string("X"),string("shutdown"));
     }
@@ -178,9 +184,8 @@ int main(int argc, char *argv[]){
   else{
     parfu_worker_node(my_rank,total_ranks,BUCKET_SIZE);
   }
-  
+
+  cout << "rank " << my_rank << " done, about to call MPI_Finalize()\n";
   MPI_Finalize();
-  cout << "all done.\n";
-  
   return 0;
 }

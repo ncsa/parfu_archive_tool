@@ -23,6 +23,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "parfu_main.hh"
+#define BUCKET_SIZE         (200000000)
 
 int main(int argc, char *argv[]){
   Parfu_directory *test_dir;
@@ -96,7 +97,7 @@ int main(int argc, char *argv[]){
     //    cout << "dump offsets\n";
     //    my_target_collec->dump_offsets();
     cout << "generate rank orders\n";
-    transfer_orders = my_target_collec->create_transfer_orders(0,1000000);
+    transfer_orders = my_target_collec->create_transfer_orders(0,BUCKET_SIZE);
     cout << "there are " << transfer_orders->size() << " orders.\n";
     
     //  cout << "\n\n\nFirst order:\n\n";
@@ -114,7 +115,7 @@ int main(int argc, char *argv[]){
     // send initial broadcast orders
     initial_order = string("");
     
-    initial_order.append("C");
+    initial_order.append("A");
     initial_order.append(archive_file_name);
 
     *length_buffer = initial_order.size()+1;
@@ -131,15 +132,15 @@ int main(int argc, char *argv[]){
     file_handle = (MPI_File*)malloc(sizeof(MPI_File));
     
     cout << "Now we try collective file open.\n";
- 
-    //    mpi_return_val =
-    //      MPI_File_open(MPI_COMM_WORLD,word_buffer,
-    //		    MPI_MODE_WRONLY|MPI_MODE_CREATE,
-    //		    MPI_INFO_NULL,file_handle);
-
+    
+    mpi_return_val =
+      MPI_File_open(MPI_COMM_WORLD,word_buffer,
+    		    MPI_MODE_WRONLY|MPI_MODE_CREATE,
+		    MPI_INFO_NULL,file_handle);
+    
   } // if(my_rank == 0)
   else{
-    parfu_worker_node(my_rank,total_ranks);
+    parfu_worker_node(my_rank,total_ranks,BUCKET_SIZE);
   }
   
   MPI_Finalize();

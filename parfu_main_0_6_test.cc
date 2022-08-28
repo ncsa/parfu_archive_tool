@@ -32,21 +32,21 @@ int main(int argc, char *argv[]){
   string my_string;
   Parfu_target_collection *my_target_collec;
   vector <string> *transfer_orders=nullptr;
-  Parfu_rank_order_set *my_orders=nullptr;
+  //  Parfu_rank_order_set *my_orders=nullptr;
   int my_rank,total_ranks;
   string initial_order;
   int mpi_return_val;
-  int *length_buffer=nullptr;
+  //  int *length_buffer=nullptr;
 
   string archive_file_name;
   
   MPI_File *file_handle=nullptr;
-  MPI_Info file_info;
+  //  MPI_Info file_info;
   
-  char *word_buffer=nullptr;
-  void *order_buffer=nullptr;
+  //  char *word_buffer=nullptr;
+  //  void *order_buffer=nullptr;
   
-  length_buffer = new int;
+  //  length_buffer = new int;
   
   
   // Do argument parsing and "exit with the usage() or help() message stuff
@@ -76,6 +76,10 @@ int main(int argc, char *argv[]){
     if(argc>2){
       archive_file_name = string(argv[2]);
       cout << "archive file: " << archive_file_name << "\n";
+    }
+    else{
+      cerr << "ERROR!  No archive file specified!  \n";
+      exit(1);
     }
     
     my_string = string(argv[1]);
@@ -142,21 +146,27 @@ int main(int argc, char *argv[]){
     cout << "Now we try collective file open.\n";
 
     parfu_broadcast_order(string("A"),
-			  my_string);
+			  archive_file_name);
     
     //    mpi_return_val =
     //      MPI_File_open(MPI_COMM_WORLD,word_buffer,
     //    		    MPI_MODE_WRONLY|MPI_MODE_CREATE,
     //		    MPI_INFO_NULL,file_handle);
     file_handle = new MPI_File;
-    mpi_return_val =
-      MPI_File_open(MPI_COMM_WORLD,my_string.c_str(),
+
+    //    MPI_Barrier(MPI_COMM_WORLD);
+    if((mpi_return_val =
+      MPI_File_open(MPI_COMM_WORLD,archive_file_name.c_str(),
     		    MPI_MODE_WRONLY|MPI_MODE_CREATE,
-		    MPI_INFO_NULL,file_handle);
+		    MPI_INFO_NULL,file_handle)) != MPI_SUCCESS){
+      cerr << "main MPI_File_open returned " << mpi_return_val << "!\n";
+      cerr << "Attempted to open file:>" << archive_file_name << "<\n";
+    }
+    
 		    
     // Now send out a set of orders.
     cout << "We have " << transfer_orders->size();
-    cout << " transfer orders available.\n";
+    cout << " transfer orders available; return val=" << mpi_return_val <<".\n";
 
     parfu_broadcast_order(string("N"),
 			  string("individual"));

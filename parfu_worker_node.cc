@@ -83,12 +83,17 @@ int parfu_worker_node(int my_rank, int total_ranks,
     case 'B': // receiving in "broadcast" mode
       
       // receive length of order buffer
-      mpi_return_val = MPI_Bcast((void*)(my_length),1,MPI_INT,0,MPI_COMM_WORLD);
+      if((mpi_return_val =
+	  MPI_Bcast((void*)(my_length),1,MPI_INT,0,MPI_COMM_WORLD))!=MPI_SUCCESS){
+	cerr << "parfu_worker: 1 MPI_Bcast returned " << mpi_return_val << "!\n";
+      }
       
       // receive the order string itself
       message_buffer = (char*)malloc(*my_length);
-      mpi_return_val =
-	MPI_Bcast(((void*)(message_buffer)),*my_length,MPI_CHAR,0,MPI_COMM_WORLD);
+      if((mpi_return_val =
+	  MPI_Bcast(((void*)(message_buffer)),*my_length,MPI_CHAR,0,MPI_COMM_WORLD))!=MPI_SUCCESS){
+	cerr << "parfu_worker: 2 MPI_Bcast returned " << mpi_return_val << "!\n";
+      }
       message_string=string(message_buffer);
       
       // grab the first letter off the message which is our
@@ -104,10 +109,13 @@ int parfu_worker_node(int my_rank, int total_ranks,
 	archive_filename = message_string.substr(1);
 	if(file_handle==nullptr)
 	  file_handle = new MPI_File;
-	mpi_return_val =
-	  MPI_File_open(MPI_COMM_WORLD,archive_filename.c_str(),
-			MPI_MODE_WRONLY|MPI_MODE_CREATE,
-			MPI_INFO_NULL,file_handle);
+	//	MPI_Barrier(MPI_COMM_WORLD);
+	if((mpi_return_val =
+	    MPI_File_open(MPI_COMM_WORLD,archive_filename.c_str(),
+			  MPI_MODE_WRONLY|MPI_MODE_CREATE,
+			  MPI_INFO_NULL,file_handle))!=MPI_SUCCESS){
+	  cerr << "parfu_worker rank:" << my_rank << " : 3 MPI_File_open returned " << mpi_return_val << "!\n";
+	}
 	archive_files.push_back(file_handle);
       } // if(instruction_letter == "A"){
       if(instruction_letter == "N"){
@@ -139,12 +147,16 @@ int parfu_worker_node(int my_rank, int total_ranks,
       break;
     case 'N':
       // we're in individual receive mode.  
-      mpi_return_val = MPI_Recv((void*)(my_length),1,MPI_INT,
-				0,MPI_ANY_TAG,MPI_COMM_WORLD,message_status);
+      if((mpi_return_val = MPI_Recv((void*)(my_length),1,MPI_INT,
+				    0,MPI_ANY_TAG,MPI_COMM_WORLD,message_status))!=MPI_SUCCESS){
+	cerr << "parfu_worker: 4 MPI_Recv returned " << mpi_return_val << "!\n";
+      }
       //      cerr << "individual receive; got length=" << *my_length << "\n";
       message_buffer = (char*)malloc(*my_length);
-      mpi_return_val = MPI_Recv((void*)(message_buffer),*my_length,MPI_CHAR,
-				0,MPI_ANY_TAG,MPI_COMM_WORLD,message_status);
+      if((mpi_return_val = MPI_Recv((void*)(message_buffer),*my_length,MPI_CHAR,
+				    0,MPI_ANY_TAG,MPI_COMM_WORLD,message_status))!=MPI_SUCCESS){
+	cerr << "parfu_worker: 5 MPI_Recv returned " << mpi_return_val << "!\n";
+      }
       //      cerr << "individual RX: got buffer.\n";
       message_string = string(message_buffer);
       //      cerr << "individual RX: string: " << message_string << "\n";

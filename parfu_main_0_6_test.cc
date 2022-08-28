@@ -29,7 +29,7 @@
 
 int main(int argc, char *argv[]){
   Parfu_directory *test_dir;
-  string my_string;
+  string base_path;
   Parfu_target_collection *my_target_collec;
   vector <string> *transfer_orders=nullptr;
   //  Parfu_rank_order_set *my_orders=nullptr;
@@ -82,8 +82,8 @@ int main(int argc, char *argv[]){
       exit(1);
     }
     
-    my_string = string(argv[1]);
-    test_dir = new Parfu_directory(my_string);
+    base_path = string(argv[1]);
+    test_dir = new Parfu_directory(base_path);
     
     //  cout << "Have we spidered directory? " << test_dir->is_directory_spidered() << "\n";
     test_dir->spider_directory();
@@ -137,7 +137,7 @@ int main(int argc, char *argv[]){
     cout << "set up buffer for collective open\n";
 
     word_buffer = (char*)malloc(archive_file_name.size()+1);
-    memcpy(word_buffer,my_string.c_str(),my_string.size()+1);
+    memcpy(word_buffer,base_path.c_str(),base_path.size()+1);
     file_handle = (MPI_File*)malloc(sizeof(MPI_File));
     
     */
@@ -181,12 +181,21 @@ int main(int argc, char *argv[]){
     // we're now in individual mode.
     // all commands must be sent to each rank individually including the shutdown
     // until we've either sent each of them a shutdown, or sent each of them a command
+
     // to go back to broadcast mode.
 
     for(int i=1; i<total_ranks; i++){
-      parfu_send_order_to_rank(i,0,string("C"),transfer_orders->at(i));
+      parfu_send_order_to_rank(i,0,string("P"),base_path);
+    }
+    
+    for(int i=1; i<total_ranks; i++){
+      parfu_send_order_to_rank(i,0,string("C"),transfer_orders->at(i-1));
     }
 
+    //    cerr << "\ndump order zero: \n\n";
+    //    cerr << transfer_orders->at(0);
+    //    cerr << "\n\nend order zero\n\n";
+    
     for(int i=1; i<total_ranks; i++){
       parfu_send_order_to_rank(i,0,string("X"),string("shutdown"));
     }

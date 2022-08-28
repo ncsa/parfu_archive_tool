@@ -117,4 +117,7 @@ class tarentry
   static size_t record_length(const char *keyword, const char *value);
 };
 
+// TODO: put functions in here to put out file size and stuff
+// That way we can genuinely minimize the calls to stat.  
+
 #endif // TAR_ENTRY_HH_

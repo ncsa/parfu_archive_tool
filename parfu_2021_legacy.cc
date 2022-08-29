@@ -35,12 +35,14 @@ unsigned int parfu_what_is_path(string pathname,
   int returnval;
   int buffer_length;
   char *target_name_buffer;
+  ifstream filecheck;
   
   // check for existence first
   
   if(follow_symlinks){ // treat symlinks like what they point to
     if((returnval=stat(pathname.c_str(),&filestruct))){
-      if(std::filesystem::exists(pathname.c_str())){
+      filecheck.open(pathname.c_str());
+      if(filecheck){
 	fprintf(stderr,"parfu_what_is_path:\n");
 	fprintf(stderr,"  stat returned %d for existing file!!!\n",returnval);
 	return PARFU_WHAT_IS_PATH_ERROR;

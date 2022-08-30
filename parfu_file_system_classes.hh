@@ -64,6 +64,8 @@ using namespace std;
 //
 ////////////////////
 
+long unsigned int parfu_next_block_boundary(long unsigned int first_available);
+
 ////////////
 // 
 // Classes for target file information

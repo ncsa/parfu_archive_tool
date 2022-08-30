@@ -111,6 +111,8 @@ int Parfu_rank_order_set::move_data_Create(string base_path,
   string header_contents;
   unsigned long bucket_location_in_archive;
   unsigned long total_bucket_length;
+  unsigned long blocked_bucket_length;
+  int pad_size;
   int return_val;
   MPI_Status my_mpi_status;
 
@@ -169,17 +171,25 @@ int Parfu_rank_order_set::move_data_Create(string base_path,
       }
     }
   } // for(unsigned ndx=0; ndx<orders.size() ; ndx++)
+
+  blocked_bucket_length = parfu_next_block_boundary(total_bucket_length);
+  pad_size = blocked_bucket_length - total_bucket_length;
+
+  // pad out the bucket to blocksize length to make tar happy
+  memset(staging_buffer+total_bucket_length,0,pad_size);
   
   // And now we copy the assembled contents of the bucket
-  // into the appropriate place in the bucket
+  // into the appropriate place in the bucket in the archive file
   if((return_val=MPI_File_write_at(*archive_file_handle,
 				   bucket_location_in_archive,
 				   staging_buffer,
-				   total_bucket_length,MPI_CHAR,&my_mpi_status))!=MPI_SUCCESS){
+				   blocked_bucket_length,MPI_CHAR,&my_mpi_status))!=MPI_SUCCESS){
     cerr << "move_data_Create:MPI_File_write_at() returned ";
     cerr << return_val << " when trying to write complete bucket to archive file.\n";
   }
-				   
+  
+  free(staging_buffer);
+  staging_buffer=nullptr;
   return 0;
 } // int Parfu_rank_order_set::move_data_Create
 

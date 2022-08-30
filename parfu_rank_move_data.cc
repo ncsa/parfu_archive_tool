@@ -92,6 +92,9 @@ Parfu_rank_order_set::Parfu_rank_order_set(string order_buffer){
   orders.push_back(local_move_order);
 }
 
+// this is a function that populates a single bucket in an archive
+// file on disk.  This is typically run by a single worker node
+// on one set of orders that it gets
 int Parfu_rank_order_set::move_data_Create(string base_path,
 					   unsigned long bucket_size,
 					   MPI_File *archive_file_handle){

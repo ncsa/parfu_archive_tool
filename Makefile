@@ -100,11 +100,11 @@ TARGETS := parfu_0_5_1 parfu_0_6_test
 # it as a bug.  
 
 # header and utility function definitions
-PARFU_HEADER_FILES := parfu_primary.h tarentry.hh parfu_main.hh parfu_file_system_classes.hh parfu_rank_move_data.hh parfu_worker_node.hh
+PARFU_HEADER_FILES := parfu_primary.h tarentry.hh parfu_main.hh parfu_file_system_classes.hh parfu_rank_move_data.hh parfu_worker_node.hh parfu_boss_functions.hh
 
 #PARFU_OBJECT_FILES := parfu_file_list_utils.o parfu_buffer_utils.o parfu_data_transfer.o parfu_behavior_control.o tarentry.o
 PARFU_OBJECT_FILES := parfu_2021_legacy.o parfu_file_list_utils.o parfu_buffer_utils.o parfu_data_transfer.o tarentry.o 
-PARFU_TEST_OBJECT_FILES := parfu_2021_legacy.o parfu_file_system_classes.o tarentry.o parfu_rank_move_data.o parfu_worker_node.o
+PARFU_TEST_OBJECT_FILES := parfu_2021_legacy.o parfu_file_system_classes.o tarentry.o parfu_rank_move_data.o parfu_worker_node.o parfu_boss_functions.o
 
 default: ${TARGETS}
 test: parfu_0_6_test

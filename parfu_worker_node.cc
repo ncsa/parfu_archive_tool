@@ -174,7 +174,12 @@ int parfu_worker_node(int my_rank, int total_ranks,
 	my_rank_order->move_data_Create(my_base_path,
 					in_bucket_size,
 					file_handle);
-	
+	// Now return to say that I'm done
+	message_string = to_string(my_rank);
+	if((mpi_return_val = MPI_Send(message_string.c_str(),message_string.size(),MPI_CHAR,
+				      0,0,MPI_COMM_WORLD))!=MPI_SUCCESS){
+	  cerr << "rank " << my_rank << "sending done didn't work!\n";
+	}
 	
       } //  if(instruction_letter == "C"){
       if(instruction_letter == "P"){
@@ -212,62 +217,4 @@ int parfu_worker_node(int my_rank, int total_ranks,
   return 0;
 }
 
-int parfu_broadcast_order(string instruction,
-			  string message){
-  // this function is specifically assuming that rank 0 is
-  // sending the message.  
 
-  // instruction is a string with a single letter
-  // message is the bulk of the message.
-  int *message_length=nullptr;
-  //  char *message_buffer=nullptr;
-  int mpi_return_val;
-  
-  message_length = new int;
-
-  string message_contents = string("");
-  message_contents.append(instruction);
-  message_contents.append(message);
-  // the +1 is because of the null-terminated C string.  We're not currently
-  // using C string functions to parse these messages, but we might, and this
-  // allows the null to be transmitted and allows this buffer to be safe for
-  // those functions (I think) in case we change our mind.  
-  *message_length = message_contents.size()+1;
-  mpi_return_val = MPI_Bcast(message_length,1,MPI_INT,0,MPI_COMM_WORLD);
-  mpi_return_val += MPI_Bcast(((void*)(message_contents.data())),
-			      message_contents.size()+1,
-			      MPI_CHAR,0,MPI_COMM_WORLD);
-  delete message_length;
-  return mpi_return_val;
-}
-
-int parfu_send_order_to_rank(int dest_rank,
-			     int tag,
-			     string instruction,
-			     string message){
-  // this function is specifically assuming that rank 0 is
-  // sending the message.  
-
-  // instruction is a string with a single letter
-  // message is the bulk of the message.
-  int *message_length=nullptr;
-  int mpi_return_val;
-  
-  message_length = new int;
-
-  string message_contents = string("");
-  message_contents.append(instruction);
-  message_contents.append(message);
-  // the +1 is because of the null-terminated C string.  We're not currently
-  // using C string functions to parse these messages, but we might, and this
-  // allows the null to be transmitted and allows this buffer to be safe for
-  // those functions (I think) in case we change our mind.  
-  *message_length = message_contents.size()+1;
-  mpi_return_val = MPI_Send(message_length,1,MPI_INT,dest_rank,tag,MPI_COMM_WORLD);
-  mpi_return_val += MPI_Send(((void*)(message_contents.data())),
-			     message_contents.size()+1,
-			     MPI_CHAR,dest_rank,tag,MPI_COMM_WORLD);
-  delete message_length;
-  return mpi_return_val;
-
-}

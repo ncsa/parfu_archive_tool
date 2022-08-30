@@ -114,6 +114,7 @@ using namespace std;
 #include "tarentry.hh"
 #include "parfu_rank_move_data.hh"
 #include "parfu_worker_node.hh"
+#include "parfu_boss_functions.hh"
 
 // classes to define for new structure of parfu
 // Parfu_file: (contains information about target file file on disk)

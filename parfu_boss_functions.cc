@@ -86,9 +86,28 @@ int parfu_send_order_to_rank(int dest_rank,
 
 }
 
-int push_out_all_orders(vector <string*> transfer_order_list){
-
-
+int push_out_all_orders(vector <string*> transfer_order_list,
+			int total_ranks){
+  int next_order=0;
+  int next_rank=1;
+  int total_orders = transfer_order_list.size();
+  
+  // First we distribute initial orders to ranks.
+  // We start at order index 0 but at rank 1, because
+  // *we* are rank zero.  We have to kepe 
+  while( (next_rank < total_ranks) &&
+	 (next_order < total_orders)){
+    parfu_send_order_to_rank(next_rank,
+			     0,  // MPI_Send tag=0
+			     string("C"), // C for "create" mode
+			     *(transfer_order_list.at(next_order)));
+    // update loop
+    next_order++;
+    next_rank++;
+  }
+  // now all the ranks have something to do
+  // if there are additional orders left, we wait
+  // until the 
   
   return 0;
 }

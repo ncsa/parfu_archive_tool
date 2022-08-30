@@ -28,16 +28,4 @@
 int parfu_worker_node(int my_rank, int total_ranks,
 		      unsigned long bucket_size);
 
-// these functions assume that it's rank 0 doing the broadcasting,
-// or rank 0 doing the individual sending.  These functions are from the
-// point of view of rank zero sending out orders.  
-int parfu_send_order_to_rank(int rank,
-			     int tag,
-			     string instruction,
-			     string message);
-int parfu_broadcast_order(string instruction,
-			  string message);
-
-
-
 #endif

@@ -31,7 +31,7 @@ Parfu_rank_order_set::Parfu_rank_order_set(string order_buffer){
   line_end = 0;
   while(line_begin < order_buffer.size()){
     line_end = order_buffer.find(PARFU_LINE_SEPARATOR_CHARACTER,line_begin);
-    cerr << "line: >" << order_buffer.substr(line_begin,line_end) << "<\n"; 
+    //    cerr << "line: >" << order_buffer.substr(line_begin,line_end) << "<\n"; 
     if(line_end > order_buffer.length()){
       cerr << "Parfu_rank_order_set: bad input buffer!\n";
       throw "Could not find line ending!\n";
@@ -76,8 +76,8 @@ Parfu_rank_order_set::Parfu_rank_order_set(string order_buffer){
     entry_begin = entry_end + 1;
     entry_end = order_buffer.find(PARFU_LINE_SEPARATOR_CHARACTER,entry_begin);
     
-    cerr << "debug read order: " << local_move_order.header_size << "  " << local_move_order.file_size;
-    cerr << "  " << local_move_order.position_in_archive << "\n";
+    //    cerr << "debug read order: " << local_move_order.header_size << "  " << local_move_order.file_size;
+    //    cerr << "  " << local_move_order.position_in_archive << "\n";
     // grab offset in file
     local_move_order.offset_in_file = stoi(order_buffer.substr(entry_begin,entry_end-entry_begin));
 
@@ -103,8 +103,8 @@ int Parfu_rank_order_set::move_data_Create(string base_path,
   // buffer size
   void *staging_buffer = nullptr;
   MPI_File *target_file = nullptr;
-  unsigned long file_start_in_target;
-  unsigned long file_start_in_archive;
+  //  unsigned long file_start_in_target;
+  //  unsigned long file_start_in_archive;
   unsigned long file_start_in_bucket;
   tarentry my_tarentry;
   string full_filename;

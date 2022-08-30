@@ -35,6 +35,8 @@ int parfu_send_order_to_rank(int rank,
 int parfu_broadcast_order(string instruction,
 			  string message);
 
+int push_out_all_orders(vector <string*> transfer_order_list,
+			int total_ranks);
 
 
 #endif

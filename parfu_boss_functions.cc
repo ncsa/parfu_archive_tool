@@ -86,28 +86,100 @@ int parfu_send_order_to_rank(int dest_rank,
 
 }
 
-int push_out_all_orders(vector <string*> transfer_order_list,
-			int total_ranks){
-  int next_order=0;
-  int next_rank=1;
-  int total_orders = transfer_order_list.size();
+#define INT_STRING_BUFFER_SIZE (20)
+
+int push_out_all_orders(vector <string> *transfer_order_list,
+			unsigned int total_ranks){
+  unsigned int next_order=0;
+  unsigned int next_rank=1;
+  unsigned int total_orders = transfer_order_list->size();
+  char *return_receive_buffer=nullptr;
+  int mpi_return_val;
+  //  MPI_Status message_status;
+  int worker_rank_received;
+  
+  // I assume any rank number printed to a string
+  // will fit within INT_STRING_BUFFER_SIZE characters
+  return_receive_buffer=(char*)malloc(INT_STRING_BUFFER_SIZE);
   
   // First we distribute initial orders to ranks.
   // We start at order index 0 but at rank 1, because
-  // *we* are rank zero.  We have to kepe 
+  // *we* are rank zero.  
   while( (next_rank < total_ranks) &&
 	 (next_order < total_orders)){
     parfu_send_order_to_rank(next_rank,
 			     0,  // MPI_Send tag=0
 			     string("C"), // C for "create" mode
-			     *(transfer_order_list.at(next_order)));
+			     (transfer_order_list->at(next_order)));
     // update loop
     next_order++;
     next_rank++;
   }
-  // now all the ranks have something to do
-  // if there are additional orders left, we wait
-  // until the 
+  // we've distributed order sets to ranks until we ran out of
+  // one of them.  We need to now deal with our status depending
+  // on whether we've run out of ranks, run out of order sets,
+  // or neither.
+
+  // If all the orders have been sent, then we don't need to
+  // worry about sending any more, we just need to wait for
+  // the returns from each of the order sets, then exit.
+
+  // this should work whether or not the ranks have been exhausted
+  // Because we're only doing as many receives as orders, so the
+  // ranks that never received any orders won't be sending us
+  // a complete message.  
+  if(next_order >= total_orders){
+    for(unsigned i=0;i<total_orders;i++){
+      if((mpi_return_val = MPI_Recv((void*)(return_receive_buffer),
+				    INT_STRING_BUFFER_SIZE,MPI_CHAR,
+				    MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,
+				    MPI_STATUS_IGNORE))!=MPI_SUCCESS){
+	cerr << "push_out_all_orders:  MPI_Recv returned " << mpi_return_val << "!\n";
+      }
+      //      cerr << "individual RX: got buffer.\n";
+    } // for(unsigned i=0;i<total_orders;i++){
+  } // if(next_order >= total_orders){
+  else{
+    // in this case, we have orders left, which means that every single
+    // worker rank got orders.  So starting here, all worker ranks are busy,
+    // and we have leftover order sets to hand out.  
+
+    // As the busy worker ranks finish and send back that they're done, we
+    // hand each one that does that a new work item while we still have
+    // any 
+    while(next_order < total_orders){
+      if((mpi_return_val = MPI_Recv((void*)(return_receive_buffer),
+				    INT_STRING_BUFFER_SIZE,MPI_CHAR,
+				    MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,
+				    MPI_STATUS_IGNORE))!=MPI_SUCCESS){
+	cerr << "push_out_all_orders:  MPI_Recv returned " << mpi_return_val << "!\n";
+      }
+      worker_rank_received=stoi(return_receive_buffer);
+      parfu_send_order_to_rank(worker_rank_received,
+			       0,
+			       string("C"), // this has the "create" message baked in
+			       // we may want to make this an input parameter
+			       (transfer_order_list->at(next_order)));
+      // loop cleanup
+      next_order++;
+    } // while
+    
+    // at this point, all work items have been distributed.  So we just need
+    // to wait for them all to report that they're finished
+    
+    // [TODO perhaps we should move writing the catalog to here?]
+    for(unsigned i=0;i<total_ranks;i++){
+      if((mpi_return_val = MPI_Recv((void*)(return_receive_buffer),
+				    INT_STRING_BUFFER_SIZE,MPI_CHAR,
+				    MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,
+				    MPI_STATUS_IGNORE))!=MPI_SUCCESS){
+	cerr << "push_out_all_orders:  MPI_Recv returned " << mpi_return_val << "!\n";
+      } // if((mpi_return_val...
+      
+    }// for(i=0   
+  } // else 
   
+
+
   return 0;
 }

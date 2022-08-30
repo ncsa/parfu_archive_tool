@@ -133,7 +133,7 @@ parfu_0_5_1: parfu_0_5_1_main_versA.o ${PARFU_OBJECT_FILES} ${PARFU_HEADER_FILES
 	${MY_CXX} -o $@ ${CFLAGS} parfu_0_5_1_main_versA.o ${PARFU_OBJECT_FILES}	
 
 parfu_0_6_test: parfu_main_0_6_test.o ${PARFU_TEST_OBJECT_FILES} ${PARFU_HEADER_FILES}
-	${MY_CXX} -o $@ ${CFLAGS} parfu_main_0_6_test.o ${PARFU_TEST_OBJECT_FILES}
+	${MY_CXX} -o $@ ${CFLAGS} ${PARFU_TEST_OBJECT_FILES} parfu_main_0_6_test.o 
 
 # utility targets
 

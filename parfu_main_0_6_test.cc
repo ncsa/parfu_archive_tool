@@ -188,10 +188,16 @@ int main(int argc, char *argv[]){
       parfu_send_order_to_rank(i,0,string("P"),base_path);
     }
     
+    /*
     for(int i=1; i<total_ranks; i++){
       parfu_send_order_to_rank(i,0,string("C"),transfer_orders->at(i-1));
     }
-
+    */
+    cout << "About to call push_out_all_orders\n";
+    push_out_all_orders(transfer_orders,total_ranks);
+    cout << "push_out_all_orders has returned.\n";
+    
+    
     //    cerr << "\ndump order zero: \n\n";
     //    cerr << transfer_orders->at(0);
     //    cerr << "\n\nend order zero\n\n";

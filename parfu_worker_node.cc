@@ -176,7 +176,7 @@ int parfu_worker_node(int my_rank, int total_ranks,
 					file_handle);
 	// Now return to say that I'm done
 	message_string = to_string(my_rank);
-	if((mpi_return_val = MPI_Send(message_string.c_str(),message_string.size(),MPI_CHAR,
+	if((mpi_return_val = MPI_Send(message_string.c_str(),message_string.size()+1,MPI_CHAR,
 				      0,0,MPI_COMM_WORLD))!=MPI_SUCCESS){
 	  cerr << "rank " << my_rank << "sending done didn't work!\n";
 	}

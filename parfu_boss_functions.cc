@@ -94,6 +94,7 @@ int push_out_all_orders(vector <string> *transfer_order_list,
   unsigned int next_rank=1;
   unsigned int total_orders = transfer_order_list->size();
   char *return_receive_buffer=nullptr;
+  string return_receive_string;
   int mpi_return_val;
   //  MPI_Status message_status;
   int worker_rank_received;
@@ -105,6 +106,8 @@ int push_out_all_orders(vector <string> *transfer_order_list,
   // First we distribute initial orders to ranks.
   // We start at order index 0 but at rank 1, because
   // *we* are rank zero.  
+  //  cerr << "POAO: A ranks:" << total_ranks << " orders:" << total_orders << "\n";
+  //  cerr << "POAO: A next
   while( (next_rank < total_ranks) &&
 	 (next_order < total_orders)){
     parfu_send_order_to_rank(next_rank,
@@ -154,7 +157,9 @@ int push_out_all_orders(vector <string> *transfer_order_list,
 				    MPI_STATUS_IGNORE))!=MPI_SUCCESS){
 	cerr << "push_out_all_orders:  MPI_Recv returned " << mpi_return_val << "!\n";
       }
-      worker_rank_received=stoi(return_receive_buffer);
+      return_receive_string=string(return_receive_buffer);
+      cerr << "debug: indicated rank:" << return_receive_string << "\n";
+      worker_rank_received=stoi(return_receive_string);
       parfu_send_order_to_rank(worker_rank_received,
 			       0,
 			       string("C"), // this has the "create" message baked in
@@ -168,7 +173,11 @@ int push_out_all_orders(vector <string> *transfer_order_list,
     // to wait for them all to report that they're finished
     
     // [TODO perhaps we should move writing the catalog to here?]
-    for(unsigned i=0;i<total_ranks;i++){
+
+    // VERY IMPORTANT!!!  Index "i" MUST start at 1, NOT ZERO here.  Otherwise,
+    // you end up waiting for one more receive than you're ever going to get
+    // and it deadlocks
+    for(unsigned i=1;i<total_ranks;i++){
       if((mpi_return_val = MPI_Recv((void*)(return_receive_buffer),
 				    INT_STRING_BUFFER_SIZE,MPI_CHAR,
 				    MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,

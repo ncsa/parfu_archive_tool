@@ -121,6 +121,12 @@ int Parfu_rank_order_set::move_data_Create(string base_path,
     cerr << "move_data_Create: could not allocate staging buffer!\n";
     return -1;
   }
+
+  if(bucket_size != parfu_next_block_boundary(bucket_size)){
+    cerr << "move_data_Create WARNING!  bucket_size is not a multiple\n";
+    cerr << "of the tar block size (512 bytes)!  This is likely fatal in\n";
+    cerr << "most cases!\n";
+  }
   
   bucket_location_in_archive =
     orders.front().position_in_archive;

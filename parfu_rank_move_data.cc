@@ -131,6 +131,29 @@ int Parfu_rank_order_set::move_data_Create(string base_path,
     bucket_location_in_archive;
   target_file = new MPI_File;
 
+  cerr << "bucket: " << orders.front().position_in_archive;
+  cerr << "  " << orders.back().position_in_archive;
+  cerr << "  ";
+  cerr << (orders.back().position_in_archive +
+	   orders.back().header_size +
+	   orders.back().file_size);
+  cerr << "\n";
+    
+
+    
+  if(total_bucket_length > bucket_size){
+    cerr << "WARNING WARNING!  Bucket won't fit in buffer!\n";
+    cerr << "n_norders:" <<orders.size() << "\n";
+    cerr << " header_size:";
+    cerr << orders.front().header_size << " file_offset:";
+    cerr << orders.front().offset_in_file << "  ";;
+    cerr << orders.front().file_size<< "\n";
+    cerr << " header_size:";
+    cerr << orders.back().header_size << " file_offset:";
+    cerr << orders.back().offset_in_file << "  ";
+    cerr << orders.back().file_size << "\n";
+  }
+  
   // go through the files in the order set
   // set up their headers and copy their data
   // into the buffer.  In other words, we're assembling
@@ -176,7 +199,9 @@ int Parfu_rank_order_set::move_data_Create(string base_path,
   pad_size = blocked_bucket_length - total_bucket_length;
 
   // pad out the bucket to blocksize length to make tar happy
-  memset(staging_buffer+total_bucket_length,0,pad_size);
+  if(pad_size){
+    memset(((char*)staging_buffer)+total_bucket_length,0,pad_size);
+  }
   
   // And now we copy the assembled contents of the bucket
   // into the appropriate place in the bucket in the archive file

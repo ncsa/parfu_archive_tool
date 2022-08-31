@@ -845,7 +845,7 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
       // have the header placed before it.
       trans_orders->back().append(print_marching_order_raw(archive_file_index,
 							   files.at(ndx),
-							   bucket_size,
+							   bucket_size-files.at(ndx).storage_ptr->header_size(),
 							   files.at(ndx).storage_ptr->header_size(),
 							   position_in_archive,
 							   position_in_file));

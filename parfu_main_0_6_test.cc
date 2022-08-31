@@ -25,7 +25,8 @@
 #include "parfu_main.hh"
 
 //#define BUCKET_SIZE         (200000000)
-#define BUCKET_SIZE         (500000)
+// must be a multiple of 512??
+#define BUCKET_SIZE         (499200)
 
 int main(int argc, char *argv[]){
   Parfu_directory *test_dir;
@@ -111,12 +112,12 @@ int main(int argc, char *argv[]){
     //  cout << "\n\n end first order.\n\n";
     
     
-    //  cout << "transfer orders:\n\n";
-    //  for(unsigned int i=0;i<transfer_orders->size();i++){
-    //    cout << "transfer order " << i << "\n";
-    //cout << transfer_orders->at(i);
-    //    cout << "\n";
-    //  }
+    cout << "transfer orders:\n\n";
+    for(unsigned int i=0;i<transfer_orders->size();i++){
+      cout << "transfer order " << i << "\n";
+      cout << transfer_orders->at(i);
+      cout << "\n";
+    }
     
     // send initial broadcast orders
 

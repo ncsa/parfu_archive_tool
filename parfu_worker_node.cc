@@ -123,7 +123,7 @@ int parfu_worker_node(int my_rank, int total_ranks,
 	receive_mode = 'N';
 	// if the "N" message buffer contains other information in the
 	// future, this is where we would retrieve it and process it.
-	cerr << "rank " << my_rank << " switching to iNdividual receive mode.\n";
+	//	cerr << "rank " << my_rank << " switching to iNdividual receive mode.\n";
       }
       if(instruction_letter == "X"){
 	valid_instruction=true;
@@ -170,7 +170,9 @@ int parfu_worker_node(int my_rank, int total_ranks,
 	// the rest of a message is a buffer with transfer orders
 	// this creates the order set for this rank
 	my_rank_order = new Parfu_rank_order_set(message_string.substr(1));
-	cerr << "rank " << my_rank << " about to do data transfer.\n";
+	cerr << "rank " << my_rank << " transferring data with ";
+	cerr << my_rank_order->n_orders() << " orders with total size ";
+	cerr << my_rank_order->total_size() << "\n";
 	my_rank_order->move_data_Create(my_base_path,
 					in_bucket_size,
 					file_handle);

@@ -59,7 +59,8 @@ public:
   int move_data_Create(string base_path,
 		       unsigned long bucket_size,
 		       MPI_File *my_file_handle);
-  
+  int n_orders(void);
+  unsigned long total_size(void);
 private:
   vector <parfu_move_order_t> orders;
   

@@ -81,6 +81,8 @@ Parfu_rank_order_set::Parfu_rank_order_set(string order_buffer){
     // grab offset in file
     local_move_order.offset_in_file = stoi(order_buffer.substr(entry_begin,entry_end-entry_begin));
 
+    //    if(type_string.size()>0)
+    
     orders.push_back(local_move_order);
     
     // cleanup for next line
@@ -89,7 +91,7 @@ Parfu_rank_order_set::Parfu_rank_order_set(string order_buffer){
   }
 
 
-  orders.push_back(local_move_order);
+  //  orders.push_back(local_move_order);
 }
 
 // this is a function that populates a single bucket in an archive
@@ -137,13 +139,13 @@ int Parfu_rank_order_set::move_data_Create(string base_path,
     bucket_location_in_archive;
   target_file = new MPI_File;
 
-  cerr << "bucket: " << orders.front().position_in_archive;
-  cerr << "  " << orders.back().position_in_archive;
-  cerr << "  ";
-  cerr << (orders.back().position_in_archive +
-	   orders.back().header_size +
-	   orders.back().file_size);
-  cerr << "\n";
+  //  cerr << "bucket: " << orders.front().position_in_archive;
+  //  cerr << "  " << orders.back().position_in_archive;
+  //cerr << "  ";
+  //cerr << (orders.back().position_in_archive +
+  //	   orders.back().header_size +
+  //	   orders.back().file_size);
+  //cerr << "\n";
     
 
     
@@ -239,3 +241,22 @@ void parfu_make_tar_header_at(string full_filename,
 	      ))); 
 }
 
+int Parfu_rank_order_set::n_orders(void){
+  return orders.size();
+}
+
+unsigned long Parfu_rank_order_set::total_size(void){
+  unsigned long bucket_location_in_archive;
+  unsigned long total_bucket_length;
+  unsigned long blocked_bucket_length;
+  
+  bucket_location_in_archive =
+    orders.front().position_in_archive;
+  total_bucket_length =
+    (orders.back().position_in_archive +
+     orders.back().header_size +
+     orders.back().file_size) -
+    bucket_location_in_archive;
+  blocked_bucket_length = parfu_next_block_boundary(total_bucket_length);
+  return blocked_bucket_length;
+}

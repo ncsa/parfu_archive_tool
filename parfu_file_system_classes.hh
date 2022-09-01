@@ -537,7 +537,8 @@ public:
   void set_offsets();
   void dump_offsets(void);
   vector <string> *create_transfer_orders(int archive_file_index,
-					  long unsigned int bucket_size);
+					  long unsigned int bucket_size,
+					  int max_orders_per_bundle);
   string print_marching_order(int file_index,
 			      Parfu_storage_reference myref);
   string print_marching_order_raw(int file_index,

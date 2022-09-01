@@ -114,7 +114,7 @@ int push_out_all_orders(vector <string> *transfer_order_list,
 			     0,  // MPI_Send tag=0
 			     string("C"), // C for "create" mode
 			     (transfer_order_list->at(next_order)));
-    cerr << "debugL1: sending order " << next_order << "\n";
+    //    cerr << "debugL1: sending order " << next_order << "\n";
     // update loop
     next_order++;
     next_rank++;
@@ -158,9 +158,9 @@ int push_out_all_orders(vector <string> *transfer_order_list,
 				    MPI_STATUS_IGNORE))!=MPI_SUCCESS){
 	cerr << "push_out_all_orders:  MPI_Recv returned " << mpi_return_val << "!\n";
       }
-      cerr << "debugL1: sending order " << next_order << "\n";
+      //      cerr << "debugL1: sending order " << next_order << "\n";
       return_receive_string=string(return_receive_buffer);
-      cerr << "debug: indicated rank:" << return_receive_string << "\n";
+      //      cerr << "debug: indicated rank:" << return_receive_string << "\n";
       worker_rank_received=stoi(return_receive_string);
       parfu_send_order_to_rank(worker_rank_received,
 			       0,

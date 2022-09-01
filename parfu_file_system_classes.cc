@@ -681,7 +681,8 @@ void Parfu_target_collection::set_offsets(){
 }
 
 vector <string> *Parfu_target_collection::create_transfer_orders(int archive_file_index,
-								 long unsigned int bucket_size){
+								 long unsigned int bucket_size,
+								 int max_orders_per_bundle){
   // vector of output buffers containing transfer instructions
   // (essentially just a series of buffers that will be sent
   // via MPI but managed by string classes)

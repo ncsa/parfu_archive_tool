@@ -104,7 +104,7 @@ int main(int argc, char *argv[]){
     //    cout << "dump offsets\n";
     //    my_target_collec->dump_offsets();
     cout << "generate rank orders\n";
-    transfer_orders = my_target_collec->create_transfer_orders(0,BUCKET_SIZE);
+    transfer_orders = my_target_collec->create_transfer_orders(0,BUCKET_SIZE,-1);
     //    cout << "there are " << transfer_orders->size() << " orders.\n";
     
     //  cout << "\n\n\nFirst order:\n\n";
@@ -112,12 +112,12 @@ int main(int argc, char *argv[]){
     //  cout << "\n\n end first order.\n\n";
     
     
-    cout << "transfer orders:\n\n";
-    for(unsigned int i=0;i<transfer_orders->size();i++){
-      cout << "transfer order " << i << "\n";
-      cout << transfer_orders->at(i);
-      cout << "\n";
-    }
+    //    cout << "transfer orders:\n\n";
+    //    for(unsigned int i=0;i<transfer_orders->size();i++){
+    //      cout << "transfer order " << i << "\n";
+    //      cout << transfer_orders->at(i);
+    //      cout << "\n";
+    //}
     
     // send initial broadcast orders
 

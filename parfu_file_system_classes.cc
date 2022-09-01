@@ -682,7 +682,7 @@ void Parfu_target_collection::set_offsets(){
 
 vector <string> *Parfu_target_collection::create_transfer_orders(int archive_file_index,
 								 long unsigned int bucket_size,
-								 int max_orders_per_bundle){
+								 unsigned int max_orders_per_bundle){
   // vector of output buffers containing transfer instructions
   // (essentially just a series of buffers that will be sent
   // via MPI but managed by string classes)
@@ -697,12 +697,19 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
   long unsigned int total_extent;
   long unsigned int position_jump;
   Parfu_file_slice last_slice;
+  bool limit_orders_by_number;
+  unsigned orders_in_bundle;
   
   if(bucket_size < 100000){
     cerr << "create_transfer_orders called w/ bucket_size=" << bucket_size << "\n";
     cerr << "This is extremely unlikely to work.\n";
     return nullptr;
   }
+
+  if(max_orders_per_bundle>0)
+    limit_orders_by_number=true;
+  else
+    limit_orders_by_number=false;
   
   if(files.size() > 0){
     last_slice = files.back().slices.back();
@@ -731,6 +738,7 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
 
   // we start by loading the tranfer orders vector with an empty buffer
   trans_orders->push_back(string(""));
+  orders_in_bundle=0;
   // Our virtual position in the archive file starts at the
   // beginning of the data area
   position_in_archive = 0UL;
@@ -750,12 +758,18 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
     
     if(total_extent <= bucket_size){
       // this file can live in one bucket
-      if(next_position_in_bucket > bucket_size){
+      //      cerr << "debug:" << limit_orders_by_number << " orders:";
+      //      cerr << trans_orders->size() << " max:";
+      //      cerr << max_orders_per_bundle << "\n";
+      if((next_position_in_bucket > bucket_size) ||
+	 (limit_orders_by_number &&
+	  (orders_in_bundle>=max_orders_per_bundle))){	
 	// due to previous files in this bucket,
 	// it spills off the end, so we jump to the
 	// next bucket.  We load a new empty buffer,
 	// leaving the other one complete
 	trans_orders->push_back(string(""));
+	orders_in_bundle=0;
 	// back to the beginning of the bucket
 	position_in_bucket = 0UL;
 	// this now *now* where our file will end
@@ -769,6 +783,7 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
       // whatever bucket we're in, this file will fit in it
       trans_orders->back().append(print_marching_order(archive_file_index,
 						       directories.at(ndx)));
+      orders_in_bundle++;
       position_in_bucket = next_position_in_bucket;
       position_in_archive += position_jump;
       
@@ -792,10 +807,19 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
     next_position_in_bucket = position_in_bucket + position_jump;
     
     if(total_extent <= bucket_size){
+      //    if(total_extent <= bucket_size ||
+      //       (limit_orders_by_number &&
+      //	(trans_orders->size()>max_orders_per_bundle))){
       // this file can live in one bucket
-      if(next_position_in_bucket > bucket_size){
-	// due to others in bucket, must jump to next
+      //      if(next_position_in_bucket > bucket_size){
+      if((next_position_in_bucket > bucket_size) ||
+	 (limit_orders_by_number &&
+	  (orders_in_bundle>=max_orders_per_bundle))){	
+	// due to others in bucket,
+	// (or if we've hit the "max orders per bucket" limit)
+	// jump to next bucket
 	trans_orders->push_back(string(""));
+	orders_in_bundle=0;
 	// back to the beginning of the bucket
 	position_in_bucket = 0UL;
 	// this now *now* where our file will end
@@ -810,6 +834,7 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
       //      cerr << "check before call: " << files.at(ndx).slices.front().header_size_this_slice << "\n";
       trans_orders->back().append(print_marching_order(archive_file_index,
 						       files.at(ndx)));
+      orders_in_bundle++;
       if (files.at(ndx).slices.front().slice_offset_in_container !=
 	  position_in_archive){
 	cerr << "WARNING!  Offset mismatch! "
@@ -827,8 +852,10 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
       // start by jumping to the next bucket no matter what
       unsigned long int position_in_file=0UL;
       unsigned long int extent_remaining;
-      if(trans_orders->back().size()>0)
+      if(trans_orders->back().size()>0){
 	trans_orders->push_back(string(""));
+	orders_in_bundle=0;
+      }
       extent_remaining = total_extent;
       
       // loop over the file, cutting into bucket-sized pieces until
@@ -850,7 +877,7 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
 							   files.at(ndx).storage_ptr->header_size(),
 							   position_in_archive,
 							   position_in_file));
-      
+      orders_in_bundle++;
       position_in_file += (bucket_size - files.at(ndx).storage_ptr->header_size());
       extent_remaining -= bucket_size;
       position_in_archive += bucket_size;
@@ -861,6 +888,8 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
 
 	// print the orders for this full bucket
 	trans_orders->push_back(string(""));
+	orders_in_bundle=0;
+
 	trans_orders->back().append(print_marching_order_raw(archive_file_index,
 							     files.at(ndx),
 							     bucket_size, // full bucket
@@ -869,7 +898,7 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
 							          // of the file
 							     position_in_archive,
 							     position_in_file));
-	
+	orders_in_bundle++;
 	position_in_file += bucket_size;
 	extent_remaining -= bucket_size;
 	position_in_archive += bucket_size;
@@ -879,6 +908,7 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
       // header) is exactly a multiple of bucket size)
       if(extent_remaining > 0){
 	trans_orders->push_back(string(""));
+	orders_in_bundle=0;
 	trans_orders->back().append(print_marching_order_raw(archive_file_index,
 							     files.at(ndx),
 							     extent_remaining, // just the remainder
@@ -887,6 +917,7 @@ vector <string> *Parfu_target_collection::create_transfer_orders(int archive_fil
 							          // of the file
 							     position_in_archive,
 							     position_in_file));
+	orders_in_bundle++;
 	// the per-file counters don't need cleaning up, but we do need to roll
 	// the main archive position to the next tar-compatible block position
 	position_in_archive += extent_remaining;

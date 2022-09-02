@@ -46,6 +46,12 @@ int main(int argc, char *argv[]){
   int *archive_file_multiplier;
   
   string archive_file_name;
+
+  if(argc<2){
+    // no arguments
+    parfu_usage();
+    exit(-42);
+  }
   
   MPI_File *file_handle=nullptr;
   //  MPI_Info file_info;

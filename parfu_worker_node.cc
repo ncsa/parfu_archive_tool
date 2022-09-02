@@ -31,8 +31,7 @@
 //  cout << "\n\n parsing done.\n";
 
 // we've already done MPI_Init() and have our rank
-int parfu_worker_node(int my_rank, int total_ranks,
-		      unsigned long in_bucket_size){
+int parfu_worker_node(int my_rank, int total_ranks){
   string my_message_buffer;
   string my_base_path;
   int mpi_return_val;
@@ -43,18 +42,19 @@ int parfu_worker_node(int my_rank, int total_ranks,
   string message_string;
   char receive_mode='B'; // we start in "broadcast" receiving mode
   bool valid_instruction;
+  unsigned long rank_bucket_size = 0UL;
   
   MPI_File *file_handle=nullptr;
   vector <MPI_File*> archive_files;
   MPI_Status *message_status=nullptr;
-
+  
   Parfu_rank_order_set *my_rank_order;
   
   if(my_rank==0){
     cerr << "parfu_worker_node got zero rank!!!\n";
     return -1;
   }
-
+  
   my_length = new int;
   message_status = new MPI_Status;
   
@@ -117,6 +117,11 @@ int parfu_worker_node(int my_rank, int total_ranks,
 	}
 	archive_files.push_back(file_handle);
       } // if(instruction_letter == "A"){
+      if(instruction_letter == "U"){
+	valid_instruction=true;
+	// set bucket size
+	rank_bucket_size = stoi(message_string.substr(1));
+      }
       if(instruction_letter == "N"){
 	valid_instruction=true;
 	// we flip from broadcast mode to "iNdividual" receive mode.  
@@ -167,6 +172,11 @@ int parfu_worker_node(int my_rank, int total_ranks,
       valid_instruction=false;
       if(instruction_letter == "C"){
 	valid_instruction=true;
+	if(!rank_bucket_size){
+	  cerr << "rank " << my_rank << " never got bucket size!  Exiting.\n";
+	  return 7;
+	}
+	
 	// the rest of a message is a buffer with transfer orders
 	// this creates the order set for this rank
 	my_rank_order = new Parfu_rank_order_set(message_string.substr(1));
@@ -174,7 +184,7 @@ int parfu_worker_node(int my_rank, int total_ranks,
 	cerr << my_rank_order->n_orders() << " orders with total size ";
 	cerr << my_rank_order->total_size() << "\n";
 	my_rank_order->move_data_Create(my_base_path,
-					in_bucket_size,
+					rank_bucket_size,
 					file_handle);
 	// Now return to say that I'm done
 	message_string = to_string(my_rank);
@@ -213,10 +223,10 @@ int parfu_worker_node(int my_rank, int total_ranks,
     } // switch(receive_mode)
     
     
-  } // while(1)
+    } // while(1)
     //  cout << "rank:" << my_rank << " inst:" << instruction_letter;
     //  cout << "  arch flnm:" << archive_filename << "\n";
   return 0;
-}
+  }
 
 

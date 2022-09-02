@@ -122,6 +122,7 @@ vector <string> *parfu_parse_args(unsigned nargs,
 				  unsigned *max_orders_per_bucket,
 				  string *archive_file_name,
 				  int *archive_file_multiplier);
+void parfu_usage(void);
 
 // classes to define for new structure of parfu
 // Parfu_file: (contains information about target file file on disk)

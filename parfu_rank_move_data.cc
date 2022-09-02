@@ -152,14 +152,14 @@ int Parfu_rank_order_set::move_data_Create(string base_path,
   if(total_bucket_length > bucket_size){
     cerr << "WARNING WARNING!  Bucket won't fit in buffer!\n";
     cerr << "n_norders:" <<orders.size() << "\n";
-    cerr << " header_size:";
-    cerr << orders.front().header_size << " file_offset:";
-    cerr << orders.front().offset_in_file << "  ";;
-    cerr << orders.front().file_size<< "\n";
-    cerr << " header_size:";
-    cerr << orders.back().header_size << " file_offset:";
-    cerr << orders.back().offset_in_file << "  ";
-    cerr << orders.back().file_size << "\n";
+    cerr << "bucket start: " << bucket_location_in_archive
+	 << " \n";
+    cerr << "bucket end: " << (orders.back().position_in_archive +
+			       orders.back().header_size +
+			       orders.back().file_size)
+	 << " \n";
+    cerr << "data length: " << total_bucket_length
+	 << " bucket size: " << bucket_size << "\n";
   }
   
   // go through the files in the order set

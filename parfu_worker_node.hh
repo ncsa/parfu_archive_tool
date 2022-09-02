@@ -25,7 +25,6 @@
 #ifndef PARFU_WORKER_NODE_HH_
 #define PARFU_WORKER_NODE_HH_
 
-int parfu_worker_node(int my_rank, int total_ranks,
-		      unsigned long bucket_size);
+int parfu_worker_node(int my_rank, int total_ranks);
 
 #endif

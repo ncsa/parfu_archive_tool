@@ -24,13 +24,14 @@
 
 #include "parfu_main.hh"
 
-//#define BUCKET_SIZE         (200000000)
+//#define DEFAULT_BUCKET_SIZE         (200000000)
 // must be a multiple of 512??
-#define BUCKET_SIZE         (499200)
+#define DEFAULT_BUCKET_SIZE         (499200)
 
 int main(int argc, char *argv[]){
-  Parfu_directory *test_dir;
-  string base_path;
+  char run_mode='C';
+  Parfu_directory *my_target_directory;
+  //  string base_path;
   Parfu_target_collection *my_target_collec;
   vector <string> *transfer_orders=nullptr;
   vector <string> *target_paths=nullptr;
@@ -40,7 +41,7 @@ int main(int argc, char *argv[]){
   int mpi_return_val;
   //  int *length_buffer=nullptr;
   unsigned max_orders_per_bucket;
-  long unsigned bucket_size=BUCKET_SIZE;
+  long unsigned bucket_size=DEFAULT_BUCKET_SIZE;
   string *archive_file_name_from_command_line;
   int *archive_file_multiplier;
   
@@ -87,40 +88,58 @@ int main(int argc, char *argv[]){
     //    cerr << "checking: max orders per bucket after argument parsing: ";
     //    cerr << max_orders_per_bucket << "\n";
 
+    archive_file_name = *archive_file_name_from_command_line;
+    if(archive_file_name.size()<1){
+      cerr << "No archive file specified.  Aborting.\n";
+      exit(5);
+    }
+    
     cerr << "We got " << target_paths->size() << " target paths from command line.\n";
     for(unsigned i=0;i<target_paths->size();i++){
       cerr << "path " << i << " :" << target_paths->at(i) << "\n";
     }
-    
-    //    cout << "parfu test build\n";
-    if(argc > 1){
-      cout << "We will scan directory:";
-      cout << argv[1];
-      cout << "\n";
-    }
-    else{
-      cout << "You must input a directory to scan!\n";
-      return 1;
+    if(run_mode == 'C' && (target_paths->size() < 1)){
+      cerr << "We are in \"create\" mode and have no targets to archive.  Aborting.\n";
+      exit(3);
     }
 
-    if(argc>2){
-      archive_file_name = string(argv[2]);
-      cout << "archive file: " << archive_file_name << "\n";
+    // this is for the testing stage, where we assume we have one and only one target
+    if(run_mode == 'C' && (target_paths->size() > 1)){
+      cerr << "Parfu test-mode create only allows one target.  Aborting.\n";
+      exit(4);
     }
-    else{
-      cerr << "ERROR!  No archive file specified!  \n";
-      exit(1);
-    }
+    // TODO change for multiple targets
+    my_target_directory = new Parfu_directory(target_paths->front());
     
-    base_path = string(argv[1]);
-    test_dir = new Parfu_directory(base_path);
     
-    //  cout << "Have we spidered directory? " << test_dir->is_directory_spidered() << "\n";
-    test_dir->spider_directory();
-    //  cout << "Have we spidered directory? " << test_dir->is_directory_spidered() << "\n";
+    //    cout << "parfu test build\n";
+    //    if(argc > 1){
+    //      cout << "We will scan directory:";
+    //      cout << argv[1];
+    //      cout << "\n";
+    //    }
+    //    else{
+    //      cout << "You must input a directory to scan!\n";
+    //      return 1;
+    //    }
+
+    //    if(argc>2){
+    //      archive_file_name = string(argv[2]);
+    //      cout << "archive file: " << archive_file_name << "\n";
+    //    }
+    //    else{
+    //      cerr << "ERROR!  No archive file specified!  \n";
+    //      exit(1);
+    //    }
+    
+    //    base_path = string(argv[1]);
+    
+    //  cout << "Have we spidered directory? " << my_target_directory->is_directory_spidered() << "\n";
+    my_target_directory->spider_directory();
+    //  cout << "Have we spidered directory? " << my_target_directory->is_directory_spidered() << "\n";
     
     //  cout << "First build the target collection\n";
-    my_target_collec = new Parfu_target_collection(test_dir);
+    my_target_collec = new Parfu_target_collection(my_target_directory);
     cout << "Target collection built.  ";
     //    cout << "Now dump it, unsorted.\n";
     //    my_target_collec->dump();
@@ -133,7 +152,7 @@ int main(int argc, char *argv[]){
     //    cout << "dump offsets\n";
     //    my_target_collec->dump_offsets();
     cout << "generate rank orders\n";
-    transfer_orders = my_target_collec->create_transfer_orders(0,BUCKET_SIZE,max_orders_per_bucket);
+    transfer_orders = my_target_collec->create_transfer_orders(0,bucket_size,max_orders_per_bucket);
     //    cout << "there are " << transfer_orders->size() << " orders.\n";
     
     //  cout << "\n\n\nFirst order:\n\n";
@@ -171,6 +190,10 @@ int main(int argc, char *argv[]){
     file_handle = (MPI_File*)malloc(sizeof(MPI_File));
     
     */
+
+    string bucket_size_string = to_string(bucket_size);
+    parfu_broadcast_order(string("U"),
+			  bucket_size_string);
 
     
     cout << "Now we try collective file open.\n";
@@ -215,7 +238,7 @@ int main(int argc, char *argv[]){
     // to go back to broadcast mode.
 
     for(int i=1; i<total_ranks; i++){
-      parfu_send_order_to_rank(i,0,string("P"),base_path);
+      parfu_send_order_to_rank(i,0,string("P"),target_paths->front());
     }
     
     /*
@@ -244,7 +267,7 @@ int main(int argc, char *argv[]){
     
   } // if(my_rank == 0)
   else{
-    parfu_worker_node(my_rank,total_ranks,BUCKET_SIZE);
+    parfu_worker_node(my_rank,total_ranks);
   }
 
   cout << "rank " << my_rank << " done, about to call MPI_Finalize()\n";

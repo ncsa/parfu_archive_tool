@@ -116,6 +116,11 @@ using namespace std;
 #include "parfu_worker_node.hh"
 #include "parfu_boss_functions.hh"
 
+vector <string> *parfu_parse_args(unsigned nargs,
+				 char *args[],
+				 unsigned long *bucket_size,
+				 unsigned *max_orders_per_bucket);
+
 // classes to define for new structure of parfu
 // Parfu_file: (contains information about target file file on disk)
 //       (also contains a list of one or more file slices)

@@ -33,12 +33,15 @@ int main(int argc, char *argv[]){
   string base_path;
   Parfu_target_collection *my_target_collec;
   vector <string> *transfer_orders=nullptr;
+  vector <string> *target_paths=nullptr;
   //  Parfu_rank_order_set *my_orders=nullptr;
   int my_rank,total_ranks;
   string initial_order;
   int mpi_return_val;
   //  int *length_buffer=nullptr;
-
+  unsigned max_orders_per_bucket;
+  long unsigned bucket_size=BUCKET_SIZE;
+  
   string archive_file_name;
   
   MPI_File *file_handle=nullptr;
@@ -62,6 +65,23 @@ int main(int argc, char *argv[]){
   cout << "I am rank " << my_rank << " out of a total of " << total_ranks << "\n";
 
   if(my_rank == 0){
+
+    
+    // parse command line
+    cerr << "checking: max orders per bucket initialized to: ";
+    cerr << max_orders_per_bucket << "\n";
+    if((target_paths = parfu_parse_args(argc,argv,&bucket_size,&max_orders_per_bucket))
+       == nullptr){
+      cerr << "Error from command line parsing!  Exiting.\n";
+      exit(1);
+    }
+    cerr << "checking: max orders per bucket after argument parsing: ";
+    cerr << max_orders_per_bucket << "\n";
+
+    cerr << "We got " << target_paths->size() << " target paths fr command line.\n";
+    for(unsigned i=0;i<target_paths->size();i++){
+      cerr << "path " << i << " :" << target_paths->at(i) << "\n";
+    }
     
     cout << "parfu test build\n";
     if(argc > 1){
@@ -104,7 +124,7 @@ int main(int argc, char *argv[]){
     //    cout << "dump offsets\n";
     //    my_target_collec->dump_offsets();
     cout << "generate rank orders\n";
-    transfer_orders = my_target_collec->create_transfer_orders(0,BUCKET_SIZE,150);
+    transfer_orders = my_target_collec->create_transfer_orders(0,BUCKET_SIZE,max_orders_per_bucket);
     //    cout << "there are " << transfer_orders->size() << " orders.\n";
     
     //  cout << "\n\n\nFirst order:\n\n";
@@ -222,3 +242,4 @@ int main(int argc, char *argv[]){
   MPI_Finalize();
   return 0;
 }
+

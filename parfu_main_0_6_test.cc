@@ -41,6 +41,8 @@ int main(int argc, char *argv[]){
   //  int *length_buffer=nullptr;
   unsigned max_orders_per_bucket;
   long unsigned bucket_size=BUCKET_SIZE;
+  string *archive_file_name_from_command_line;
+  int *archive_file_multiplier;
   
   string archive_file_name;
   
@@ -66,24 +68,31 @@ int main(int argc, char *argv[]){
 
   if(my_rank == 0){
 
+    archive_file_name_from_command_line = new string;
+    archive_file_multiplier = new int;
+    *archive_file_multiplier = 1;
     
     // parse command line
-    cerr << "checking: max orders per bucket initialized to: ";
-    cerr << max_orders_per_bucket << "\n";
-    if((target_paths = parfu_parse_args(argc,argv,&bucket_size,&max_orders_per_bucket))
+    //    cerr << "checking: max orders per bucket initialized to: ";
+    //    cerr << max_orders_per_bucket << "\n";
+    if((target_paths =
+	parfu_parse_args(argc,argv,&bucket_size,&max_orders_per_bucket,
+			 archive_file_name_from_command_line,
+			 archive_file_multiplier))
        == nullptr){
       cerr << "Error from command line parsing!  Exiting.\n";
+      parfu_broadcast_order(string("X"),string("abort"));
       exit(1);
     }
-    cerr << "checking: max orders per bucket after argument parsing: ";
-    cerr << max_orders_per_bucket << "\n";
+    //    cerr << "checking: max orders per bucket after argument parsing: ";
+    //    cerr << max_orders_per_bucket << "\n";
 
-    cerr << "We got " << target_paths->size() << " target paths fr command line.\n";
+    cerr << "We got " << target_paths->size() << " target paths from command line.\n";
     for(unsigned i=0;i<target_paths->size();i++){
       cerr << "path " << i << " :" << target_paths->at(i) << "\n";
     }
     
-    cout << "parfu test build\n";
+    //    cout << "parfu test build\n";
     if(argc > 1){
       cout << "We will scan directory:";
       cout << argv[1];

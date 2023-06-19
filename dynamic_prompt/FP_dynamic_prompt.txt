@@ -1,0 +1,215 @@
+##################
+#
+# This dynamic code written by Craig steffen in approximately
+# 2016 as part of the Blue Waters project.  The code is available
+# (but NOT licensed in any way for public users) here on github:
+# https://github.com/ncsa/module_improvements/blob/master/modimp_load_bash
+#
+##################
+
+
+
+function pmt_init(){
+    MODIMP_PROMPT_SALT=""
+}
+
+
+function pmt_space(){
+    MODIMP_PROMPT_SALT+=" "
+}
+export -f pmt_space
+
+function pmt_dash(){
+    MODIMP_PROMPT_SALT+="-"
+}
+export -f pmt_dash
+
+function pmt_und(){
+    MODIMP_PROMPT_SALT+="_"
+}
+export -f pmt_und
+
+function pmt_pipe(){
+    MODIMP_PROMPT_SALT+="|"
+}
+export -f pmt_pipe
+
+function pmt_stripe(){
+    STRIPE_STRING=`lfs getstripe -d . 2> /dev/null`
+    regex_search1="no stripe info"
+    if [[ $STRIPE_STRING =~ $regex_search1 ]]; then
+	MODIMP_PROMPT_SALT+="___"
+    else
+	regex_search2="stripe_count:\s+([[:digit:]]+)\s+"
+	if [[ $STRIPE_STRING =~ $regex_search2 ]]; then
+	    #	    MODIMP_PROMPT_SALT+=$1
+	    MODIMP_PROMPT_SALT+=$(printf "%3d" ${BASH_REMATCH[1]})
+	else
+	    MODIMP_PROMPT_SALT+="XXX"
+	fi
+    fi
+}
+export -f pmt_stripe
+
+function pmt_make(){
+    if [[ -f "Makefile" ]]; then
+	MODIMP_PROMPT_SALT+="M"
+    else
+	MODIMP_PROMPT_SALT+="_"
+    fi
+}
+export -f pmt_make
+
+function pmt_finalize(){
+    PS1=$MODIMP_PROMPT_PREAMBLE
+    PS1+="$MODIMP_PROMPT_SALT"
+    PS1+="$MODIMP_PROMPT_POSTAMBLE"
+    if [ "$PBS_ENVIRONMENT" = "PBS_INTERACTIVE" ] ; then
+	PS1+="\e[1;31m[INTERACTIVE JOB]\e[0m "
+    fi
+}
+export -f pmt_finalize
+
+function modimp_prompt_setup {
+    if [ -f $HOME/.no_modimp ]; then
+	return;
+    fi
+    if [ -f $HOME/.no_modimp_warning ]; then
+	echo "The file $HOME/.no_modimp_warning exists; modimp commands will not load."
+	return;
+    fi
+    echo 
+    echo "This function takes your current prompt and sets up an initial modimp dynamic prompt."
+    echo 
+    if [[ $MODIMP_PROMPT_PREAMBLE != "" ]]; then
+	echo
+	echo "However, You already have modimp variables set (MODIMP_PROMPT_PREAMBLE)!";
+	echo "(If you want to run this command with a different option to get a different";
+	echo "prompt, first run modimp_prompt_reset to go back to a non-dynamic prompt, then"
+	echo "run your \"modimp_prompt_setup XXX\" command.)"
+	echo 
+	return;
+    fi
+    if [[ $MODIMP_PROMPT_POSTAMBLE != "" ]]; then
+	echo
+	echo "However, You already have modimp variables set (MODIMP_PROMPT_POSTAMBLE)!";
+	echo 
+	return;
+    fi
+    if [[ $PROMPT_COMMAND != "" ]]; then
+	echo
+	echo "However, You already have modimp variables set (PROMPT_COMMAND)!";
+	echo 
+	return;
+    fi
+    export MODIMP_PROMPT_PREAMBLE=$PS1;
+    export MODIMP_PROMPT_POSTAMBLE=" ";
+    if [ `expr match "$MODIMP_PROMPT_PREAMBLE" '$'` ] ; then
+	export MODIMP_PROMPT_PREAMBLE=${MODIMP_PROMPT_PREAMBLE//\$/}
+	export MODIMP_PROMPT_PREAMBLE=${MODIMP_PROMPT_PREAMBLE//$/}
+	export MODIMP_PROMPT_PREAMBLE=${MODIMP_PROMPT_PREAMBLE//  / }
+	export MODIMP_PROMPT_POSTAMBLE=" \$ ";
+    fi
+    
+    PROMPT_COMMAND="pmt_init ; pmt_cpat ; pmt_dar ; pmt_ctkc35 ; pmt_dash ; pmt_stripe; pmt_dash ; pmt_cmpL ; pmt_dash ; pmt_make ; pmt_finalize"
+    if [[ $1 = "PrgEnv" ]]; then
+	PROMPT_COMMAND="pmt_init ; pmt_cmpL ; pmt_finalize";
+    fi
+    if [[ $1 = "compact" ]]; then
+	PROMPT_COMMAND="pmt_init ; pmt_pipe ; pmt_cpat ; pmt_dar ; pmt_ctkc35 ; pmt_make ; pmt_cmpS ; pmt_pipe ; pmt_finalize"
+    fi
+    export PROMPT_COMMAND;
+    
+    echo "Ok, now MODIMP_PROMPT_PREAMBLE, MODIMP_PROMPT_POSTAMBLE, and PROMPT_COMMAND now set."
+    echo "adjust their values to change the dynamic prompt.  Run modimp_prompt_commit to install"
+    echo "the current configuration to your .profile file."
+    echo 
+}
+
+function modimp_prompt_commit {
+    if [ -f $HOME/.no_modimp ]; then
+	return;
+    fi
+    if [ -f $HOME/.no_modimp_warning ]; then
+	echo "The file $HOME/.no_modimp_warning exists; modimp commands will not load."
+	return;
+    fi
+    DEFAULT_INSTALL_FILE="$HOME/.profile"    
+    length_of_first_arg=${#1}
+    install_to_file=$1
+    if (( $length_of_first_arg > 0 )); then
+	echo "you specified to install the modimp load commands into the file: $install_to_file"
+    else
+	echo 
+	echo "The first argument of this script is the name of the file into which the modimp"
+	echo "prompt setup are to be inserted.  Typically, this will be the .profile file"
+	echo "in your home directory.  To install there, run this command:"
+	echo 
+	echo "modimp_prompt_commit $DEFAULT_INSTALL_FILE"
+	echo
+	return;
+    fi
+    
+    target_grep_test=`grep MODIMP_PROMPT_PREAMBLE $install_to_file`
+    contains_MODIMP_PROMPT=${#target_grep_test}
+    target_grep_test=`grep MODIMP_PROMPT_POSTAMBLE $install_to_file`
+    contains_MODIMP_PROMPT+=${#target_grep_test}
+    
+    if (( $contains_MODIMP_PROMPT > 0 )); then
+	echo 
+	echo "It looks like the target file already has MODIMP_PROMPT definitions installed, aborting."
+	echo "Please remove the old prompt definition section from that file before committing your"
+	echo "current prompt."
+	echo 
+	return;
+    fi
+    
+    if [[ $MODIMP_PROMPT_PREAMBLE = "" && $MODIMP_PROMPT_POSTAMBLE = "" ]]; then
+	echo 
+	echo "Your MODIMP_PROMPT_PREAMBLE and MODIMP_PROMPT_POSTAMBLE are empty!"
+	echo "This means that your prompt will"
+	echo "have no static characters at all (blank).  If you really want this, you'll"
+	echo "have to install this configuration manually.  (This may happen because you"
+	echo "ran modimp_prompt_reset.  You'll have to run modimp_prompt_setup or else"
+	echo "set up a valid dynamic prompt so there's something to \"commit\".)"
+	echo 
+	echo " your MODIMP_PROMPT_PREAMBLE = >>$MODIMP_PROMPT_PREAMBLE<<"
+	echo " your MODIMP_PROMPT_POSTAMBLE = >>$MODIMP_PROMPT_POSTAMBLE<<"
+	
+	return;
+    fi
+    if [[ $PROMPT_COMMAND = "" ]]; then
+	echo
+	echo "Your PROMPT_COMMAND variable is empty! That means there's no valid"
+	echo "dynamic prompt configuration to be \"commit\"ed.  (This may be because you"
+	echo "ran modimp_prompt_reset).  You can set up a configuration manually"
+	echo "(run modimp_prompt_help for details) or run modimp_prompt_setup to get"
+	echo "a generic one set up for you."
+	echo 
+	return;
+    fi
+    TARGETFILE=$install_to_file
+    echo "" >> ${TARGETFILE}
+    echo "#" >> ${TARGETFILE}
+    echo "# Modimp dynamic prompt setup.  Modify the PREAMBLE and POSTAMBLE variables to set" >> ${TARGETFILE}
+    echo "# the static parts of your prompt.  Add and remove functions in the PROMPT_COMMAND" >> ${TARGETFILE}
+    echo "# to change the characters in the dynamic prompt.  The PROMPT_COMMAND should *always*" >> ${TARGETFILE}
+    echo "# begin with pmt_init and should always end with pmt_finalize (or equivalent)." >> ${TARGETFILE}
+    
+    echo 'if [[ `declare -f -F pmt_init` ]]; then' >> ${TARGETFILE}
+    echo "  echo \"Loading Modimp dynamic prompt.\"" >> ${TARGETFILE}
+    echo "  echo " >> ${TARGETFILE}
+    echo "  export MODIMP_PROMPT_PREAMBLE=\"${MODIMP_PROMPT_PREAMBLE}\"" >> ${TARGETFILE}
+    echo "  export MODIMP_PROMPT_POSTAMBLE=\"${MODIMP_PROMPT_POSTAMBLE}\"" >> ${TARGETFILE}
+    echo "  export PROMPT_COMMAND=\"${PROMPT_COMMAND}\"" >> ${TARGETFILE}
+    echo "else" >> ${TARGETFILE}
+    echo "  echo \"Modimp dynamic prompt: modimp functions not defined; \"" >> ${TARGETFILE}
+    echo "  echo \"skipping loading dynamic prompt. \"" >> ${TARGETFILE}
+    echo "  echo " >> ${TARGETFILE}
+    echo "fi" >> ${TARGETFILE}
+    echo "" >> ${TARGETFILE}
+    echo "" 
+    echo "Finished installing. Log out and log back in to test your prompt.  Edit the function"
+    echo "definitions to change the dynamic prompt."
+    echo ""
+}

@@ -102,8 +102,67 @@ if(! $my_pers_active_fragment){
 $check_equals_lines = `grep "=====" $main_script_fragment`;
 
 if(!$check_equals_lines){
-    print "\nOops!  Your script fragment file doesn't contain the \"=====\" separator!!!\n\n!";
+    print STDERR "\nOops!  Your script fragment file doesn't contain the \"=====\" separator!!!\n\n!";
     exit;
 }
 
-# now walk 
+print "\n";
+
+# insert both system and personal static fragments and output them 
+open LOC_SYS_STATIC,"<$my_sys_static_fragment" or die "Could not open file >$my_sys_static_fragment< for reading!\n";
+while(<LOC_SYS_STATIC>){
+    print $_;
+}
+close LOC_SYS_STATIC;
+
+open LOC_PERS_STATIC,"<$my_pers_static_fragment" or die "Could not open file >$my_pers_static_fragment< for reading!\n";
+while(<LOC_PERS_STATIC>){
+    print $_;
+}
+close LOC_PERS_STATIC;
+
+# now grab the static part of the job file fragment:
+
+# the static part of the fragment starts immediately.  It STOPS at the line of "=====".  
+open MAIN_FRAG,"<$main_script_fragment" or die "Could not open main script fragment >$main_script fragment< for reading!\n";
+$in_static_part=1;
+while(<MAIN_FRAG>){
+    if(! m/=====/){
+	if($in_static_part){
+	    print $_;
+	}
+    }
+    else{
+	$in_static_part=0;
+    }
+}
+
+# insert both system and personal active fragments and output them 
+open LOC_SYS_ACTIVE,"<$my_sys_active_fragment" or die "Could not open file >$my_sys_active_fragment< for reading!\n";
+while(<LOC_SYS_ACTIVE>){
+    print $_;
+}
+close LOC_SYS_ACTIVE;
+
+open LOC_PERS_ACTIVE,"<$my_pers_active_fragment" or die "Could not open file >$my_pers_active_fragment< for reading!\n";
+while(<LOC_PERS_ACTIVE>){
+    print $_;
+}
+close LOC_PERS_ACTIVE;
+
+# now grab the active part of the job file fragment:
+
+# the active part of the fragment starts immediately.  It STOPS at the line of "=====".  
+open MAIN_FRAG,"<$main_script_fragment" or die "Could not open main script fragment >$main_script fragment< for reading!\n";
+$in_active_part=0;
+while(<MAIN_FRAG>){
+    if(! m/=====/){
+	if($in_active_part){
+	    print $_;
+	}
+    }
+    else{
+	$in_active_part=1;
+    }
+}
+

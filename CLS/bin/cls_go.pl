@@ -89,7 +89,7 @@ $my_pers_active_fragment=$ENV{CLS_ACTIVE_PERS_FILE};
 # active job file fragment (the part after the "=====")
 
 
-print "main script fragment: $main_script_fragment\n";
+print STDERR "main script fragment: $main_script_fragment\n";
 if(! -e $main_script_fragment){
     print STDERR "\n\nThe fragment file you specified: >$main_script_fragment< does not exist!\n";
     print STDERR "Exiting.\n\n";
@@ -129,7 +129,7 @@ if(!$check_equals_lines){
     exit;
 }
 
-print "\n";
+print STDERR "\n";
 
 # insert both system and personal static fragments and output them 
 open LOC_SYS_STATIC,"<$my_sys_static_fragment" or die "Could not open file >$my_sys_static_fragment< for reading!\n";

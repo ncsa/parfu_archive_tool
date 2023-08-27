@@ -106,10 +106,11 @@ int push_out_all_orders(vector <string> *transfer_order_list,
   // First we distribute initial orders to ranks.
   // We start at order index 0 but at rank 1, because
   // *we* are rank zero.  
-  //  cerr << "POAO: A ranks:" << total_ranks << " orders:" << total_orders << "\n";
+  cerr << "POAO: A ranks:" << total_ranks << " orders:" << total_orders << "\n";
   //  cerr << "POAO: A next
   while( (next_rank < total_ranks) &&
 	 (next_order < total_orders)){
+    cerr << "POAO ph1: send order " << next_order << "\n";
     parfu_send_order_to_rank(next_rank,
 			     0,  // MPI_Send tag=0
 			     string("C"), // C for "create" mode
@@ -132,7 +133,10 @@ int push_out_all_orders(vector <string> *transfer_order_list,
   // Because we're only doing as many receives as orders, so the
   // ranks that never received any orders won't be sending us
   // a complete message.  
+  cerr << "POAO next order:" << next_order << "  next rank:" << next_rank << "\n";
+
   if(next_order >= total_orders){
+    cerr << "POAO: sent all orders, so wait for finished responses; next order:" << next_order <<"  \n";
     for(unsigned i=0;i<total_orders;i++){
       if((mpi_return_val = MPI_Recv((void*)(return_receive_buffer),
 				    INT_STRING_BUFFER_SIZE,MPI_CHAR,
@@ -152,6 +156,7 @@ int push_out_all_orders(vector <string> *transfer_order_list,
     // hand each one that does that a new work item while we still have
     // any 
     while(next_order < total_orders){
+      cerr << "POAO: next order:" << next_order << "out of total:" << total_orders << "\n";
       if((mpi_return_val = MPI_Recv((void*)(return_receive_buffer),
 				    INT_STRING_BUFFER_SIZE,MPI_CHAR,
 				    MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,
@@ -167,7 +172,7 @@ int push_out_all_orders(vector <string> *transfer_order_list,
 			       string("C"), // this has the "create" message baked in
 			       // we may want to make this an input parameter
 			       (transfer_order_list->at(next_order)));
-      
+      cerr << "POAO: sent order " << next_order << " to rank " << worker_rank_received << "\n";
       // loop cleanup
       next_order++;
     } // while

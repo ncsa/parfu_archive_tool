@@ -159,7 +159,7 @@ int main(int argc, char *argv[]){
     //    my_target_collec->dump_offsets();
     cout << "generate rank orders\n";
     transfer_orders = my_target_collec->create_transfer_orders(0,bucket_size,max_orders_per_bucket);
-    //    cout << "there are " << transfer_orders->size() << " orders.\n";
+    cout << "there are " << transfer_orders->size() << " orders.\n";
     
     //  cout << "\n\n\nFirst order:\n\n";
     //  cout << transfer_orders->front();

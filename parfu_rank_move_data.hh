@@ -61,6 +61,7 @@ public:
 		       MPI_File *my_file_handle);
   int n_orders(void);
   unsigned long total_size(void);
+  string order_n_filename(int order_index);
 private:
   vector <parfu_move_order_t> orders;
   

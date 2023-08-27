@@ -260,3 +260,13 @@ unsigned long Parfu_rank_order_set::total_size(void){
   blocked_bucket_length = parfu_next_block_boundary(total_bucket_length);
   return blocked_bucket_length;
 }
+
+string Parfu_rank_order_set::order_n_filename(int order_index){
+  if(order_index>orders.size()){
+    cerr << "WARNING! ordner_n_filename() called with index=" << order_index << "\n";
+    cerr << "which is outside of bounds!\n";
+    return string("");
+  }
+  return orders.at(order_index).rel_filename;
+}
+

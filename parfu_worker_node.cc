@@ -24,6 +24,42 @@
 
 #include "parfu_main.hh"
 
+/////////////////
+//
+// The worker is an infinite loop that receives MPI messages.
+// The worker also has "receive mode" that's part of its internal state
+// that determines what kind of messages
+// it's listening for.  Messages are used to direct it to do things
+// and it change its message-listening mode and other aspects of
+// its internal state.
+//
+// It starts in "B" mode, in which it's listening for broadcast
+// messages.
+//
+// B mode valid incoming messages:
+//   "A" instuction: the rest of the message buffer is the name of an archive
+//       file that you are to do a collective open on now, and retain that
+//       parallel file pointer in your state.
+//   "U" instruction: the rest of the message buffer is a number that you are
+//       to set your internal bucket size to
+//   "N" switch out of "B" (broadcast) listening mode to "N" mode
+//       (iNdividual listening mode)
+//   "X" close down and exit
+//
+//   in "N" mode, worker is listening for one-to-one individual MPI messages
+//      from rank 0.  
+// N mode valid incoming messages:
+//   "C" "create" mode (referenced to tar).  The rest of the buffer is a series
+//       of file transfer orders.  These will be copied from target files to
+//       the archive file.
+//   "P" rest of the buffer is new base path to set in your state
+//   "B" switch out of "N" (iNdividual) broadcast receive mode to "B"
+//       (broadcast) receive mode
+//   "X" close down and exit
+//   
+//
+
+
 // this example was tested successfully
 // 
 //  cout << "now parse the orders.\n\n";
@@ -58,6 +94,8 @@ int parfu_worker_node(int my_rank, int total_ranks){
   my_length = new int;
   message_status = new MPI_Status;
   
+  
+  // preliminary, out of date, and incomplete explanation of messages
   ///////////////////
   //
   // Workers run in an infinite loop.
@@ -183,6 +221,7 @@ int parfu_worker_node(int my_rank, int total_ranks){
 	cerr << "rank " << my_rank << " transferring data with ";
 	cerr << my_rank_order->n_orders() << " orders with total size ";
 	cerr << my_rank_order->total_size() << "\n";
+	
 	my_rank_order->move_data_Create(my_base_path,
 					rank_bucket_size,
 					file_handle);

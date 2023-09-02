@@ -218,10 +218,11 @@ int parfu_worker_node(int my_rank, int total_ranks){
 	// the rest of a message is a buffer with transfer orders
 	// this creates the order set for this rank
 	my_rank_order = new Parfu_rank_order_set(message_string.substr(1));
-	cerr << "rank " << my_rank << " transferring data with ";
-	cerr << my_rank_order->n_orders() << " orders with total size ";
-	cerr << my_rank_order->total_size() << "\n";
-	
+	cerr << "r:" << my_rank << " Cmode w/ orders:";
+	cerr << my_rank_order->n_orders() << ", totsz:";
+	cerr << my_rank_order->total_size();
+	//<< "\n";
+	cerr << " 1st file:" << my_rank_order->order_n_filename(0) << "\n";
 	my_rank_order->move_data_Create(my_base_path,
 					rank_bucket_size,
 					file_handle);

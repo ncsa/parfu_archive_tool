@@ -26,7 +26,7 @@
 
 //#define DEFAULT_BUCKET_SIZE         (200000000)
 // must be a multiple of 512??
-#define DEFAULT_BUCKET_SIZE         (499200)
+#define DEFAULT_BUCKET_SIZE         (4992000)
 
 int main(int argc, char *argv[]){
   char run_mode='C';

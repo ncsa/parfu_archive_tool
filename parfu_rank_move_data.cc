@@ -189,7 +189,7 @@ int Parfu_rank_order_set::move_data_Create(string base_path,
 				   MPI_MODE_RDONLY,MPI_INFO_NULL,
 				   target_file))!=MPI_SUCCESS){
 	cerr << "move_data_Create:MPI_File_open() returned ";
-	cerr << return_val << " when trying to open for reading.\n";
+	cerr << return_val << " when trying to open for reading, file:" << orders.at(ndx).rel_filename << "\n";
       }
       if((return_val=MPI_File_read_at(*target_file,
 				      orders.at(ndx).offset_in_file,

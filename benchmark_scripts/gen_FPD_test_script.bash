@@ -58,6 +58,7 @@ fi
 #FPD_SYSTEM="bw_moab"
 #FPD_SYSTEM="bridges"
 #FPD_SYSTEM="iforge"
+#FPD_SYSTEM="fronteraSS"
 
 if [ ! "$FPD_SYSTEM" ]; then
     echo ; echo "You must set a valid FPD_SYSTEM!  (Edit the script, or set an env var.)" ; echo
@@ -168,6 +169,19 @@ case "$FPD_SYSTEM" in
 	ARCDIR='${SCRATCH}'       
 	MYMPIRUN_1="ibrun -n "
 	MYMPIRUN_2=" -o 0 "
+	;;
+    "fronteraSS")
+	JOB_NAME="FPD_fron"
+	BASE_SYSTEM_NAME="frontera"
+	MANAGER="slurm"
+	DATA_FS="lstr"
+	ARC_FS="lstr"
+	RANKS_PER_NODE=56
+	DATADIR='${SCRATCH}'
+	ARCDIR='${SCRATCH}'
+	MYMPIRUN_1="ibrun -n "
+	MYMPIRUN_2=" -o 0 "
+	QUEUE_NAME="normal"
 	;;
     "stampede2")
 	JOB_NAME="FPD_st2"	
@@ -493,3 +507,4 @@ echo 'done' >> ${SCRIPT_FILE_NAME}
 echo "" >> ${SCRIPT_FILE_NAME}
 
 # now we set up the loop computation in the target script
+

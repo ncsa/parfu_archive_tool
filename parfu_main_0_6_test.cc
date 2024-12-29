@@ -67,7 +67,8 @@ int main(int argc, char *argv[]){
   // an MPI launch infrastructure) all that stuff gets done properly
   // and the code exist cleanly.  Users appreciate that.  
   
-  MPI_Init(NULL,NULL);
+  //  MPI_Init(NULL,NULL);
+  MPI_Init(&argc,&argv);
   MPI_Comm_size(MPI_COMM_WORLD,&total_ranks);
   MPI_Comm_rank(MPI_COMM_WORLD,&my_rank);
   

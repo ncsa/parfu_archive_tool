@@ -2,9 +2,9 @@
 #SBATCH --time=08:00:00                         # Job run time (hh:mm:ss)
 #SBATCH --nodes=1                               # Number of nodes
 #SBATCH --ntasks-per-node=16                     # Number of task (cores/ppn) per node
-#SBATCH --job-name=FPuntar                      # Name of batch job
-#SBATCH --output=untar_test_%j.out                  # stdout from job is written to this file
-#SBATCH --error=untar_test_%j.err                   # stderr from job is written to this file
+#SBATCH --job-name=FPpf                      # Name of batch job
+#SBATCH --output=parfu_test_%j.out                  # stdout from job is written to this file
+#SBATCH --error=parfu_test_%j.err                   # stderr from job is written to this file
 
 #CLS end job script static section
 ====================
@@ -22,7 +22,7 @@ DATASET_INDEX=0 # 0 is GW; 1 is Ar; 2 is VC
 # system-specific index into list of volumes we might use
 FSIND=0 # File System INDex
 
-FP_CODE="tar"
+FP_CODE="parfu" # this is not used on command line; this is a human label
 
 NODES=1
 RANKS=16
@@ -31,8 +31,8 @@ ITER=0
 MY_TARGET_DIR=${TGT_DIR[${FSIND}]}
 MY_TARFILE=${TAR_DIR}/${FP_TARFILE[${DATASET_INDEX}]}
 
-echo "TAR_DIR=${TAR_DIR}"
-echo "iniital target: ${MY_TARGET_DIR}"
+#echo "TAR_DIR=${TAR_DIR}"
+#echo "iniital target: ${MY_TARGET_DIR}"
 
 
 
@@ -41,15 +41,17 @@ echo "*** start execution"
 echo "cd ${MY_TARGET_DIR}"
 cd ${MY_TARGET_DIR}
 
-MY_OUTFILE=$ORIGINAL_DIR/tar_out_${FP_SYSTEM}_${SLURM_JOBID}_${ITER}.out
-echo "About to fire off untar with output to file: ${MY_OUTFILE}"
+MY_OUTFILE=$ORIGINAL_DIR/${FP_CODE}_out_data_${DATASET}_${FP_SYSTEM}_${SLURM_JOBID}_${ITER}.out
+#echo "About to fire off untar with output to file: ${MY_OUTFILE}"
+echo "About to fire off ${FP_CODE} with output to file: ${MY_OUTFILE}"
 
 MY_STATUSFILE="parfu_run_${SLURM_JOBID}_${ITER}"
 MY_ARCFILE=ARC_DIR[FSIND]/${DATASET}_${SLURM_JOBID}_${ITER}.pfu
 MY_TARGET=${TGT_DIR[FSIND]}/${DATASET}_data
 MY_OUTFILE=${ORIGINAL_DIR}/parfu_${DATASET}_${SLURM_JOBID}_${ITER}.out
 echo "archive=${MY_ARCFILE} target=${MY_TARGET} out=${MY_OUTFILE}" >> ${MY_STATUSFILE}
-srun --nodes=${NODES} --ntasks-per-node=${RANKS} --cpus-per-task=1 parfu archivefile=MY_ARCFILE $MY_TARGET >& $MY_OUTFILE
+echo "archive=${MY_ARCFILE} target=${MY_TARGET} out=${MY_OUTFILE}" 
+srun --nodes=${NODES} --ntasks-per-node=${RANKS} --cpus-per-task=1 parfu archivefile=${MY_ARCFILE} ${MY_TARGET} >& ${MY_OUTFILE}
 #srun --nodes=${NODES} --ntasks-per-node=${RANKS} --cpus-per-task=1 parfu archivefile=${ARC_DIR[FSIND]}/${DATASET}_${SLURM_JOBID}_${ITER}.pfu ${TGT_DIR[FSIND]}/${DATASET}_data >& ${ORIGINAL_DIR}/parfu_${DATASET}_${SLURM_JOBID}_${ITER}.out
 echo "***stop execution"
 END=`date +%s`

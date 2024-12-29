@@ -38,6 +38,9 @@ MY_TARFILE=${TAR_DIR}/${FP_TARFILE[${DATASET_INDEX}]}
 
 START=`date +%s`
 echo "*** start execution"
+# cd to the target directory and then reference the data directory relative makes
+# things nice for both parfu and tar, in that the archive will reference from directly
+# above the target directory.  
 echo "cd ${MY_TARGET_DIR}"
 cd ${MY_TARGET_DIR}
 
@@ -46,11 +49,12 @@ MY_OUTFILE=$ORIGINAL_DIR/${FP_CODE}_out_data_${DATASET}_${FP_SYSTEM}_${SLURM_JOB
 echo "About to fire off ${FP_CODE} with output to file: ${MY_OUTFILE}"
 
 MY_STATUSFILE="parfu_run_${SLURM_JOBID}_${ITER}"
-MY_ARCFILE=ARC_DIR[FSIND]/${DATASET}_${SLURM_JOBID}_${ITER}.pfu
-MY_TARGET=${TGT_DIR[FSIND]}/${DATASET}_data
-MY_OUTFILE=${ORIGINAL_DIR}/parfu_${DATASET}_${SLURM_JOBID}_${ITER}.out
-echo "archive=${MY_ARCFILE} target=${MY_TARGET} out=${MY_OUTFILE}" >> ${MY_STATUSFILE}
-echo "archive=${MY_ARCFILE} target=${MY_TARGET} out=${MY_OUTFILE}" 
+MY_ARCFILE="${ARC_DIR[${FSIND}]}/${DATASET}_${SLURM_JOBID}_${ITER}.pfu"
+# MY_TARGET="${TGT_DIR[FSIND]}/${DATASET}_data"
+MY_TARGET="${DATASET}_data" # as explained above, referenced locally to make the archive nice.  Coupled to "cd ${MY_TARGET_DIR}" above.  
+MY_OUTFILE="${ORIGINAL_DIR}/parfu_${DATASET}_${SLURM_JOBID}_${ITER}.out"
+echo "code=${FP_CODE} archive=${MY_ARCFILE} target=${MY_TARGET} out=${MY_OUTFILE}" >> ${MY_STATUSFILE}
+echo "code=${FP_CODE} archive=${MY_ARCFILE} target=${MY_TARGET} out=${MY_OUTFILE}" 
 srun --nodes=${NODES} --ntasks-per-node=${RANKS} --cpus-per-task=1 parfu archivefile=${MY_ARCFILE} ${MY_TARGET} >& ${MY_OUTFILE}
 #srun --nodes=${NODES} --ntasks-per-node=${RANKS} --cpus-per-task=1 parfu archivefile=${ARC_DIR[FSIND]}/${DATASET}_${SLURM_JOBID}_${ITER}.pfu ${TGT_DIR[FSIND]}/${DATASET}_data >& ${ORIGINAL_DIR}/parfu_${DATASET}_${SLURM_JOBID}_${ITER}.out
 echo "***stop execution"

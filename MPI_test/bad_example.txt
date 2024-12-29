@@ -1,0 +1,6 @@
+brdgs2:r017 ~/mpi_test_code [1] $ srun --tasks=4 ./hello_test.exe
+Hello World from Node 0
+Hello World from Node 0
+Hello World from Node 0
+Hello World from Node 0
+brdgs2:r017 ~/mpi_test_code [1] $

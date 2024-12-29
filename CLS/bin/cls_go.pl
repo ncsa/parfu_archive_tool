@@ -38,7 +38,10 @@ if(!$main_script_fragment){
     print STDERR "     CLS_STATIC_SYS_FILE CLS_STATIC_PERS_FILE\n";
     print STDERR "     CLS_ACTIVE_SYS_FILE CLS_ACTIVE_PERS_FILE\n";
     print STDERR "It is safe to point those at empty files if you don't have anything to put in them\n";
-    print STDERR "  Exiting\n\n";
+    print STDERR "\nThe combined runnable script is output to stdout.  You can pipe the output\n";
+    print STDERR "to a file and then later check, edit, and perhaps sbatch that file.\n\n";
+    print STDERR "Or, if you're feeling lucky, you can pipe the output directly into\n";
+    print STDERR "sbatch (but then you won't have a record of what you submitted).\n\n";
     exit;
 }
 

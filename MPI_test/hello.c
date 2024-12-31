@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <mpi.h>
 
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
    int node;
    

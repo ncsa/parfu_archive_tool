@@ -55,7 +55,7 @@ MY_TARGET="${DATASET}_data" # as explained above, referenced locally to make the
 MY_OUTFILE="${ORIGINAL_DIR}/parfu_${DATASET}_${SLURM_JOBID}_${ITER}.out"
 echo "code=${FP_CODE} archive=${MY_ARCFILE} target=${MY_TARGET} out=${MY_OUTFILE}" >> ${MY_STATUSFILE}
 echo "code=${FP_CODE} archive=${MY_ARCFILE} target=${MY_TARGET} out=${MY_OUTFILE}" 
-srun --nodes=${NODES} --ntasks-per-node=${RANKS} --cpus-per-task=1 parfu archivefile=${MY_ARCFILE} ${MY_TARGET} >& ${MY_OUTFILE}
+srun ${FP_SRUN_FLAGS} --nodes=${NODES} --ntasks-per-node=${RANKS} --cpus-per-task=1 parfu archivefile=${MY_ARCFILE} ${MY_TARGET} >& ${MY_OUTFILE}
 #srun --nodes=${NODES} --ntasks-per-node=${RANKS} --cpus-per-task=1 parfu archivefile=${ARC_DIR[FSIND]}/${DATASET}_${SLURM_JOBID}_${ITER}.pfu ${TGT_DIR[FSIND]}/${DATASET}_data >& ${ORIGINAL_DIR}/parfu_${DATASET}_${SLURM_JOBID}_${ITER}.out
 echo "***stop execution"
 END=`date +%s`

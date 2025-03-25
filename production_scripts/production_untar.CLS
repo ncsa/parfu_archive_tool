@@ -33,16 +33,16 @@ MY_TARFILE=${TAR_DIR}/${FP_TARFILE[${DATASET_INDEX}]}
 
 echo "TAR_DIR=${TAR_DIR}"
 echo "iniital target: ${MY_TARGET_DIR}"
-
+echo "my tarfile: ${MY_TARFILE}"
 
 
 START=`date +%s`
 echo "*** start execution"
 echo "cd ${MY_TARGET_DIR}"
 cd ${MY_TARGET_DIR}
-echo "tar xf ${MY_TARFILE}"
 MY_OUTFILE=$ORIGINAL_DIR/tar_out_${FP_SYSTEM}_${SLURM_JOBID}_${ITER}.out
 echo "About to fire off untar with output to file: ${MY_OUTFILE}"
+echo "tar xf ${MY_TARFILE} >& ${MY_OUTFILE}"
 tar xf ${MY_TARFILE} >& ${MY_OUTFILE}
 echo "***stop execution"
 END=`date +%s`

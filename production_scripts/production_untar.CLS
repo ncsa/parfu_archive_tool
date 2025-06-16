@@ -10,6 +10,13 @@
 ====================
 #CLS begin job script active section (this should be the last section)
 
+# TAR_DIR must be set in localization section
+
+if [ -z $TAR_DIR ] ; then
+    echo "Variable TAR_DIR must be set!"
+    exit
+fi
+
 ORIGINAL_DIR=`pwd`
 echo "original dir: $ORIGINAL_DIR"
 
@@ -22,7 +29,7 @@ DATASET_INDEX=0 # 0 is GW; 1 is Ar; 2 is VC
 # system-specific index into list of volumes we might use
 FSIND=0 # File System INDex
 
-FP_CODE="tar"
+FP_CODE="untar"
 
 NODES=1
 RANKS=1
